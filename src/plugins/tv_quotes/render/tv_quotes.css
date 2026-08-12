@@ -1,0 +1,242 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: #fff;
+  font-family: 'DejaVu Sans', sans-serif;
+  font-weight: bold;
+  color: #000;
+}
+
+/* Outer frame: thick black rule + inset thin red rule, corner brackets.
+   Gives the card a "cool" bordered-poster look instead of a bare edge. */
+.tvq-frame {
+  width: 100%;
+  height: 100%;
+  padding: 12px;
+  background: #fff;
+}
+
+.tvq-frame-inner {
+  width: 100%;
+  height: 100%;
+  border: 5px solid #000;
+  position: relative;
+  box-sizing: border-box;
+}
+
+.tvq-frame-inner::before {
+  content: "";
+  position: absolute;
+  inset: 8px;
+  border: 2px solid #d40000;
+  pointer-events: none;
+}
+
+.tvq-corner {
+  position: absolute;
+  width: 22px;
+  height: 22px;
+  border: 5px solid #000;
+  z-index: 2;
+}
+
+.tvq-corner.tl { top: -5px; left: -5px; border-right: none; border-bottom: none; }
+.tvq-corner.tr { top: -5px; right: -5px; border-left: none; border-bottom: none; }
+.tvq-corner.bl { bottom: -5px; left: -5px; border-right: none; border-top: none; }
+.tvq-corner.br { bottom: -5px; right: -5px; border-left: none; border-top: none; }
+
+/* Show logo, top-right corner. Inset clear of the corner bracket. */
+.tvq-show-logo {
+  position: absolute;
+  top: 16px;
+  right: 20px;
+  width: 74px;
+  height: auto;
+  z-index: 3;
+}
+
+.tvq-show-logo-p {
+  top: 14px;
+  right: 16px;
+  width: 60px;
+}
+
+/* ════════════════════════════════════════════════════════════ */
+/* LANDSCAPE (800×480) */
+/* ════════════════════════════════════════════════════════════ */
+
+.tvq-container {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  padding: 28px 36px;
+  gap: 28px;
+  position: relative;
+  background: #fff;
+}
+
+.tvq-portrait {
+  flex-shrink: 0;
+  width: 220px;
+  height: 220px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: #fff;
+}
+
+.tvq-portrait-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.tvq-portrait-placeholder {
+  width: 100%;
+  height: 100%;
+  background: #000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tvq-portrait-placeholder span {
+  color: #fff;
+  font-size: 90px;
+  font-weight: 900;
+}
+
+.tvq-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 16px;
+  min-width: 0;
+}
+
+.tvq-quote {
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 1.4;
+  color: #000;
+  -webkit-text-stroke: 0.2px #000;
+}
+
+.tvq-attribution {
+  font-size: 16px;
+  font-weight: 900;
+  letter-spacing: 1px;
+  color: #d40000;
+  text-transform: uppercase;
+}
+
+.tvq-show-tag {
+  position: absolute;
+  left: 36px;
+  bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 1px;
+  color: #000;
+  background: #fff;
+  padding: 4px 10px;
+  border: 2px solid #000;
+  border-radius: 3px;
+}
+
+.tvq-show-icon {
+  font-size: 12px;
+}
+
+/* ════════════════════════════════════════════════════════════ */
+/* PORTRAIT (480×800) */
+/* ════════════════════════════════════════════════════════════ */
+
+.tvq-container-portrait {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: 32px 28px;
+  gap: 24px;
+  background: #fff;
+}
+
+.tvq-portrait-p {
+  width: 100%;
+  height: 300px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #fff;
+}
+
+.tvq-portrait-img-p {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.tvq-portrait-placeholder-p {
+  width: 100%;
+  height: 100%;
+  background: #000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tvq-portrait-placeholder-p span {
+  color: #fff;
+  font-size: 110px;
+  font-weight: 900;
+}
+
+.tvq-content-p {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  /* was center - that made the divider's height depend on how much
+     empty space was left around the quote, which varied with quote
+     length. Top-align instead so the quote always starts right under
+     the portrait, and the divider always lands at the same place
+     (flex:1 still pushes it to the bottom of the card). */
+  justify-content: flex-start;
+  gap: 16px;
+  padding-top: 24px;
+}
+
+.tvq-quote-p {
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1.4;
+  color: #000;
+}
+
+.tvq-attribution-p {
+  font-size: 16px;
+  font-weight: 900;
+  letter-spacing: 1px;
+  color: #d40000;
+  text-transform: uppercase;
+}
+
+.tvq-show-tag-p {
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 1px;
+  color: #000;
+  border-top: 2px solid #000;
+  padding-top: 12px;
+}

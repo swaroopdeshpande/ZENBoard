@@ -1,0 +1,6 @@
+{
+    "display_name": "Weather",
+    "id": "weather_terminal",
+    "class": "WeatherTerminal",
+    "repository": ""
+}

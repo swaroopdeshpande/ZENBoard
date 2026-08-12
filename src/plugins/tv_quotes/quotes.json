@@ -1,0 +1,104 @@
+{
+  "sheldon": {
+    "display_name": "Sheldon Cooper",
+    "show": "The Big Bang Theory",
+    "portraits": ["sheldon.png"],
+    "quotes": [
+      "I'm not crazy. My mother had me tested.",
+      "Bazinga!",
+      "That's my spot.",
+      "I'm not lazy, I'm just motivationally challenged.",
+      "It's a well-established principle of physics that any home containing more than one physicist is potentially uninhabitable.",
+      "I'm a physicist. I have a working knowledge of the entire universe and everything it contains.",
+      "Whether or not you find it interesting is not a criteria we use to decide what's true.",
+      "I'm not being rude. I'm using sarcasm to express contempt.",
+      "In this house we obey the laws of thermodynamics!",
+      "I've never been a fan of the outdoors. To me it is just an insufficiently controlled environment.",
+      "I'm not superstitious, but I am a little stitious.",
+      "If I appear insensitive to the plight of the homeless, it's because I am rich in spirit.",
+      "Scissors cuts paper, paper covers rock, rock crushes lizard, lizard poisons Spock, Spock smashes scissors, scissors decapitates lizard, lizard eats paper, paper disproves Spock, Spock vaporizes rock, and as it always has, rock crushes scissors.",
+      "Texas has a lot to offer. Aggressive Christianity, interesting gun laws, and a pervasive sense of entitled ignorance.",
+      "Knock knock knock, Penny. Knock knock knock, Penny. Knock knock knock, Penny.",
+      "I don't know if you're aware of this, but there's a rich mosaic of q's and a's out there in the world, and I've read most of them.",
+      "Hard work is a myth. It's talent and luck.",
+      "I have a very good reason for thinking what I think. I've thought about it a lot, and I'm very smart."
+    ]
+  },
+  "penny": {
+    "display_name": "Penny",
+    "show": "The Big Bang Theory",
+    "portraits": ["penny.png"],
+    "quotes": [
+      "Sweetie, I love you, but you're the worst liar in the world.",
+      "I make coffee. Which, when you think about it, is a lot like nursing, but I don't have to change bedpans.",
+      "I'm not a nerd girl. Fine, I'm a nerd girl.",
+      "Honey, I'm not trying to insult you. I'm just letting you know that I don't understand a word you're saying.",
+      "I don't need luck, I have skill.",
+      "You know, for a girl who didn't go to college, I did pretty good.",
+      "I love that you get so excited about stuff. It's cute.",
+      "Look, I love you all dearly, but sometimes you're a lot.",
+      "I'm not crying because I'm sad. I'm crying because everyone is stupid.",
+      "Guys, I don't know if you've noticed, but I'm kind of hot."
+    ]
+  },
+  "leonard": {
+    "display_name": "Leonard Hofstadter",
+    "show": "The Big Bang Theory",
+    "portraits": ["leonard.png"],
+    "quotes": [
+      "Anything worth doing has a certain amount of risk associated with it.",
+      "I'm not just anybody. I'm your boyfriend.",
+      "String theory is not dead. Elegant, elegant math.",
+      "I'm sorry, Penny. That's not what I meant. What I meant is that I don't know what I meant.",
+      "It's a magical moment. Let's not ruin it by talking about how many video games it took to get here.",
+      "Look, I'm sorry that string theory is a colossal failure that's gained no scientific traction in 30 years.",
+      "I have a PhD, not that you'd know it from how I'm treated around here.",
+      "We're scientists. We solve problems, we don't create them."
+    ]
+  },
+  "howard": {
+    "display_name": "Howard Wolowitz",
+    "show": "The Big Bang Theory",
+    "portraits": ["howard.png"],
+    "quotes": [
+      "I have a Master's degree, from MIT, I'll have you know. People assume because I don't have a PhD, they can call me 'Mister.' Well, it's 'Master.' I have a Master's degree.",
+      "I'm engaged to a microbiologist. That's like a triple word score in Words with Nerds.",
+      "In space, no one can hear you complain that you're the only one of your friends without a PhD.",
+      "I speak Klingon.",
+      "Bazinga is Sheldon's thing. I have my own things.",
+      "Back in my day we didn't have Facebook, we had to poke each other in person."
+    ]
+  },
+  "raj": {
+    "display_name": "Raj Koothrappali",
+    "show": "The Big Bang Theory",
+    "portraits": ["raj.png"],
+    "quotes": [
+      "I can't talk to women unless I've had a drink. And frankly, one drink isn't enough. I need to be at the point where I'm one drink away from a coma.",
+      "In my culture, arranged marriages are considered completely normal.",
+      "I have social anxiety disorder that renders me functionally mute around women I'm not related to.",
+      "Excuse me, I don't talk to strangers unless properly lubricated."
+    ]
+  },
+  "amy": {
+    "display_name": "Amy Farrah Fowler",
+    "show": "The Big Bang Theory",
+    "portraits": ["amy.png"],
+    "quotes": [
+      "I'm a neurobiologist. I know how the brain works better than anyone at this table, and even I don't understand men.",
+      "Sheldon, I appreciate the fact that intimacy is a difficult and frightening thing for you.",
+      "Bazinga is my boyfriend's word, but I like to use it too.",
+      "I have both a physical body and a needlessly complicated emotional one."
+    ]
+  },
+  "bernadette": {
+    "display_name": "Bernadette Rostenkowski",
+    "show": "The Big Bang Theory",
+    "portraits": ["bernadette.png"],
+    "quotes": [
+      "I may look like a nice sweet little girl, but I will cut you.",
+      "I have a PhD in microbiology. I could kill you and testify at my own trial as an expert witness.",
+      "Just because I'm getting married doesn't mean I'm going to stop working. I love my job."
+    ]
+  }
+}

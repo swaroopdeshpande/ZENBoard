@@ -1,0 +1,39 @@
+<div class="form-group">
+    <div class="form-group nowrap">
+        <label for="title" class="form-label">Title:</label>
+        <input type="text" id="title" name="title" placeholder="Type something..." required class="form-input">
+    </div>
+
+    <!-- Text Model Dropdown - OpenRouter free-tier models only ($0 cost) -->
+    <div class="form-group nowrap">
+        <label for="textModel" class="form-label">Text Model (free tier):</label>
+        <select id="textModel" name="textModel" class="form-input">
+            <option value="google/gemma-4-31b-it:free" selected>Gemma 4 31B (free)</option>
+            <option value="google/gemma-4-26b-a4b-it:free">Gemma 4 26B (free)</option>
+            <option value="openai/gpt-oss-20b:free">GPT-OSS 20B (free)</option>
+            <option value="nvidia/nemotron-3-nano-30b-a3b:free">Nemotron 3 Nano 30B (free)</option>
+            <option value="nvidia/nemotron-3-super-120b-a12b:free">Nemotron 3 Super 120B (free)</option>
+        </select>
+        <small style="color:#888">All options here are OpenRouter's free tier - $0 cost regardless of usage.</small>
+    </div>
+</div>
+
+<div class="form-group">
+    <label for="textPrompt" class="form-label">Text Prompt:</label>
+    <input type="text" id="textPrompt" name="textPrompt" placeholder="Type something..." required class="form-input">
+</div>
+
+<script>
+
+    // populate form values from plugin settings
+    document.addEventListener('DOMContentLoaded', () => {        
+        if (loadPluginSettings) {
+            // Populate text inputs
+            document.getElementById('title').value = pluginSettings.title || '';
+            document.getElementById('textPrompt').value = pluginSettings.textPrompt || '';
+            
+            // Populate text model
+            document.getElementById('textModel').value = pluginSettings.textModel || 'google/gemma-4-31b-it:free';
+        }
+    });
+</script>

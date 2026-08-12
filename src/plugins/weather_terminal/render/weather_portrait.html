@@ -1,0 +1,63 @@
+{% extends "plugin.html" %}
+
+{% block content %}
+<div class="wx-frame-p" style="width: {{ frame_w }}px; height: {{ frame_h }}px;">
+
+  <div class="wx-top">
+    <span class="wx-date">{{ date_str }}</span>
+    <span class="wx-updated-lbl">UPDATED</span>
+  </div>
+  <div class="wx-top2">
+    <div class="wx-location">
+      <svg class="wx-home-icon" width="20" height="20" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path d="M3.5 11.5L12 4l8.5 7.5M6 10.5V20h12v-9.5" stroke="#ffffff" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <span class="wx-location-name">{{ location_name }}</span>
+    </div>
+    <span class="wx-updated-time">{{ updated_str }}</span>
+  </div>
+
+  <div class="wx-rule"></div>
+
+  <div class="wx-current-p">
+    <div class="wx-current-icon">{{ current.icon_svg|safe }}</div>
+    <div class="wx-current-text">
+      <div class="wx-current-temp">{{ current.temp }}<span class="wx-unit">&#176;{{ unit_label }}</span></div>
+      <div class="wx-current-cond">{{ current.condition|upper }}</div>
+    </div>
+  </div>
+
+  <div class="wx-graph wx-graph-p">{{ graph_svg|safe }}</div>
+
+  <div class="wx-stats-p">
+    <div class="wx-stat-box">
+      <div class="wx-stat-lbl">FEELS LIKE</div>
+      <div class="wx-stat-val">{{ current.feels_like }}{{ unit_label }}</div>
+    </div>
+    <div class="wx-stat-box">
+      <div class="wx-stat-lbl">RAIN CHANCE</div>
+      <div class="wx-stat-val">{{ current.rain_chance }}%</div>
+    </div>
+    <div class="wx-stat-box">
+      <div class="wx-stat-lbl">HUMIDITY</div>
+      <div class="wx-stat-val">{{ current.humidity }}%</div>
+    </div>
+    <div class="wx-stat-box">
+      <div class="wx-stat-lbl">WIND</div>
+      <div class="wx-stat-val">{{ current.wind_speed }} {{ current.wind_unit }}</div>
+    </div>
+  </div>
+
+  <div class="wx-hourly wx-hourly-p">
+    {% for h in hourly[:4] %}
+    <div class="wx-hour {% if not loop.last %}wx-hour-sep{% endif %}">
+      <div class="wx-hour-time">{{ 'NOW' if loop.first else h.time_label }}</div>
+      <div class="wx-hour-icon">{{ h.icon_svg|safe }}</div>
+      <div class="wx-hour-temp">{{ h.temp }}{{ unit_label }}</div>
+      <div class="wx-hour-rain">RAIN {{ h.rain_chance }}%</div>
+    </div>
+    {% endfor %}
+  </div>
+
+</div>
+{% endblock %}

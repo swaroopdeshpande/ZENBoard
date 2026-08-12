@@ -1,0 +1,133 @@
+{% extends "plugin.html" %}
+
+{% block content %}
+<div class="sh-frame {% if dark %}sh-dark{% endif %}" style="width: {{ frame_w }}px; height: {{ frame_h }}px;">
+
+  <!-- TOP -->
+  <div class="sh-top">
+    <div class="sh-top-left">
+      <span class="sh-title">SYSTEM HEALTH</span>
+      <span class="sh-hostname">{{ hostname }}</span>
+    </div>
+    <div class="sh-top-right">
+      <span class="sh-svc {% if inkypi_active %}sh-svc-ok{% else %}sh-svc-bad{% endif %}">
+        <span class="sh-dot"></span>InkyPi
+      </span>
+      <span class="sh-svc {% if tailscale_active %}sh-svc-ok{% else %}sh-svc-bad{% endif %}">
+        <span class="sh-dot"></span>Tailscale
+      </span>
+      <span class="sh-time">{{ timestamp }}</span>
+    </div>
+  </div>
+
+  <div class="sh-rule"></div>
+
+  <!-- HERO ROW -->
+  <div class="sh-hero">
+    <div class="sh-hero-card">
+      <div class="sh-hero-lbl">CPU</div>
+      <div class="sh-hero-val {% if cpu_warn %}sh-red{% endif %}">{{ cpu_pct }}<span class="sh-unit">%</span></div>
+      <div class="sh-bar"><div class="sh-bar-fill {% if cpu_warn %}sh-bar-red{% endif %}" style="width:{{ cpu_pct }}%;"></div></div>
+    </div>
+    <div class="sh-hero-card">
+      <div class="sh-hero-lbl">TEMP</div>
+      <div class="sh-hero-val {% if temp_warn %}sh-red{% endif %}">{{ temp_c if temp_c is not none else '--' }}<span class="sh-unit">&#176;C</span></div>
+      <div class="sh-bar"><div class="sh-bar-fill {% if temp_warn %}sh-bar-red{% endif %}" style="width:{{ ((temp_c or 0) / 85 * 100) | round | int }}%;"></div></div>
+    </div>
+    <div class="sh-hero-card">
+      <div class="sh-hero-lbl">MEMORY</div>
+      <div class="sh-hero-val {% if mem_warn %}sh-red{% endif %}">{{ mem_pct }}<span class="sh-unit">%</span></div>
+      <div class="sh-bar"><div class="sh-bar-fill {% if mem_warn %}sh-bar-red{% endif %}" style="width:{{ mem_pct }}%;"></div></div>
+    </div>
+    <div class="sh-hero-card">
+      <div class="sh-hero-lbl">DISK</div>
+      <div class="sh-hero-val {% if disk_warn %}sh-red{% endif %}">{{ disk_pct }}<span class="sh-unit">%</span></div>
+      <div class="sh-bar"><div class="sh-bar-fill {% if disk_warn %}sh-bar-red{% endif %}" style="width:{{ disk_pct }}%;"></div></div>
+    </div>
+  </div>
+
+  <!-- SECONDARY GRID -->
+  <div class="sh-grid">
+
+    <div class="sh-cell {% if throttle_warn %}sh-cell-warn{% endif %}">
+      <div class="sh-cell-lbl">POWER</div>
+      {% if throttled_now %}
+        <div class="sh-cell-val sh-red">NOW: {{ throttled_now[0] }}</div>
+      {% elif throttled_ever %}
+        <div class="sh-cell-val sh-red">{{ throttled_ever[0] }}</div>
+      {% else %}
+        <div class="sh-cell-val">OK</div>
+      {% endif %}
+    </div>
+
+    <div class="sh-cell">
+      <div class="sh-cell-lbl">UPTIME</div>
+      <div class="sh-cell-val">{{ uptime_str }}</div>
+    </div>
+
+    <div class="sh-cell {% if load_warn %}sh-cell-warn{% endif %}">
+      <div class="sh-cell-lbl">LOAD AVG</div>
+      <div class="sh-cell-val {% if load_warn %}sh-red{% endif %}">{{ load1 }} / {{ load5 }} / {{ load15 }}</div>
+    </div>
+
+    <div class="sh-cell {% if swap_warn %}sh-cell-warn{% endif %}">
+      <div class="sh-cell-lbl">SWAP</div>
+      <div class="sh-cell-val {% if swap_warn %}sh-red{% endif %}">{{ swap_used_mb }}MB ({{ swap_pct }}%)</div>
+    </div>
+
+    <div class="sh-cell">
+      <div class="sh-cell-lbl">WI-FI</div>
+      <div class="sh-cell-val">{{ wifi_ssid or '--' }}{% if wifi_signal %} &middot; {{ wifi_signal }}%{% endif %}</div>
+    </div>
+
+    <div class="sh-cell">
+      <div class="sh-cell-lbl">TAILSCALE IP</div>
+      <div class="sh-cell-val">{{ tailscale_ip or '--' }}</div>
+    </div>
+
+    <div class="sh-cell">
+      <div class="sh-cell-lbl">REFRESHES TODAY</div>
+      <div class="sh-cell-val">{{ refresh_count if refresh_count is not none else '--' }}</div>
+    </div>
+
+    <div class="sh-cell">
+      <div class="sh-cell-lbl">MEM / DISK</div>
+      <div class="sh-cell-val">{{ mem_used_mb }}MB &middot; {{ disk_used_gb }}GB</div>
+    </div>
+
+    <div class="sh-cell">
+      <div class="sh-cell-lbl">CPU FREQ</div>
+      <div class="sh-cell-val">{{ freq_mhz if freq_mhz else '--' }}MHz</div>
+    </div>
+
+    <div class="sh-cell">
+      <div class="sh-cell-lbl">PROCESSES</div>
+      <div class="sh-cell-val">{{ proc_count }}</div>
+    </div>
+
+    <div class="sh-cell">
+      <div class="sh-cell-lbl">LOCAL IP</div>
+      <div class="sh-cell-val">{{ local_ip or '--' }}</div>
+    </div>
+
+    <div class="sh-cell">
+      <div class="sh-cell-lbl">NETWORK I/O</div>
+      <div class="sh-cell-val">&#8593;{{ net_sent_mb }}MB &#8595;{{ net_recv_mb }}MB</div>
+    </div>
+
+  </div>
+
+  <!-- Per-core row: dedicated full-width strip, not part of the grid -->
+  <div class="sh-percore-row">
+    <div class="sh-cell-lbl">PER-CORE</div>
+    <div class="sh-core-row">
+      {% for c in per_core %}
+      <div class="sh-core-bar-wrap">
+        <div class="sh-core-bar {% if c >= 80 %}sh-bar-red{% endif %}" style="height:{{ c }}%;"></div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+</div>
+{% endblock %}

@@ -1,0 +1,150 @@
+/* ═══════════════════════════════════════════════════════════════
+   Apple Calendar - ZENBoard
+   Explicit pixel sizing from get_safe_area() (frame_w/frame_h) - not
+   percentage/flex chains. Strict solid-line grid, iOS-style filled-red
+   "today" circle, red/black theme toggle. Solid black/white/red only.
+   ═══════════════════════════════════════════════════════════════ */
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  padding: 0 !important;
+  background: #fff;
+  font-family: 'DejaVu Sans', sans-serif;
+  font-weight: bold;
+  color: #000;
+  -webkit-font-smoothing: none;
+}
+
+.container { display: block !important; }
+
+.cal-frame {
+  background: #fff;
+  color: #000;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 6px solid #000;
+  border-radius: 16px;
+}
+
+.cal-dark { background: #000; color: #fff; border-color: #fff; }
+
+/* ── header ── */
+
+.cal-header {
+  padding: 12px 18px 4px 18px;
+}
+
+.cal-month {
+  font-size: 24px;
+  font-weight: 900;
+  letter-spacing: 1.5px;
+  color: #000;
+}
+
+.cal-dark .cal-month { color: #fff; }
+
+/* ── weekday row ── */
+
+.cal-weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  padding: 4px 12px 0 12px;
+  border-bottom: 5px solid #000;
+}
+
+.cal-dark .cal-weekdays { border-bottom-color: #fff; }
+
+.cal-wd {
+  text-align: center;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 1px;
+  padding: 4px 0 8px 0;
+  color: #000;
+}
+
+.cal-dark .cal-wd { color: #fff; }
+.cal-wd-red { color: #d40000 !important; }
+
+/* ── month grid ── */
+
+.cal-grid {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  grid-template-rows: repeat(6, 1fr);
+  padding: 0 12px 12px 12px;
+}
+
+.cal-cell {
+  border: 1px solid #000;
+  padding: 4px 5px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-height: 0;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.cal-dark .cal-cell { border-color: #555; }
+
+.cal-cell-dim .cal-daynum { font-weight: 400; font-size: 11px; }
+
+.cal-daynum {
+  font-size: 13px;
+  font-weight: 800;
+  width: 22px;
+  height: 22px;
+  line-height: 22px;
+  text-align: center;
+  border-radius: 50%;
+  flex: 0 0 auto;
+}
+
+.cal-today {
+  background: #d40000;
+  color: #fff !important;
+}
+
+.cal-events {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: 3px;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.cal-evt {
+  font-size: 9.5px;
+  font-weight: 700;
+  color: #fff;
+  height: 13px;
+  line-height: 13px;
+  padding: 0 5px;
+  border-radius: 3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 0 0 auto;
+}
+
+.cal-more {
+  font-size: 8.5px;
+  font-weight: 800;
+  color: #777;
+}
+
+.cal-dark .cal-more { color: #999; }
+
+/* ── portrait tweaks: narrower columns, tighter type ── */
+
+.cal-frame-p .cal-month { font-size: 20px; }
+.cal-frame-p .cal-wd { font-size: 11px; padding: 4px 0 6px 0; }
+.cal-frame-p .cal-cell { padding: 3px 4px; }
+.cal-frame-p .cal-daynum { width: 20px; height: 20px; line-height: 20px; font-size: 12px; }
+.cal-frame-p .cal-evt { font-size: 8.5px; padding: 1px 4px; }

@@ -1,0 +1,21 @@
+<div class="settings-container">
+    <div class="form-group">
+        <label class="form-label">Display Mode</label>
+        <select id="displayMode" name="displayMode" class="form-input">
+            <option value="landscape">Landscape</option>
+            <option value="portrait">Portrait</option>
+        </select>
+    </div>
+    <div class="form-group">
+        <label class="form-label">Cache Duration (seconds)</label>
+        <input type="number" id="cacheTtl" name="cacheTtl" min="60" max="86400" value="300" class="form-input">
+    </div>
+</div>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    if (typeof pluginSettings !== 'undefined' && pluginSettings) {
+        if (pluginSettings.displayMode) document.getElementById('displayMode').value = pluginSettings.displayMode || 'landscape';
+        if (pluginSettings.cacheTtl)    document.getElementById('cacheTtl').value = pluginSettings.cacheTtl || '300';
+    }
+});
+</script>

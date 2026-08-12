@@ -1,0 +1,239 @@
+/* ═══════════════════════════════════════════════════════════════
+   Stock Tracker - ZENBoard
+   Sizing is EXPLICIT PIXEL (via inline style from get_safe_area()),
+   not percentage/flex-chain sizing - that ambiguity is exactly what
+   caused the previous version to render at the wrong size.
+   Black / white / red only, bold everywhere, no gradients/shadows.
+   ═══════════════════════════════════════════════════════════════ */
+
+body {
+  padding: 0 !important;
+  background: #fff;
+  font-family: 'DejaVu Sans', sans-serif;
+  font-weight: bold;
+  color: #000;
+  -webkit-font-smoothing: none;
+}
+
+.container { display: block !important; }
+
+/* ── shared tokens (light) ── */
+.st-frame, .st-frame-p {
+  background: #fff;
+  color: #000;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+body.dark .st-frame, body.dark .st-frame-p {
+  background: #000;
+  color: #fff;
+}
+
+/* ══════════════════════ LANDSCAPE ══════════════════════ */
+
+.st-frame { padding: 4px 16px 10px 4px; }
+
+.st-top {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  flex: 0 0 auto;
+  padding-bottom: 8px;
+}
+
+.st-ticker-row { display: flex; align-items: baseline; gap: 12px; }
+
+.st-ticker {
+  font-size: 34px;
+  font-weight: 900;
+  color: #d40000;
+  letter-spacing: -1px;
+}
+
+.st-company {
+  font-size: 15px;
+  font-weight: 700;
+  color: #000;
+}
+body.dark .st-company { color: #fff; }
+
+.st-top-right { display: flex; align-items: center; gap: 8px; }
+
+.st-exchange {
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  color: #000;
+}
+body.dark .st-exchange { color: #fff; }
+
+.st-sep { color: #999; font-size: 13px; }
+
+.st-dot { color: #000; font-size: 10px; }
+body.dark .st-dot { color: #fff; }
+.st-dot-open { color: #d40000; }
+
+.st-status {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  color: #000;
+}
+body.dark .st-status { color: #fff; }
+
+.st-rule { height: 3px; background: #000; flex-shrink: 0; }
+body.dark .st-rule { background: #fff; }
+
+.st-rule-thin { height: 2px; margin: 10px 0; }
+
+.st-main {
+  flex: 1 1 auto;
+  display: flex;
+  min-height: 0;
+  padding-top: 12px;
+  gap: 20px;
+}
+
+/* ── left: price + stats ── */
+
+.st-left {
+  flex: 0 0 260px;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.st-price-row { display: flex; align-items: baseline; gap: 8px; }
+
+.st-price {
+  font-size: 44px;
+  font-weight: 900;
+  letter-spacing: -1.5px;
+  color: #000;
+}
+body.dark .st-price { color: #fff; }
+
+.st-currency {
+  font-size: 15px;
+  font-weight: 700;
+  color: #000;
+}
+body.dark .st-currency { color: #fff; }
+
+.st-change {
+  font-size: 18px;
+  font-weight: 900;
+  margin-top: 2px;
+}
+.st-up { color: #000; }
+body.dark .st-up { color: #fff; }
+.st-down { color: #d40000; }
+
+.st-stats {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  justify-content: space-evenly;
+}
+
+.st-stat {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 5px 0;
+  border-bottom: 1.5px solid #000;
+}
+body.dark .st-stat { border-bottom-color: #444; }
+.st-stat:last-child { border-bottom: none; }
+
+.st-stat-lbl {
+  font-size: 13px;
+  font-weight: 700;
+  color: #000;
+}
+body.dark .st-stat-lbl { color: #ccc; }
+
+.st-stat-val {
+  font-size: 15px;
+  font-weight: 900;
+  color: #000;
+}
+body.dark .st-stat-val { color: #fff; }
+
+/* ── right: chart ── */
+
+.st-vrule { width: 3px; background: #000; flex-shrink: 0; }
+body.dark .st-vrule { background: #fff; }
+
+.st-right {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.st-period-badge {
+  align-self: flex-start;
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: 1.5px;
+  color: #fff;
+  background: #d40000;
+  padding: 4px 12px;
+  border-radius: 3px;
+  margin-bottom: 10px;
+}
+
+.st-chart {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.st-chart svg { display: block; width: 100%; height: 100%; }
+
+/* ══════════════════════ PORTRAIT ══════════════════════ */
+
+.st-frame-p { padding: 4px 14px 12px 14px; }
+
+.st-top-p {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 0 0 auto;
+  padding-bottom: 10px;
+}
+
+.st-ticker-row-p { display: flex; align-items: baseline; gap: 10px; }
+
+.st-company-p {
+  font-size: 15px;
+  font-weight: 700;
+  color: #000;
+}
+body.dark .st-company-p { color: #fff; }
+
+.st-top-right-p { display: flex; align-items: center; gap: 8px; }
+
+.st-price-block-p { flex: 0 0 auto; padding-top: 16px; }
+
+.st-chart-block-p {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  padding-top: 14px;
+}
+
+.st-stats-p {
+  flex: 0 0 auto;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 24px;
+  padding-top: 8px;
+}

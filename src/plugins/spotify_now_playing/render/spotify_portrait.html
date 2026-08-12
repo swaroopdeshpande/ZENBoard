@@ -1,0 +1,175 @@
+{% extends "plugin.html" %}
+
+{% block content %}
+<div class="sp-root">
+
+  <!-- ══════════════ TOP BAR ══════════════ -->
+  <div class="sp-top">
+    <div class="sp-brand">
+      <svg class="sp-logo" viewBox="0 0 24 24" aria-hidden="true">
+        <circle cx="12" cy="12" r="12" fill="#000"/>
+        <path d="M6.2 9.2c3.6-1.05 8-0.75 11.3 1.15" stroke="#fff" stroke-width="2.1" fill="none" stroke-linecap="round"/>
+        <path d="M7.1 12.6c3-0.85 6.7-0.6 9.3 0.95" stroke="#fff" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+        <path d="M7.9 15.8c2.4-0.7 5.4-0.5 7.5 0.8" stroke="#fff" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+      </svg>
+      <span class="sp-wordmark">Spotify</span>
+    </div>
+
+    <div class="sp-top-right">
+      <svg class="sp-eq" viewBox="0 0 26 18" aria-hidden="true">
+        {% if is_playing %}
+        <rect x="0"  y="6"  width="3.4" height="12" fill="#000"/>
+        <rect x="5.5" y="1"  width="3.4" height="17" fill="#000"/>
+        <rect x="11" y="8"  width="3.4" height="10" fill="#000"/>
+        <rect x="16.5" y="3"  width="3.4" height="15" fill="#000"/>
+        <rect x="22" y="10" width="3.4" height="8"  fill="#000"/>
+        {% else %}
+        <rect x="0"  y="15" width="3.4" height="3" fill="#000"/>
+        <rect x="5.5" y="15" width="3.4" height="3" fill="#000"/>
+        <rect x="11" y="15" width="3.4" height="3" fill="#000"/>
+        <rect x="16.5" y="15" width="3.4" height="3" fill="#000"/>
+        <rect x="22" y="15" width="3.4" height="3" fill="#000"/>
+        {% endif %}
+      </svg>
+      <span class="sp-clock">{{ clock }}</span>
+    </div>
+  </div>
+
+  <!-- ══════════════ MAIN (stacked) ══════════════ -->
+  {% if has_track %}
+  <div class="sp-main-p">
+
+    <div class="sp-art sp-art-p">
+      {% if art_uri %}
+        <img class="sp-art-img" src="{{ art_uri }}" alt="" />
+      {% else %}
+        <div class="sp-art-fallback">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="12" cy="12" r="10.5" fill="none" stroke="#000" stroke-width="1.6"/>
+            <circle cx="12" cy="12" r="2.6" fill="#d40000"/>
+          </svg>
+        </div>
+      {% endif %}
+    </div>
+
+    <div class="sp-info-p">
+      <div class="sp-label">{{ status }}</div>
+      <div class="sp-label-rule"></div>
+
+      <div class="sp-title sp-title-p">{{ title }}</div>
+      <div class="sp-artist">{{ artist }}</div>
+      <div class="sp-album">{{ album }}</div>
+
+      <div class="sp-spacer"></div>
+
+      <div class="sp-progress">
+        <div class="sp-bar">
+          <div class="sp-bar-fill" style="width: {{ '%.2f'|format(progress_pct) }}%;"></div>
+          <div class="sp-bar-dot" style="left: {{ '%.2f'|format(progress_pct) }}%;"></div>
+        </div>
+        <div class="sp-times">
+          <span>{{ elapsed }}</span>
+          <span>{{ duration }}</span>
+        </div>
+      </div>
+
+      <div class="sp-controls">
+        <svg class="sp-ctl {% if shuffle %}sp-on{% endif %}" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M3 6h4.2l3.1 4M3 18h4.2l9.4-12H21M14.5 14l2.1 4H21"
+                fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M18.4 3.4L21.4 6l-3 2.6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M18.4 15.4L21.4 18l-3 2.6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+
+        <svg class="sp-ctl" viewBox="0 0 24 24" aria-hidden="true">
+          <rect x="3" y="4.5" width="2.8" height="15" fill="currentColor"/>
+          <path d="M21 4.5v15L8.5 12z" fill="currentColor"/>
+        </svg>
+
+        <div class="sp-playpause">
+          {% if is_playing %}
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <rect x="7.2" y="6" width="3.9" height="12" rx="0.4" fill="#fff"/>
+            <rect x="13.4" y="6" width="3.9" height="12" rx="0.4" fill="#fff"/>
+          </svg>
+          {% else %}
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M8.5 5.6v12.8L19 12z" fill="#fff"/>
+          </svg>
+          {% endif %}
+        </div>
+
+        <svg class="sp-ctl" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M3 4.5v15L15.5 12z" fill="currentColor"/>
+          <rect x="18.2" y="4.5" width="2.8" height="15" fill="currentColor"/>
+        </svg>
+
+        <svg class="sp-ctl {% if repeat != 'off' %}sp-on{% endif %}" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M7 5h10a4 4 0 0 1 4 4v1M17 19H7a4 4 0 0 1-4-4v-1"
+                fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+          <path d="M9.6 2.4L7 5l2.6 2.6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M14.4 21.6L17 19l-2.6-2.6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+          {% if repeat == 'track' %}
+          <rect x="10" y="9.4" width="4.4" height="5.2" fill="#fff"/>
+          <path d="M11 11l1.4-1v4.4" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+          {% endif %}
+        </svg>
+      </div>
+    </div>
+  </div>
+
+  {% else %}
+  <div class="sp-main-p sp-main-p-empty">
+    <div class="sp-empty-mark-p">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <circle cx="12" cy="12" r="10.5" fill="none" stroke="#000" stroke-width="1.5"/>
+        <circle cx="12" cy="12" r="2.4" fill="#d40000"/>
+      </svg>
+    </div>
+    <div class="sp-empty-copy">
+      <div class="sp-label">{{ status }}</div>
+      <div class="sp-label-rule"></div>
+      <div class="sp-empty-title">{{ status }}</div>
+      {% if message %}<div class="sp-empty-msg">{{ message }}</div>{% endif %}
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- ══════════════ BOTTOM BAR ══════════════ -->
+  <div class="sp-bottom">
+    <div class="sp-vol">
+      <svg class="sp-vol-icon" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M4 9.5h3.4L12 5.2v13.6L7.4 14.5H4z" fill="currentColor"/>
+        <path d="M15.5 9.2a4 4 0 0 1 0 5.6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        <path d="M18.2 6.6a7.6 7.6 0 0 1 0 10.8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+      {% if volume is not none %}
+      <div class="sp-vol-bar sp-vol-bar-p">
+        <div class="sp-vol-fill" style="width: {{ volume }}%;"></div>
+        <div class="sp-vol-dot" style="left: {{ volume }}%;"></div>
+      </div>
+      {% endif %}
+    </div>
+
+    <div class="sp-bottom-right">
+      {% if device %}
+      <span class="sp-device">
+        <svg class="sp-device-icon" viewBox="0 0 24 24" aria-hidden="true">
+          <rect x="5" y="2.5" width="14" height="19" rx="2.2" fill="none" stroke="currentColor" stroke-width="1.9"/>
+          <circle cx="12" cy="7.6" r="1.7" fill="currentColor"/>
+          <circle cx="12" cy="15.2" r="3.4" fill="none" stroke="currentColor" stroke-width="1.9"/>
+        </svg>
+        <span class="sp-device-name sp-device-name-p">{{ device }}</span>
+      </span>
+      {% endif %}
+
+      <svg class="sp-heart {% if saved %}sp-heart-on{% endif %}" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M12 20.4S3.6 14.9 3.6 9.2A4.9 4.9 0 0 1 12 5.9a4.9 4.9 0 0 1 8.4 3.3c0 5.7-8.4 11.2-8.4 11.2z"
+              fill="{% if saved %}#d40000{% else %}none{% endif %}"
+              stroke="{% if saved %}#d40000{% else %}#000{% endif %}" stroke-width="2"/>
+      </svg>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

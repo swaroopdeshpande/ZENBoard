@@ -1,0 +1,51 @@
+{% extends "plugin.html" %}
+
+{% block content %}
+<div class="safe-content">
+  <div class="az-container portrait">
+
+    <!-- Header -->
+    <div class="az-header-portrait">
+      <span class="az-logo-portrait">AMAZON</span>
+      <div class="az-header-line-portrait"></div>
+    </div>
+
+    <!-- Orders Stack -->
+    <div class="az-orders-portrait">
+      {% for order in orders %}
+      <div class="az-order-portrait {% if not loop.last %}az-order-sep-portrait{% endif %}">
+
+        <!-- Image Row -->
+        <div class="az-order-top-portrait">
+          <div class="az-img-container-portrait {% if order.image_b64 %}has-image{% endif %}" data-status="{{ order.status }}">
+            {% if order.image_b64 %}
+              <img class="az-img-portrait" src="data:image/png;base64,{{ order.image_b64 }}" />
+            {% else %}
+              <div class="az-icon-glyph">{{ order.status_icon }}</div>
+            {% endif %}
+          </div>
+
+          <!-- Quick Info -->
+          <div class="az-quick-info">
+            <div class="az-status-badge-small" data-status="{{ order.status }}">
+              {{ order.status }}
+            </div>
+            {% if order.delivery_date %}
+            <div class="az-delivery-small">{{ order.delivery_date }}</div>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- Product Name -->
+        <div class="az-product-portrait">{{ order.product_name|truncate(45) }}</div>
+
+        <!-- Order Number -->
+        <div class="az-ordernum-portrait">#{{ order.order_number }}</div>
+
+      </div>
+      {% endfor %}
+    </div>
+
+  </div>
+</div>
+{% endblock %}

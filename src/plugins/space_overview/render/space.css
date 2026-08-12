@@ -1,0 +1,334 @@
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+    width: 800px;
+    height: 480px;
+    background: #0a0a0a;
+    font-family: 'Courier New', Courier, monospace;
+    color: #ffffff;
+    overflow: hidden;
+}
+
+.space-frame {
+    width: 800px;
+    height: 480px;
+    background: #0a0a0a;
+    border: 1.5px solid #333333;
+    display: flex;
+    flex-direction: column;
+}
+
+/* HEADER */
+.space-header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    padding: 10px 0;
+    border-bottom: 1px solid #333333;
+}
+
+.space-dot { color: #555555; font-size: 14px; }
+
+.space-title {
+    font-size: 20px;
+    font-weight: 900;
+    letter-spacing: 6px;
+    color: #ffffff;
+}
+
+/* MAIN GRID */
+.space-main {
+    display: grid;
+    grid-template-columns: 1fr 260px;
+    flex: 1;
+    overflow: hidden;
+}
+
+/* LEFT MAP COLUMN */
+.space-map-col {
+    display: flex;
+    flex-direction: column;
+    border-right: 1px solid #333333;
+    overflow: hidden;
+}
+
+.space-map {
+    width: 100%;
+    height: 260px;
+    object-fit: cover;
+}
+
+/* BOTTOM ROW */
+.space-bottom-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    border-top: 1px solid #333333;
+    flex: 1;
+    overflow: hidden;
+}
+
+.moon-box {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    border-right: 1px solid #333333;
+}
+
+.moon-icon { font-size: 28px; flex-shrink: 0; }
+.moon-info { display: flex; flex-direction: column; gap: 3px; }
+
+.moon-phase {
+    font-size: 12px;
+    font-weight: 900;
+    letter-spacing: 1px;
+    color: #ffffff;
+}
+
+.moon-detail {
+    font-size: 11px;
+    font-weight: 700;
+    color: #cccccc;
+}
+
+/* EVENTS */
+.events-box { padding: 8px 12px; overflow: hidden; }
+
+.events-title {
+    font-size: 14px;
+    font-weight: 900;
+    letter-spacing: 2px;
+    color: #ffffff;
+    margin-bottom: 6px;
+}
+
+.events-timeline { display: flex; flex-direction: column; gap: 4px; }
+
+.event-item { display: flex; align-items: flex-start; gap: 6px; }
+
+.event-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #444444;
+    flex-shrink: 0;
+    margin-top: 3px;
+}
+
+.dot-active { background: #ffffff; }
+.event-info { display: flex; flex-direction: column; gap: 1px; }
+
+.event-countdown {
+    font-size: 14px;
+    font-weight: 900;
+    color: #ffffff;
+    letter-spacing: 1px;
+}
+
+.event-name {
+    font-size: 12px;
+    font-weight: 700;
+    color: #cccccc;
+    text-transform: uppercase;
+}
+
+/* RIGHT COLUMN */
+.space-right-col {
+    display: flex;
+    flex-direction: column;
+}
+
+/* ISS BOX */
+.iss-box {
+    padding: 12px 14px;
+    border-bottom: 1px solid #333333;
+    flex: 1;
+}
+
+.iss-box-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.iss-icon {
+    width: 18px;
+    height: 18px;
+    border: 1px solid #555555;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 9px;
+    color: #ffffff;
+    border-radius: 2px;
+    font-weight: 900;
+}
+
+.iss-label {
+    font-size: 13px;
+    font-weight: 900;
+    letter-spacing: 2px;
+    color: #ffffff;
+}
+
+.iss-stats {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 10px;
+}
+
+.iss-stat { display: flex; flex-direction: column; gap: 2px; }
+
+.stat-lbl {
+    font-size: 11px;
+    font-weight: 900;
+    color: #cccccc;
+    letter-spacing: 1px;
+}
+
+.stat-val {
+    font-size: 30px;
+    font-weight: 900;
+    color: #ffffff;
+    line-height: 1;
+    letter-spacing: -1px;
+}
+
+.stat-unit {
+    font-size: 10px;
+    font-weight: 700;
+    color: #cccccc;
+    letter-spacing: 1px;
+}
+
+.iss-divider {
+    width: 1px;
+    height: 40px;
+    background: #333333;
+    flex-shrink: 0;
+}
+
+.iss-coords { display: flex; flex-direction: column; gap: 5px; }
+
+.coord-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.coord-lbl {
+    font-size: 13px;
+    font-weight: 900;
+    color: #ffffff;
+    letter-spacing: 1px;
+}
+
+.coord-val {
+    font-size: 14px;
+    font-weight: 900;
+    color: #ffffff;
+    letter-spacing: 0.5px;
+}
+
+/* NEXT PASS BOX */
+.pass-box {
+    padding: 12px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.pass-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 4px;
+}
+
+.pass-icon { font-size: 12px; }
+
+.pass-label {
+    font-size: 13px;
+    font-weight: 900;
+    letter-spacing: 2px;
+    color: #ffffff;
+}
+
+.pass-countdown {
+    font-size: 34px;
+    font-weight: 900;
+    color: #ffffff;
+    letter-spacing: -1px;
+    line-height: 1;
+}
+
+.pass-time {
+    font-size: 11px;
+    font-weight: 700;
+    color: #cccccc;
+    letter-spacing: 1px;
+}
+
+.pass-badge {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 900;
+    letter-spacing: 1px;
+    color: #ffffff;
+    border: 1px solid #555555;
+    padding: 3px 8px;
+    border-radius: 2px;
+    margin-top: 4px;
+    width: fit-content;
+}
+
+/* LIGHT THEME */
+body.light {
+    background: #ffffff;
+    color: #000000;
+}
+
+.light .space-frame {
+    background: #ffffff;
+    border-color: #cccccc;
+    color: #000000;
+}
+
+.light .space-header { border-bottom-color: #cccccc; }
+.light .space-title { color: #000000; }
+.light .space-dot { color: #999999; }
+.light .space-main { color: #000000; }
+.light .space-map-col { border-right-color: #cccccc; }
+.light .space-bottom-row { border-top-color: #cccccc; }
+.light .moon-box { border-right-color: #cccccc; }
+.light .moon-phase { color: #000000; }
+.light .moon-detail { color: #444444; }
+.light .moon-icon { color: red; filter: sepia(1) saturate(10) hue-rotate(330deg); }
+.light .events-title { color: #000000; }
+.light .event-countdown { color: #000000; }
+.light .event-name { color: #555555; }
+.light .dot-active { background: #000000; }
+.light .event-dot { background: #cccccc; }
+.light .iss-box { border-bottom-color: #cccccc; background: #ffffff; }
+.light .iss-label { color: #000000; }
+.light .iss-icon { color: #000000; border-color: #999999; }
+.light .stat-lbl { color: #555555; }
+.light .stat-val { color: #000000; }
+.light .stat-unit { color: #555555; }
+.light .iss-divider { background: #cccccc; }
+.light .coord-lbl { color: #555555; }
+.light .coord-val { color: #000000; }
+.light .pass-box { background: #ffffff; }
+.light .pass-label { color: #000000; }
+.light .pass-countdown { color: #000000; }
+.light .pass-time { color: #555555; }
+.light .pass-badge { color: #000000; border-color: #999999; }
+.light .space-right-col { background: #ffffff; }
+
+.light .space-map { filter: invert(1); }
+.light .moon-phase { color: #000000; font-size: 14px; }
+.light .moon-detail { color: #333333; font-size: 12px; }
+.light .moon-icon { font-size: 32px; filter: sepia(1) saturate(10) hue-rotate(330deg); }

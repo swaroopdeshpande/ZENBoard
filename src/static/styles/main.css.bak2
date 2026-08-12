@@ -1,0 +1,2077 @@
+/* ═══════════════════════════════════════════════════════════
+   COLOR THEME DEFINITIONS
+═══════════════════════════════════════════════════════════ */
+
+:root {
+    --radius: 16px;
+    --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Light Theme (default) */
+body.theme-light {
+    --bg-primary: #ffffff;
+    --bg-secondary: #f5f5f7;
+    --bg-tertiary: #efefef;
+    --text-primary: #1d1d1f;
+    --text-secondary: #666666;
+    --accent: #0071e3;
+    --accent-light: #e8f0ff;
+    --border: #d5d5d7;
+    --success: #34c759;
+    --warning: #ff9500;
+    --error: #ff3b30;
+}
+
+/* Dark Theme */
+body.theme-dark {
+    --bg-primary: #1d1d1d;
+    --bg-secondary: #2a2a2a;
+    --bg-tertiary: #353535;
+    --text-primary: #ffffff;
+    --text-secondary: #a1a1a1;
+    --accent: #0a84ff;
+    --accent-light: #1e3a5f;
+    --border: #424245;
+    --success: #30b0c0;
+    --warning: #ff9500;
+    --error: #ff453a;
+}
+
+/* Ocean Theme */
+body.theme-ocean {
+    --bg-primary: #e8f4f8;
+    --bg-secondary: #d4e9f2;
+    --bg-tertiary: #c0dde9;
+    --text-primary: #0d47a1;
+    --text-secondary: #1565c0;
+    --accent: #0288d1;
+    --accent-light: #b3e5fc;
+    --border: #81d4fa;
+    --success: #00897b;
+    --warning: #ffa726;
+    --error: #e53935;
+}
+
+/* Forest Theme */
+body.theme-forest {
+    --bg-primary: #e8f5e9;
+    --bg-secondary: #c8e6c9;
+    --bg-tertiary: #a5d6a7;
+    --text-primary: #1b5e20;
+    --text-secondary: #2e7d32;
+    --accent: #43a047;
+    --accent-light: #c8e6c9;
+    --border: #81c784;
+    --success: #388e3c;
+    --warning: #f57c00;
+    --error: #d32f2f;
+}
+
+/* Sunset Theme */
+body.theme-sunset {
+    --bg-primary: #fff3e0;
+    --bg-secondary: #ffe0b2;
+    --bg-tertiary: #ffcc80;
+    --text-primary: #e65100;
+    --text-secondary: #f57f17;
+    --accent: #ff6f00;
+    --accent-light: #ffe0b2;
+    --border: #ffb74d;
+    --success: #d84315;
+    --warning: #e65100;
+    --error: #bf360c;
+}
+
+/* Nord Theme */
+body.theme-nord {
+    --bg-primary: #2e3440;
+    --bg-secondary: #3b4252;
+    --bg-tertiary: #434c5e;
+    --text-primary: #eceff4;
+    --text-secondary: #d8dee9;
+    --accent: #88c0d0;
+    --accent-light: #81a1c1;
+    --border: #4c566a;
+    --success: #a3be8c;
+    --warning: #ebcb8b;
+    --error: #bf616a;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   GLOBAL STYLES
+═══════════════════════════════════════════════════════════ */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html, body {
+    width: 100%;
+    height: 100%;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', sans-serif;
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    transition: var(--transition);
+    line-height: 1.5;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   LAYOUT
+═══════════════════════════════════════════════════════════ */
+
+.app-container {
+    width: 100%;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 24px;
+    background-color: var(--bg-secondary);
+    border-bottom: 1px solid var(--border);
+}
+
+.welcome-section {
+    flex: 1;
+}
+
+.welcome-label {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    margin-bottom: 4px;
+}
+
+.welcome-title {
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--text-primary);
+    line-height: 1.2;
+}
+
+.settings-btn {
+    width: 44px;
+    height: 44px;
+    border-radius: var(--radius);
+    background-color: var(--bg-tertiary);
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.settings-btn:hover {
+    background-color: var(--accent);
+    color: white;
+}
+
+.main-content {
+    flex: 1;
+    padding: 24px;
+    overflow-y: auto;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   PLAYLIST SELECTOR
+═══════════════════════════════════════════════════════════ */
+
+.playlist-selector {
+    margin-bottom: 32px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.playlist-selector label {
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+.playlist-selector select {
+    padding: 10px 14px;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
+    cursor: pointer;
+    font-size: 14px;
+    transition: var(--transition);
+}
+
+.playlist-selector select:hover {
+    border-color: var(--accent);
+}
+
+.playlist-selector select:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-light);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   SECTION TITLES
+═══════════════════════════════════════════════════════════ */
+
+.section-title {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 16px;
+    color: var(--text-primary);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   PLUGINS GRID
+═══════════════════════════════════════════════════════════ */
+
+.plugins-section {
+    margin-bottom: 40px;
+}
+
+.plugins-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 16px;
+    margin-bottom: 32px;
+}
+
+.plugin-card {
+    padding: 16px;
+    background-color: var(--bg-secondary);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    cursor: pointer;
+    transition: var(--transition);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.plugin-card:hover {
+    border-color: var(--accent);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+}
+
+.plugin-icon {
+    width: 60px;
+    height: 60px;
+    background-color: var(--accent-light);
+    border-radius: calc(var(--radius) - 4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 12px;
+    overflow: hidden;
+}
+
+.plugin-icon img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.icon-placeholder {
+    font-size: 32px;
+}
+
+.plugin-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+}
+
+.plugin-status {
+    font-size: 12px;
+    color: var(--success);
+    margin-bottom: 8px;
+}
+
+.plugin-refresh-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: calc(var(--radius) - 6px);
+    background-color: var(--accent);
+    color: white;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+    transition: var(--transition);
+    display: none;
+}
+
+.plugin-card:hover .plugin-refresh-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.plugin-refresh-btn:active {
+    transform: scale(0.95);
+}
+
+.empty-state {
+    grid-column: 1 / -1;
+    padding: 40px 24px;
+    text-align: center;
+    color: var(--text-secondary);
+}
+
+.empty-state button {
+    margin-top: 16px;
+    padding: 10px 24px;
+    background-color: var(--accent);
+    color: white;
+    border: none;
+    border-radius: var(--radius);
+    cursor: pointer;
+    font-weight: 600;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   DISPLAY SECTION
+═══════════════════════════════════════════════════════════ */
+
+.display-section {
+    margin-top: 40px;
+}
+
+.display-preview {
+    width: 100%;
+    max-width: 400px;
+    aspect-ratio: 800 / 480;
+    background-color: var(--bg-secondary);
+    border-radius: var(--radius);
+    border: 2px solid var(--border);
+    overflow: hidden;
+    margin-bottom: 16px;
+}
+
+.display-preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.refresh-btn {
+    padding: 12px 24px;
+    background-color: var(--accent);
+    color: white;
+    border: none;
+    border-radius: var(--radius);
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.refresh-btn:hover {
+    opacity: 0.9;
+    transform: scale(1.02);
+}
+
+.refresh-btn:active {
+    transform: scale(0.98);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   MODAL
+═══════════════════════════════════════════════════════════ */
+
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    animation: fadeIn 0.2s ease-in;
+}
+
+.modal.show {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.modal-content {
+    background-color: var(--bg-primary);
+    padding: 32px;
+    border-radius: var(--radius);
+    max-width: 500px;
+    width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+    from {
+        transform: translateY(20px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.close {
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+    color: var(--text-secondary);
+    cursor: pointer;
+    line-height: 20px;
+}
+
+.close:hover {
+    color: var(--accent);
+}
+
+.modal-content h2 {
+    margin-bottom: 24px;
+    font-size: 24px;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   SETTINGS SECTIONS
+═══════════════════════════════════════════════════════════ */
+
+.settings-section {
+    margin-bottom: 32px;
+    padding-bottom: 32px;
+    border-bottom: 1px solid var(--border);
+}
+
+.settings-section:last-child {
+    border-bottom: none;
+}
+
+.settings-section h3 {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 16px;
+    color: var(--text-primary);
+}
+
+.settings-section label {
+    display: block;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+}
+
+.settings-section input,
+.settings-section select {
+    width: 100%;
+    padding: 10px 12px;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
+    font-size: 14px;
+    margin-bottom: 12px;
+    transition: var(--transition);
+}
+
+.settings-section input:focus,
+.settings-section select:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-light);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   WIFI SETTINGS
+═══════════════════════════════════════════════════════════ */
+
+.wifi-selector {
+    margin-bottom: 16px;
+}
+
+.scan-btn {
+    width: 100%;
+    padding: 10px 12px;
+    background-color: var(--accent);
+    color: white;
+    border: none;
+    border-radius: var(--radius);
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+    margin-top: 12px;
+}
+
+.scan-btn:hover {
+    opacity: 0.9;
+}
+
+.wifi-password {
+    margin-top: 16px;
+}
+
+.wifi-password input {
+    margin-bottom: 12px;
+}
+
+.wifi-password button {
+    width: 100%;
+    padding: 10px 12px;
+    background-color: var(--success);
+    color: white;
+    border: none;
+    border-radius: var(--radius);
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.wifi-password button:hover {
+    opacity: 0.9;
+}
+
+.wifi-status {
+    margin-top: 12px;
+    padding: 10px 12px;
+    border-radius: var(--radius);
+    background-color: var(--accent-light);
+    color: var(--accent);
+    font-size: 14px;
+    text-align: center;
+    min-height: 20px;
+}
+
+.wifi-status.success {
+    background-color: #d4edda;
+    color: var(--success);
+}
+
+.wifi-status.error {
+    background-color: #f8d7da;
+    color: var(--error);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   THEME SELECTOR
+═══════════════════════════════════════════════════════════ */
+
+.theme-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+}
+
+.theme-btn {
+    padding: 12px;
+    border-radius: var(--radius);
+    border: 2px solid var(--border);
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 14px;
+    transition: var(--transition);
+}
+
+.theme-btn:hover {
+    border-color: var(--accent);
+}
+
+.theme-btn.active {
+    border-color: var(--accent);
+    background-color: var(--accent);
+    color: white;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   MOBILE RESPONSIVE
+═══════════════════════════════════════════════════════════ */
+
+@media (max-width: 768px) {
+    .header {
+        padding: 16px;
+    }
+
+    .welcome-title {
+        font-size: 24px;
+    }
+
+    .main-content {
+        padding: 16px;
+    }
+
+    .plugins-grid {
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+        gap: 12px;
+    }
+
+    .modal-content {
+        width: 95%;
+        padding: 24px;
+    }
+
+    .theme-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+
+    .display-preview {
+        max-width: 100%;
+    }
+}
+
+@media (max-width: 480px) {
+    .welcome-title {
+        font-size: 20px;
+    }
+
+    .plugins-grid {
+        grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    }
+
+    .theme-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .settings-section input,
+    .settings-section select {
+        font-size: 16px; /* Prevents zoom on iOS */
+    }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   UTILITIES
+═══════════════════════════════════════════════════════════ */
+
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--bg-secondary);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--text-secondary);
+}
+/* ═══════════════════════════════════════════════════════════
+   ADD THIS TO THE END OF main.css (don't replace, APPEND)
+   New theme system + modern welcome header + settings modal
+═══════════════════════════════════════════════════════════ */
+
+/* ── 6 Color Themes (data-theme attribute on <html>) ── */
+
+html[data-theme="light"] {
+    --bg-primary: #ffffff;
+    --bg-secondary: #f5f5f7;
+    --text-primary: #1d1d1f;
+    --text-secondary: #666666;
+    --accent-primary: #0071e3;
+    --accent-hover: #0058b0;
+    --border-color: #d5d5d7;
+    --border-light: #e0e0e0;
+    --border-subtle: #ddd;
+    --button-bg: #f4f4f9;
+    --button-hover: #e5e5e7;
+    --image-filter: none;
+}
+
+html[data-theme="dark"] {
+    --bg-primary: #1a1a1a;
+    --bg-secondary: #2d2d2d;
+    --text-primary: #e0e0e0;
+    --text-secondary: #b0b0b0;
+    --accent-primary: #0a84ff;
+    --accent-hover: #409cff;
+    --border-color: #444444;
+    --border-light: #555555;
+    --border-subtle: #555555;
+    --button-bg: #3a3a3a;
+    --button-hover: #505050;
+    --image-filter: invert(0.85) hue-rotate(180deg);
+}
+
+html[data-theme="ocean"] {
+    --bg-primary: #e8f4f8;
+    --bg-secondary: #d4e9f2;
+    --text-primary: #0d3d66;
+    --text-secondary: #1565c0;
+    --accent-primary: #0288d1;
+    --accent-hover: #01579b;
+    --border-color: #81d4fa;
+    --border-light: #b3e5fc;
+    --border-subtle: #90caf9;
+    --button-bg: #d4e9f2;
+    --button-hover: #b3e5fc;
+    --image-filter: none;
+}
+
+html[data-theme="forest"] {
+    --bg-primary: #eef6ef;
+    --bg-secondary: #d9ecda;
+    --text-primary: #1b4d1e;
+    --text-secondary: #2e6b32;
+    --accent-primary: #43a047;
+    --accent-hover: #2e7d32;
+    --border-color: #a5d6a7;
+    --border-light: #c8e6c9;
+    --border-subtle: #b0dbb3;
+    --button-bg: #d9ecda;
+    --button-hover: #c8e6c9;
+    --image-filter: none;
+}
+
+html[data-theme="sunset"] {
+    --bg-primary: #fff7ed;
+    --bg-secondary: #ffe8cc;
+    --text-primary: #7a3e00;
+    --text-secondary: #b85c00;
+    --accent-primary: #ff6f00;
+    --accent-hover: #e65100;
+    --border-color: #ffcc80;
+    --border-light: #ffe0b2;
+    --border-subtle: #ffd699;
+    --button-bg: #ffe8cc;
+    --button-hover: #ffdcb0;
+    --image-filter: none;
+}
+
+html[data-theme="nord"] {
+    --bg-primary: #2e3440;
+    --bg-secondary: #3b4252;
+    --text-primary: #eceff4;
+    --text-secondary: #d8dee9;
+    --accent-primary: #88c0d0;
+    --accent-hover: #8fbcbb;
+    --border-color: #4c566a;
+    --border-light: #434c5e;
+    --border-subtle: #4c566a;
+    --button-bg: #3b4252;
+    --button-hover: #434c5e;
+    --image-filter: brightness(1.1);
+}
+
+/* ── Global rounding upgrade ── */
+.frame,
+.plugin-item,
+.image-container img,
+.modal-content,
+input, select, button,
+.icon-btn {
+    border-radius: 14px !important;
+}
+
+.frame {
+    border-radius: 20px !important;
+}
+
+/* ── New Header Layout ── */
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+}
+
+.welcome-block {
+    display: flex;
+    flex-direction: column;
+}
+
+.welcome-label {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    margin-bottom: 2px;
+}
+
+.welcome-block h1 {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--text-primary);
+    letter-spacing: -0.5px;
+    text-transform: none;
+    line-height: 1.15;
+}
+
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.icon-btn {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--button-bg);
+    border: none;
+    cursor: pointer;
+    font-size: 18px;
+    transition: all 0.2s ease;
+    text-decoration: none;
+    color: var(--text-primary);
+}
+
+.icon-btn:hover {
+    background-color: var(--accent-primary);
+    color: white;
+    transform: translateY(-1px);
+}
+
+.icon-image-sm {
+    width: 20px;
+    height: 20px;
+    filter: var(--image-filter);
+}
+
+/* ── Modern Plugin Cards ── */
+.plugins-container .plugin-item {
+    border-radius: 16px !important;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.plugins-container .plugin-item:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+    border-color: var(--accent-primary);
+}
+
+/* ── Settings Modal ── */
+#dashSettingsModal.modal {
+    display: none;
+    position: fixed;
+    z-index: 2000;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    align-items: center;
+    justify-content: center;
+}
+
+#dashSettingsModal.modal.show {
+    display: flex;
+}
+
+#dashSettingsModal .modal-content {
+    background-color: var(--bg-primary);
+    padding: 32px;
+    max-width: 460px;
+    width: 90%;
+    max-height: 85vh;
+    overflow-y: auto;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25);
+}
+
+.close-x {
+    float: right;
+    font-size: 26px;
+    cursor: pointer;
+    color: var(--text-secondary);
+    line-height: 1;
+}
+
+.close-x:hover {
+    color: var(--accent-primary);
+}
+
+.settings-section {
+    margin-bottom: 28px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid var(--border-light);
+}
+
+.settings-section:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+}
+
+.settings-section h3 {
+    font-size: 15px;
+    font-weight: 600;
+    margin-bottom: 14px;
+    color: var(--text-primary);
+}
+
+.settings-section input,
+.settings-section select {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1px solid var(--border-subtle);
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
+    font-size: 14px;
+    margin-bottom: 10px;
+}
+
+.settings-section input:focus,
+.settings-section select:focus {
+    outline: none;
+    border-color: var(--accent-primary);
+}
+
+.save-btn, .scan-btn {
+    width: 100%;
+    padding: 10px;
+    background-color: var(--accent-primary);
+    color: white;
+    border: none;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.save-btn:hover, .scan-btn:hover {
+    background-color: var(--accent-hover);
+}
+
+.wifi-status {
+    margin-top: 10px;
+    padding: 8px 12px;
+    font-size: 13px;
+    text-align: center;
+    border-radius: 10px;
+    min-height: 16px;
+}
+
+.wifi-status.success { background-color: #d4edda; color: #155724; }
+.wifi-status.error { background-color: #f8d7da; color: #721c24; }
+.wifi-status.info { background-color: var(--button-bg); color: var(--text-secondary); }
+
+.theme-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+}
+
+.theme-btn {
+    padding: 10px;
+    border: 2px solid var(--border-subtle);
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 13px;
+    transition: all 0.2s ease;
+}
+
+.theme-btn:hover {
+    border-color: var(--accent-primary);
+}
+
+.theme-btn.active {
+    background-color: var(--accent-primary);
+    border-color: var(--accent-primary);
+    color: white;
+}
+
+/* ── Mobile responsive ── */
+@media (max-width: 600px) {
+    .header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+
+    .welcome-block h1 {
+        font-size: 22px;
+    }
+
+    .header-actions {
+        width: 100%;
+        justify-content: flex-start;
+        flex-wrap: wrap;
+    }
+
+    .theme-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+/* ═══════════════════════════════════════════════════════════
+   ADD THIS TO THE END OF main.css (don't replace, APPEND)
+   New theme system + modern welcome header + settings modal
+═══════════════════════════════════════════════════════════ */
+
+/* ── 6 Color Themes (data-theme attribute on <html>) ── */
+
+html[data-theme="light"] {
+    --bg-primary: #ffffff;
+    --bg-secondary: #f5f5f7;
+    --text-primary: #1d1d1f;
+    --text-secondary: #666666;
+    --accent-primary: #0071e3;
+    --accent-hover: #0058b0;
+    --border-color: #d5d5d7;
+    --border-light: #e0e0e0;
+    --border-subtle: #ddd;
+    --button-bg: #f4f4f9;
+    --button-hover: #e5e5e7;
+    --image-filter: none;
+}
+
+html[data-theme="dark"] {
+    --bg-primary: #1a1a1a;
+    --bg-secondary: #2d2d2d;
+    --text-primary: #e0e0e0;
+    --text-secondary: #b0b0b0;
+    --accent-primary: #0a84ff;
+    --accent-hover: #409cff;
+    --border-color: #444444;
+    --border-light: #555555;
+    --border-subtle: #555555;
+    --button-bg: #3a3a3a;
+    --button-hover: #505050;
+    --image-filter: invert(0.85) hue-rotate(180deg);
+}
+
+html[data-theme="ocean"] {
+    --bg-primary: #e8f4f8;
+    --bg-secondary: #d4e9f2;
+    --text-primary: #0d3d66;
+    --text-secondary: #1565c0;
+    --accent-primary: #0288d1;
+    --accent-hover: #01579b;
+    --border-color: #81d4fa;
+    --border-light: #b3e5fc;
+    --border-subtle: #90caf9;
+    --button-bg: #d4e9f2;
+    --button-hover: #b3e5fc;
+    --image-filter: none;
+}
+
+html[data-theme="forest"] {
+    --bg-primary: #eef6ef;
+    --bg-secondary: #d9ecda;
+    --text-primary: #1b4d1e;
+    --text-secondary: #2e6b32;
+    --accent-primary: #43a047;
+    --accent-hover: #2e7d32;
+    --border-color: #a5d6a7;
+    --border-light: #c8e6c9;
+    --border-subtle: #b0dbb3;
+    --button-bg: #d9ecda;
+    --button-hover: #c8e6c9;
+    --image-filter: none;
+}
+
+html[data-theme="sunset"] {
+    --bg-primary: #fff7ed;
+    --bg-secondary: #ffe8cc;
+    --text-primary: #7a3e00;
+    --text-secondary: #b85c00;
+    --accent-primary: #ff6f00;
+    --accent-hover: #e65100;
+    --border-color: #ffcc80;
+    --border-light: #ffe0b2;
+    --border-subtle: #ffd699;
+    --button-bg: #ffe8cc;
+    --button-hover: #ffdcb0;
+    --image-filter: none;
+}
+
+html[data-theme="nord"] {
+    --bg-primary: #2e3440;
+    --bg-secondary: #3b4252;
+    --text-primary: #eceff4;
+    --text-secondary: #d8dee9;
+    --accent-primary: #88c0d0;
+    --accent-hover: #8fbcbb;
+    --border-color: #4c566a;
+    --border-light: #434c5e;
+    --border-subtle: #4c566a;
+    --button-bg: #3b4252;
+    --button-hover: #434c5e;
+    --image-filter: brightness(1.1);
+}
+
+/* ── Global rounding upgrade ── */
+.frame,
+.plugin-item,
+.image-container img,
+.modal-content,
+input, select, button,
+.icon-btn {
+    border-radius: 14px !important;
+}
+
+.frame {
+    border-radius: 20px !important;
+}
+
+/* ── New Header Layout ── */
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+}
+
+.welcome-block {
+    display: flex;
+    flex-direction: column;
+}
+
+.welcome-label {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    margin-bottom: 2px;
+}
+
+.welcome-block h1 {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--text-primary);
+    letter-spacing: -0.5px;
+    text-transform: none;
+    line-height: 1.15;
+}
+
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.icon-btn {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--button-bg);
+    border: none;
+    cursor: pointer;
+    font-size: 18px;
+    transition: all 0.2s ease;
+    text-decoration: none;
+    color: var(--text-primary);
+}
+
+.icon-btn:hover {
+    background-color: var(--accent-primary);
+    color: white;
+    transform: translateY(-1px);
+}
+
+.icon-image-sm {
+    width: 20px;
+    height: 20px;
+    filter: var(--image-filter);
+}
+
+/* ── Modern Plugin Cards ── */
+.plugins-container .plugin-item {
+    border-radius: 16px !important;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.plugins-container .plugin-item:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+    border-color: var(--accent-primary);
+}
+
+/* ── Settings Modal ── */
+#dashSettingsModal.modal {
+    display: none;
+    position: fixed;
+    z-index: 2000;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    align-items: center;
+    justify-content: center;
+}
+
+#dashSettingsModal.modal.show {
+    display: flex;
+}
+
+#dashSettingsModal .modal-content {
+    background-color: var(--bg-primary);
+    padding: 32px;
+    max-width: 460px;
+    width: 90%;
+    max-height: 85vh;
+    overflow-y: auto;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25);
+}
+
+.close-x {
+    float: right;
+    font-size: 26px;
+    cursor: pointer;
+    color: var(--text-secondary);
+    line-height: 1;
+}
+
+.close-x:hover {
+    color: var(--accent-primary);
+}
+
+.settings-section {
+    margin-bottom: 28px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid var(--border-light);
+}
+
+.settings-section:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+}
+
+.settings-section h3 {
+    font-size: 15px;
+    font-weight: 600;
+    margin-bottom: 14px;
+    color: var(--text-primary);
+}
+
+.settings-section input,
+.settings-section select {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1px solid var(--border-subtle);
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
+    font-size: 14px;
+    margin-bottom: 10px;
+}
+
+.settings-section input:focus,
+.settings-section select:focus {
+    outline: none;
+    border-color: var(--accent-primary);
+}
+
+.save-btn, .scan-btn {
+    width: 100%;
+    padding: 10px;
+    background-color: var(--accent-primary);
+    color: white;
+    border: none;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.save-btn:hover, .scan-btn:hover {
+    background-color: var(--accent-hover);
+}
+
+.wifi-status {
+    margin-top: 10px;
+    padding: 8px 12px;
+    font-size: 13px;
+    text-align: center;
+    border-radius: 10px;
+    min-height: 16px;
+}
+
+.wifi-status.success { background-color: #d4edda; color: #155724; }
+.wifi-status.error { background-color: #f8d7da; color: #721c24; }
+.wifi-status.info { background-color: var(--button-bg); color: var(--text-secondary); }
+
+.theme-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+}
+
+.theme-btn {
+    padding: 10px;
+    border: 2px solid var(--border-subtle);
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 13px;
+    transition: all 0.2s ease;
+}
+
+.theme-btn:hover {
+    border-color: var(--accent-primary);
+}
+
+.theme-btn.active {
+    background-color: var(--accent-primary);
+    border-color: var(--accent-primary);
+    color: white;
+}
+
+/* ── Mobile responsive ── */
+@media (max-width: 600px) {
+    .header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+
+    .welcome-block h1 {
+        font-size: 22px;
+    }
+
+    .header-actions {
+        width: 100%;
+        justify-content: flex-start;
+        flex-wrap: wrap;
+    }
+
+    .theme-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+/* ── CRITICAL OVERRIDES ── */
+.plugins-container .plugin-item .icon-image {
+    width: 36px !important;
+    height: 36px !important;
+    min-width: 36px !important;
+    min-height: 36px !important;
+    border-radius: 8px !important;
+}
+
+.welcome-label {
+    display: block !important;
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    letter-spacing: 2px !important;
+    text-transform: uppercase !important;
+    color: #666 !important;
+    margin-bottom: 2px !important;
+}
+
+.welcome-block h1 {
+    font-size: 28px !important;
+    font-weight: 700 !important;
+    letter-spacing: -0.5px !important;
+    text-transform: none !important;
+    line-height: 1.15 !important;
+}
+
+.header {
+    display: flex !important;
+    flex-direction: row !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+}
+
+.header-actions {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: 6px !important;
+}
+
+.icon-btn {
+    width: 40px !important;
+    height: 40px !important;
+    border-radius: 12px !important;
+    background: var(--button-bg) !important;
+    border: none !important;
+    cursor: pointer !important;
+    font-size: 18px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-decoration: none !important;
+    color: var(--text-primary) !important;
+}
+
+.icon-btn:hover {
+    background: var(--accent-primary) !important;
+    color: white !important;
+}
+
+.icon-image-sm {
+    width: 20px !important;
+    height: 20px !important;
+    filter: var(--image-filter) !important;
+}
+
+/* ── FIX IMAGE SIZE ── */
+.image-container {
+    width: 100% !important;
+    max-width: 500px !important;
+    margin: 0 auto 16px !important;
+}
+
+.image-container img {
+    width: 100% !important;
+    height: auto !important;
+    max-height: 300px !important;
+    object-fit: contain !important;
+    border-radius: 12px !important;
+}
+
+/* ── FIX PLUGIN GRID (force grid, not list) ── */
+.plugins-container {
+    display: grid !important;
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)) !important;
+    gap: 12px !important;
+}
+
+.plugins-container .plugin-item {
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 16px 8px !important;
+    text-decoration: none !important;
+    border-radius: 16px !important;
+    border: 1px solid var(--border-color) !important;
+    background: var(--bg-secondary) !important;
+}
+
+.plugins-container .plugin-item .icon-image {
+    width: 40px !important;
+    height: 40px !important;
+    min-width: 40px !important;
+    min-height: 40px !important;
+    border-radius: 10px !important;
+    object-fit: cover !important;
+    margin-bottom: 0 !important;
+}
+
+.plugin-name {
+    margin-top: 8px !important;
+    font-size: 11px !important;
+    text-align: center !important;
+    color: var(--text-secondary) !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    width: 100% !important;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   FINAL FIXES - append to main.css
+═══════════════════════════════════════════════════════════ */
+
+/* ── Display image - compact ── */
+.image-container {
+    width: 100% !important;
+    max-width: 380px !important;
+    margin: 0 auto 20px !important;
+}
+
+.image-container img {
+    width: 100% !important;
+    height: auto !important;
+    max-height: 240px !important;
+    object-fit: contain !important;
+    border-radius: 12px !important;
+    border: 1px solid var(--border-color) !important;
+}
+
+/* ── Sort + List buttons - proper styling ── */
+.plugins-controls {
+    display: flex !important;
+    gap: 8px !important;
+}
+
+.sort-toggle, .view-toggle {
+    padding: 6px 14px !important;
+    border-radius: 20px !important;
+    border: 1px solid var(--border-color) !important;
+    background: var(--button-bg) !important;
+    color: var(--text-primary) !important;
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+    letter-spacing: 0.3px !important;
+}
+
+.sort-toggle:hover, .view-toggle:hover {
+    background: var(--accent-primary) !important;
+    color: white !important;
+    border-color: var(--accent-primary) !important;
+}
+
+.sort-toggle.active {
+    background: #4CAF50 !important;
+    color: white !important;
+    border-color: #4CAF50 !important;
+}
+
+/* ── Plugin icons invert on dark themes ── */
+html[data-theme="dark"] .plugins-container .plugin-item .icon-image,
+html[data-theme="nord"] .plugins-container .plugin-item .icon-image {
+    filter: invert(0.85) !important;
+}
+
+/* ── Plugin settings page - fix icon size ── */
+.app-header .app-icon,
+.app-icon {
+    width: 48px !important;
+    height: 48px !important;
+    border-radius: 12px !important;
+    object-fit: contain !important;
+}
+
+.app-header {
+    align-items: center !important;
+    gap: 14px !important;
+    margin-bottom: 16px !important;
+}
+
+.app-title {
+    font-size: 1.4rem !important;
+    font-weight: 700 !important;
+}
+
+/* ── Plugin settings page - back button ── */
+.back-button {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    padding: 8px 16px !important;
+    border-radius: 20px !important;
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    margin-bottom: 16px !important;
+}
+
+/* ── Plugin page - action buttons ── */
+.action-button {
+    border-radius: 12px !important;
+    font-size: 1rem !important;
+    padding: 12px !important;
+}
+
+/* ── Plugin cards hover glow ── */
+.plugins-container .plugin-item:hover {
+    transform: translateY(-3px) !important;
+    box-shadow: 0 6px 16px rgba(0,0,0,0.10) !important;
+    border-color: var(--accent-primary) !important;
+}
+
+/* ── Plugins header title ── */
+.plugins-title {
+    font-size: 15px !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.3px !important;
+    color: var(--text-secondary) !important;
+    text-transform: uppercase !important;
+}
+
+/* ── Frame padding ── */
+.frame {
+    padding: 24px !important;
+}
+
+/* ── Header separator ── */
+.header {
+    border-bottom: 1px solid var(--border-color) !important;
+    padding-bottom: 16px !important;
+    margin-bottom: 20px !important;
+}
+
+/* ── Plugin page - fix ALL themes ── */
+html[data-theme="ocean"] { --bg-primary: #e8f4f8; --bg-secondary: #d4e9f2; --text-primary: #0d3d66; --text-secondary: #1565c0; --accent-primary: #0288d1; --accent-hover: #01579b; --border-color: #81d4fa; --border-light: #b3e5fc; --border-subtle: #90caf9; --button-bg: #d4e9f2; --button-hover: #b3e5fc; --input-bg: #e8f4f8; --image-filter: none; }
+html[data-theme="forest"] { --bg-primary: #eef6ef; --bg-secondary: #d9ecda; --text-primary: #1b4d1e; --text-secondary: #2e6b32; --accent-primary: #43a047; --accent-hover: #2e7d32; --border-color: #a5d6a7; --border-light: #c8e6c9; --border-subtle: #b0dbb3; --button-bg: #d9ecda; --button-hover: #c8e6c9; --input-bg: #eef6ef; --image-filter: none; }
+html[data-theme="sunset"] { --bg-primary: #fff7ed; --bg-secondary: #ffe8cc; --text-primary: #7a3e00; --text-secondary: #b85c00; --accent-primary: #ff6f00; --accent-hover: #e65100; --border-color: #ffcc80; --border-light: #ffe0b2; --border-subtle: #ffd699; --button-bg: #ffe8cc; --button-hover: #ffdcb0; --input-bg: #fff7ed; --image-filter: none; }
+html[data-theme="nord"] { --bg-primary: #2e3440; --bg-secondary: #3b4252; --text-primary: #eceff4; --text-secondary: #d8dee9; --accent-primary: #88c0d0; --accent-hover: #8fbcbb; --border-color: #4c566a; --border-light: #434c5e; --border-subtle: #4c566a; --button-bg: #3b4252; --button-hover: #434c5e; --input-bg: #2e3440; --image-filter: brightness(1.1); }
+
+/* ── Plugin page icon fix ── */
+.app-header .app-icon {
+    width: 48px !important;
+    height: 48px !important;
+    min-width: 48px !important;
+    min-height: 48px !important;
+    max-width: 48px !important;
+    max-height: 48px !important;
+    border-radius: 12px !important;
+    object-fit: contain !important;
+}
+
+.app-header {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 8px !important;
+    margin-bottom: 12px !important;
+}
+
+.title-container {
+    display: flex !important;
+    align-items: center !important;
+    gap: 12px !important;
+}
+
+.app-title {
+    font-size: 1.3rem !important;
+    font-weight: 700 !important;
+}
+
+/* ── Plugin page full restyle ── */
+.frame {
+    padding: 20px 24px !important;
+}
+
+.back-button {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    padding: 8px 16px !important;
+    border-radius: 20px !important;
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    margin-bottom: 20px !important;
+    background: var(--button-bg) !important;
+    border: 1px solid var(--border-color) !important;
+    color: var(--text-primary) !important;
+    cursor: pointer !important;
+    text-decoration: none !important;
+}
+
+.back-button:hover {
+    background: var(--accent-primary) !important;
+    color: white !important;
+    border-color: var(--accent-primary) !important;
+}
+
+.app-header {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    text-align: center !important;
+    padding: 24px 0 20px !important;
+    margin-bottom: 0 !important;
+    gap: 0 !important;
+}
+
+.app-header .app-icon {
+    width: 72px !important;
+    height: 72px !important;
+    min-width: 72px !important;
+    max-width: 72px !important;
+    min-height: 72px !important;
+    max-height: 72px !important;
+    border-radius: 18px !important;
+    object-fit: contain !important;
+    margin-bottom: 12px !important;
+    border: 1px solid var(--border-color) !important;
+    padding: 8px !important;
+    background: var(--bg-secondary) !important;
+}
+
+.app-header .header-content {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    width: 100% !important;
+    gap: 8px !important;
+}
+
+.app-header .title-container {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    gap: 6px !important;
+}
+
+.app-title {
+    font-size: 1.5rem !important;
+    font-weight: 700 !important;
+    color: var(--text-primary) !important;
+}
+
+.api-key-label {
+    font-size: 11px !important;
+    padding: 4px 10px !important;
+    border-radius: 20px !important;
+}
+
+.header-button {
+    padding: 8px 18px !important;
+    border-radius: 20px !important;
+    font-size: 13px !important;
+    font-weight: 600 !important;
+}
+
+/* Form fields */
+.settings-container {
+    padding: 16px 0 !important;
+}
+
+.form-group {
+    margin: 10px 0 !important;
+    gap: 8px !important;
+}
+
+.form-group label {
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    min-width: 100px !important;
+}
+
+.form-input {
+    padding: 9px 12px !important;
+    border-radius: 10px !important;
+    border: 1px solid var(--border-subtle) !important;
+    background: var(--input-bg) !important;
+    color: var(--text-primary) !important;
+    font-size: 14px !important;
+}
+
+.form-input:focus {
+    outline: none !important;
+    border-color: var(--accent-primary) !important;
+    box-shadow: 0 0 0 3px rgba(0,113,227,0.15) !important;
+}
+
+/* Action buttons at bottom */
+.buttons-container {
+    display: flex !important;
+    gap: 10px !important;
+    margin-top: 20px !important;
+    padding-top: 16px !important;
+    border-top: 1px solid var(--border-light) !important;
+}
+
+.action-button {
+    flex: 1 !important;
+    padding: 12px !important;
+    border-radius: 12px !important;
+    font-size: 15px !important;
+    font-weight: 600 !important;
+    border: none !important;
+    cursor: pointer !important;
+    background: var(--accent-primary) !important;
+    color: white !important;
+    transition: all 0.2s !important;
+}
+
+.action-button:hover {
+    opacity: 0.88 !important;
+    transform: scale(1.01) !important;
+}
+
+.action-button.warn {
+    background: var(--accent-warn) !important;
+}
+EOFcat >> ~/InkyPi/src/static/styles/main.css << 'EOF'
+
+/* ── Plugin page full restyle ── */
+.frame {
+    padding: 20px 24px !important;
+}
+
+.back-button {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    padding: 8px 16px !important;
+    border-radius: 20px !important;
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    margin-bottom: 20px !important;
+    background: var(--button-bg) !important;
+    border: 1px solid var(--border-color) !important;
+    color: var(--text-primary) !important;
+    cursor: pointer !important;
+    text-decoration: none !important;
+}
+
+.back-button:hover {
+    background: var(--accent-primary) !important;
+    color: white !important;
+    border-color: var(--accent-primary) !important;
+}
+
+.app-header {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    text-align: center !important;
+    padding: 24px 0 20px !important;
+    margin-bottom: 0 !important;
+    gap: 0 !important;
+}
+
+.app-header .app-icon {
+    width: 72px !important;
+    height: 72px !important;
+    min-width: 72px !important;
+    max-width: 72px !important;
+    min-height: 72px !important;
+    max-height: 72px !important;
+    border-radius: 18px !important;
+    object-fit: contain !important;
+    margin-bottom: 12px !important;
+    border: 1px solid var(--border-color) !important;
+    padding: 8px !important;
+    background: var(--bg-secondary) !important;
+}
+
+.app-header .header-content {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    width: 100% !important;
+    gap: 8px !important;
+}
+
+.app-header .title-container {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    gap: 6px !important;
+}
+
+.app-title {
+    font-size: 1.5rem !important;
+    font-weight: 700 !important;
+    color: var(--text-primary) !important;
+}
+
+.api-key-label {
+    font-size: 11px !important;
+    padding: 4px 10px !important;
+    border-radius: 20px !important;
+}
+
+.header-button {
+    padding: 8px 18px !important;
+    border-radius: 20px !important;
+    font-size: 13px !important;
+    font-weight: 600 !important;
+}
+
+/* Form fields */
+.settings-container {
+    padding: 16px 0 !important;
+}
+
+.form-group {
+    margin: 10px 0 !important;
+    gap: 8px !important;
+}
+
+.form-group label {
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    min-width: 100px !important;
+}
+
+.form-input {
+    padding: 9px 12px !important;
+    border-radius: 10px !important;
+    border: 1px solid var(--border-subtle) !important;
+    background: var(--input-bg) !important;
+    color: var(--text-primary) !important;
+    font-size: 14px !important;
+}
+
+.form-input:focus {
+    outline: none !important;
+    border-color: var(--accent-primary) !important;
+    box-shadow: 0 0 0 3px rgba(0,113,227,0.15) !important;
+}
+
+/* Action buttons at bottom */
+.buttons-container {
+    display: flex !important;
+    gap: 10px !important;
+    margin-top: 20px !important;
+    padding-top: 16px !important;
+    border-top: 1px solid var(--border-light) !important;
+}
+
+.action-button {
+    flex: 1 !important;
+    padding: 12px !important;
+    border-radius: 12px !important;
+    font-size: 15px !important;
+    font-weight: 600 !important;
+    border: none !important;
+    cursor: pointer !important;
+    background: var(--accent-primary) !important;
+    color: white !important;
+    transition: all 0.2s !important;
+}
+
+.action-button:hover {
+    opacity: 0.88 !important;
+    transform: scale(1.01) !important;
+}
+
+.action-button.warn {
+    background: var(--accent-warn) !important;
+}
+
+/* ── Restore plugin page buttons ── */
+.settings-form {
+    display: flex !important;
+    flex-direction: column !important;
+    flex-grow: 1 !important;
+    height: auto !important;
+    min-height: 200px !important;
+}
+
+.buttons-container {
+    display: flex !important;
+    gap: 10px !important;
+    margin-top: 24px !important;
+    padding-top: 16px !important;
+    border-top: 1px solid var(--border-light) !important;
+    position: relative !important;
+    bottom: auto !important;
+}
+
+/* ── Theme specificity fix - override :root with html + body ── */
+html[data-theme="ocean"] body, html[data-theme="ocean"] {
+    --bg-primary: #e8f4f8 !important;
+    --bg-secondary: #d4e9f2 !important;
+    --text-primary: #0d3d66 !important;
+    --text-secondary: #1565c0 !important;
+    --accent-primary: #0288d1 !important;
+    --accent-hover: #01579b !important;
+    --border-color: #81d4fa !important;
+    --border-light: #b3e5fc !important;
+    --border-subtle: #90caf9 !important;
+    --button-bg: #d4e9f2 !important;
+    --button-hover: #b3e5fc !important;
+    --input-bg: #e8f4f8 !important;
+    --image-filter: none !important;
+}
+
+html[data-theme="forest"] body, html[data-theme="forest"] {
+    --bg-primary: #eef6ef !important;
+    --bg-secondary: #d9ecda !important;
+    --text-primary: #1b4d1e !important;
+    --text-secondary: #2e6b32 !important;
+    --accent-primary: #43a047 !important;
+    --accent-hover: #2e7d32 !important;
+    --border-color: #a5d6a7 !important;
+    --border-light: #c8e6c9 !important;
+    --border-subtle: #b0dbb3 !important;
+    --button-bg: #d9ecda !important;
+    --button-hover: #c8e6c9 !important;
+    --input-bg: #eef6ef !important;
+    --image-filter: none !important;
+}
+
+html[data-theme="sunset"] body, html[data-theme="sunset"] {
+    --bg-primary: #fff7ed !important;
+    --bg-secondary: #ffe8cc !important;
+    --text-primary: #7a3e00 !important;
+    --text-secondary: #b85c00 !important;
+    --accent-primary: #ff6f00 !important;
+    --accent-hover: #e65100 !important;
+    --border-color: #ffcc80 !important;
+    --border-light: #ffe0b2 !important;
+    --border-subtle: #ffd699 !important;
+    --button-bg: #ffe8cc !important;
+    --button-hover: #ffdcb0 !important;
+    --input-bg: #fff7ed !important;
+    --image-filter: none !important;
+}
+
+html[data-theme="nord"] body, html[data-theme="nord"] {
+    --bg-primary: #2e3440 !important;
+    --bg-secondary: #3b4252 !important;
+    --text-primary: #eceff4 !important;
+    --text-secondary: #d8dee9 !important;
+    --accent-primary: #88c0d0 !important;
+    --accent-hover: #8fbcbb !important;
+    --border-color: #4c566a !important;
+    --border-light: #434c5e !important;
+    --border-subtle: #4c566a !important;
+    --button-bg: #3b4252 !important;
+    --button-hover: #434c5e !important;
+    --input-bg: #2e3440 !important;
+    --image-filter: brightness(1.1) !important;
+}
+
+html[data-theme="nord"] .plugins-container .plugin-item .icon-image,
+html[data-theme="dark"] .plugins-container .plugin-item .icon-image {
+    filter: invert(0.85) brightness(1.2) !important;
+}
+
+/* ── Force body background and text to use theme variables ── */
+body {
+    background-color: var(--bg-primary) !important;
+    color: var(--text-primary) !important;
+}
+
+.frame {
+    background-color: var(--bg-secondary) !important;
+    border-color: var(--border-color) !important;
+}
+
+/* ── Plugin page buttons - restore properly ── */
+.buttons-container {
+    display: flex !important;
+    flex-direction: row !important;
+    gap: 10px !important;
+    margin-top: 20px !important;
+    padding-top: 16px !important;
+    border-top: 1px solid var(--border-light) !important;
+}
+
+.action-button {
+    flex: 1 !important;
+    padding: 13px !important;
+    border-radius: 12px !important;
+    font-size: 15px !important;
+    font-weight: 600 !important;
+    border: none !important;
+    cursor: pointer !important;
+    background-color: var(--accent-primary) !important;
+    color: white !important;
+    display: block !important;
+    text-align: center !important;
+}
+
+.action-button:hover {
+    background-color: var(--accent-hover) !important;
+}
+
+.action-button.warn {
+    background-color: #e74c3c !important;
+}

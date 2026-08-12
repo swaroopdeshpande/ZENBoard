@@ -1,0 +1,6 @@
+{
+    "display_name": "Spotify Now Playing",
+    "id": "spotify_now_playing",
+    "class": "SpotifyNowPlaying",
+    "repository": ""
+}

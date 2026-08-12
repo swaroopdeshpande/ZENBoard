@@ -1,0 +1,49 @@
+<div class="settings-container">
+    <div class="form-group">
+        <label class="form-label">N2YO API Key (for ISS pass times)</label>
+        <input type="text" id="n2yoKey" name="n2yoKey" placeholder="Get free key at n2yo.com" class="form-input">
+    </div>
+    <div class="form-group">
+        <label class="form-label">Latitude</label>
+        <input type="number" id="latitude" name="latitude" step="0.0001" value="12.9716" class="form-input">
+    </div>
+    <div class="form-group">
+        <label class="form-label">Longitude</label>
+        <input type="number" id="longitude" name="longitude" step="0.0001" value="77.5946" class="form-input">
+    </div>
+    <div class="form-group">
+        <label class="form-label">Altitude (meters)</label>
+        <input type="number" id="altitude" name="altitude" value="920" class="form-input">
+    </div>
+    <div class="form-group">
+        <label class="form-label">Display Mode</label>
+        <select id="displayMode" name="displayMode" class="form-input">
+            <option value="landscape">Landscape</option>
+            <option value="portrait">Portrait</option>
+        </select>
+    </div>
+    <div class="form-group">
+        <label class="form-label">Theme</label>
+        <select id="theme" name="theme" class="form-input">
+            <option value="dark">Dark</option>
+            <option value="light">Light</option>
+        </select>
+    </div>
+    <div class="form-group">
+        <label class="form-label">Cache Duration (seconds)</label>
+        <input type="number" id="cacheTtl" name="cacheTtl" value="300" class="form-input">
+    </div>
+</div>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    if (typeof pluginSettings !== 'undefined' && pluginSettings) {
+        if (pluginSettings.n2yoKey)     document.getElementById('n2yoKey').value = pluginSettings.n2yoKey || '';
+        if (pluginSettings.latitude)    document.getElementById('latitude').value = pluginSettings.latitude || '12.9716';
+        if (pluginSettings.longitude)   document.getElementById('longitude').value = pluginSettings.longitude || '77.5946';
+        if (pluginSettings.altitude)    document.getElementById('altitude').value = pluginSettings.altitude || '920';
+        if (pluginSettings.displayMode) document.getElementById('displayMode').value = pluginSettings.displayMode || 'landscape';
+        if (pluginSettings.theme)       document.getElementById('theme').value = pluginSettings.theme || 'dark';
+        if (pluginSettings.cacheTtl)    document.getElementById('cacheTtl').value = pluginSettings.cacheTtl || '300';
+    }
+});
+</script>

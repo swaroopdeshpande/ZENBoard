@@ -1,0 +1,106 @@
+<div class="settings-container">
+    <div class="form-group">
+        <label class="form-label">Upload Book</label>
+        <input type="file" id="bookUpload" accept=".epub,.pdf,.txt" class="form-input">
+        <button type="button" class="action-button compact" onclick="uploadBook()">Upload</button>
+        <div id="uploadStatus" style="font-size:12px; margin-top:4px;"></div>
+    </div>
+    <div class="form-group">
+        <label class="form-label">Select Book</label>
+        <select id="bookFile" name="bookFile" class="form-input"></select>
+        <button type="button" class="action-button compact" onclick="deleteBook()" style="margin-top:6px;">Delete Selected</button>
+    </div>
+    <div class="form-group">
+        <label class="form-label">Font</label>
+        <select id="fontName" name="fontName" class="form-input">
+            <option value="serif">Serif</option>
+            <option value="serif-bold">Serif Bold</option>
+            <option value="sans">Sans</option>
+            <option value="mono">Mono</option>
+            <option value="liberation">Liberation</option>
+        </select>
+    </div>
+    <div class="form-group">
+        <label class="form-label">Font Size</label>
+        <select id="fontSize" name="fontSize" class="form-input">
+            <option value="16">16px</option>
+            <option value="20" selected>20px</option>
+            <option value="24">24px</option>
+            <option value="28">28px</option>
+            <option value="32">32px</option>
+        </select>
+    </div>
+    <div class="form-group">
+        <label class="form-label">Background</label>
+        <select id="bgColor" name="bgColor" class="form-input">
+            <option value="white">White</option>
+            <option value="cream">Cream</option>
+            <option value="lightgrey">Light Grey</option>
+            <option value="black">Dark (Black bg, White text)</option>
+        </select>
+    </div>
+    <div class="form-group">
+        <label class="form-label">Orientation</label>
+        <select id="orientation" name="orientation" class="form-input">
+            <option value="landscape">Landscape</option>
+            <option value="portrait">Portrait</option>
+        </select>
+    </div>
+    <div class="form-group">
+        <label class="form-label">Partial Refresh on Page Turn</label>
+        <select id="partialRefresh" name="partialRefresh" class="form-input">
+            <option value="true">Enabled</option>
+            <option value="false">Disabled</option>
+        </select>
+    </div>
+    <div class="form-group">
+        <label class="form-label">Page Navigation</label>
+        <div style="display:flex; gap:8px;">
+            <button type="button" class="action-button compact" onclick="document.getElementById('action').value='prev'">← Previous</button>
+            <button type="button" class="action-button compact" onclick="document.getElementById('action').value='next'">Next →</button>
+        </div>
+        <input type="hidden" id="action" name="action" value="current">
+    </div>
+</div>
+<script>
+async function uploadBook() {
+    const file = document.getElementById('bookUpload').files[0];
+    if (!file) return;
+    const fd = new FormData();
+    fd.append('book', file);
+    const r = await fetch('/api/ereader/upload', {method:'POST', body:fd});
+    const d = await r.json();
+    document.getElementById('uploadStatus').textContent = d.error || `Uploaded: ${d.filename}`;
+    loadBooks();
+}
+async function loadBooks() {
+    const r = await fetch('/api/ereader/list');
+    const d = await r.json();
+    const sel = document.getElementById('bookFile');
+    const current = sel.value;
+    sel.innerHTML = '';
+    (d.books || []).forEach(b => {
+        const opt = document.createElement('option');
+        opt.value = b.path;
+        opt.textContent = `${b.name} (${b.size})`;
+        if (b.path === current) opt.selected = true;
+        sel.appendChild(opt);
+    });
+}
+async function deleteBook() {
+    const path = document.getElementById('bookFile').value;
+    if (!path || !confirm('Delete this book?')) return;
+    await fetch('/api/ereader/delete', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({path})});
+    loadBooks();
+}
+document.addEventListener('DOMContentLoaded', () => {
+    loadBooks();
+    if (typeof pluginSettings !== 'undefined' && pluginSettings) {
+        if (pluginSettings.fontName)       document.getElementById('fontName').value = pluginSettings.fontName;
+        if (pluginSettings.fontSize)       document.getElementById('fontSize').value = pluginSettings.fontSize;
+        if (pluginSettings.bgColor)        document.getElementById('bgColor').value = pluginSettings.bgColor;
+        if (pluginSettings.orientation)    document.getElementById('orientation').value = pluginSettings.orientation;
+        if (pluginSettings.partialRefresh) document.getElementById('partialRefresh').value = pluginSettings.partialRefresh;
+    }
+});
+</script>

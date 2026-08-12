@@ -1,0 +1,172 @@
+<div class="settings-container">
+
+    <div class="form-group">
+        <label class="form-label">OpenWeatherMap API Key</label>
+        <input type="text" id="apiKey" name="apiKey" placeholder="e.g. a1b2c3d4e5f6..." class="form-input">
+        <small style="color:#888">Free key at <a href="https://openweathermap.org/api" target="_blank">openweathermap.org/api</a>. Same key used for search.</small>
+    </div>
+
+    <div class="form-group">
+        <label class="form-label">Location</label>
+
+        <select id="karnatakaCity" class="form-input" style="margin-bottom:8px;">
+            <option value="">— Choose a Karnataka city —</option>
+        </select>
+
+        <div style="display:flex; gap:8px; margin-bottom:8px;">
+            <input type="text" id="citySearch" placeholder="Or search any city worldwide..." class="form-input" style="flex:1;">
+            <button type="button" id="searchBtn" class="wx-btn">Search</button>
+        </div>
+        <div id="searchResults" class="wx-search-results hidden"></div>
+
+        <button type="button" id="useLocationBtn" class="wx-btn wx-btn-block">
+            📍 Use my current location
+        </button>
+        <div id="locStatus" class="wx-loc-status"></div>
+
+        <input type="hidden" id="lat" name="lat">
+        <input type="hidden" id="lon" name="lon">
+        <input type="hidden" id="locationName" name="locationName">
+        <div id="selectedLocation" class="wx-selected-loc"></div>
+    </div>
+
+    <div class="form-group">
+        <label class="form-label">Temperature Units</label>
+        <select id="units" name="units" class="form-input">
+            <option value="metric">Celsius (°C)</option>
+            <option value="imperial">Fahrenheit (°F)</option>
+        </select>
+    </div>
+
+    <div class="form-group">
+        <small style="color:#666;">Dark mode only, matching the reference design. Refreshes are cheap (2 API calls/render) - a 15-30 min interval is plenty.</small>
+    </div>
+
+</div>
+
+<style>
+.wx-btn {
+  padding: 9px 16px; font-size: 14px; background: #333; color: #fff;
+  border: none; border-radius: 6px; cursor: pointer;
+}
+.wx-btn:hover { background: #444; }
+.wx-btn-block { width: 100%; }
+.wx-search-results {
+  background: #1a1a1a; border-radius: 6px; margin-bottom: 8px; overflow: hidden;
+}
+.wx-search-results.hidden { display: none; }
+.wx-search-result {
+  padding: 8px 12px; font-size: 13px; color: #ddd; cursor: pointer; border-bottom: 1px solid #2a2a2a;
+}
+.wx-search-result:hover { background: #2a2a2a; }
+.wx-search-result:last-child { border-bottom: none; }
+.wx-loc-status { font-size: 12px; color: #888; margin-top: 4px; min-height: 16px; }
+.wx-selected-loc {
+  margin-top: 8px; padding: 8px 12px; background: #0d2818; border: 1px solid #1db954;
+  border-radius: 6px; font-size: 13px; color: #7fd99a; display: none;
+}
+.wx-selected-loc.visible { display: block; }
+</style>
+
+<script>
+(function () {
+  const KARNATAKA_CITIES = {{ karnataka_cities|tojson }};
+  const $ = (id) => document.getElementById(id);
+
+  // Populate Karnataka dropdown
+  KARNATAKA_CITIES.forEach(c => {
+    const opt = document.createElement('option');
+    opt.value = JSON.stringify(c);
+    opt.textContent = c.name;
+    $('karnatakaCity').appendChild(opt);
+  });
+
+  function setLocation(name, lat, lon) {
+    $('lat').value = lat;
+    $('lon').value = lon;
+    $('locationName').value = name;
+    const el = $('selectedLocation');
+    el.textContent = `✓ ${name} (${Number(lat).toFixed(2)}, ${Number(lon).toFixed(2)})`;
+    el.classList.add('visible');
+  }
+
+  $('karnatakaCity').addEventListener('change', function () {
+    if (!this.value) return;
+    const c = JSON.parse(this.value);
+    setLocation(c.name, c.lat, c.lon);
+    $('citySearch').value = '';
+    $('searchResults').classList.add('hidden');
+  });
+
+  $('searchBtn').addEventListener('click', function () {
+    const q = $('citySearch').value.trim();
+    const apiKey = $('apiKey').value.trim();
+    if (!q) return;
+    if (!apiKey) { alert('Enter your OpenWeatherMap API key first'); return; }
+
+    fetch(`https://api.openweathermap.org/geo/1.0/direct?q=${encodeURIComponent(q)}&limit=5&appid=${apiKey}`)
+      .then(r => r.json())
+      .then(results => {
+        const box = $('searchResults');
+        box.innerHTML = '';
+        if (!Array.isArray(results) || results.length === 0) {
+          box.innerHTML = '<div class="wx-search-result">No results</div>';
+        } else {
+          results.forEach(r => {
+            const label = [r.name, r.state, r.country].filter(Boolean).join(', ');
+            const div = document.createElement('div');
+            div.className = 'wx-search-result';
+            div.textContent = label;
+            div.addEventListener('click', () => {
+              setLocation(label, r.lat, r.lon);
+              box.classList.add('hidden');
+            });
+            box.appendChild(div);
+          });
+        }
+        box.classList.remove('hidden');
+      })
+      .catch(e => alert('Search failed: ' + e.message));
+  });
+
+  $('useLocationBtn').addEventListener('click', function () {
+    const status = $('locStatus');
+    if (!navigator.geolocation) {
+      status.textContent = 'Geolocation not supported by this browser';
+      return;
+    }
+    status.textContent = 'Locating...';
+    navigator.geolocation.getCurrentPosition(
+      pos => {
+        const { latitude, longitude } = pos.coords;
+        const apiKey = $('apiKey').value.trim();
+        if (apiKey) {
+          fetch(`https://api.openweathermap.org/geo/1.0/reverse?lat=${latitude}&lon=${longitude}&limit=1&appid=${apiKey}`)
+            .then(r => r.json())
+            .then(results => {
+              const name = (results && results[0]) ? [results[0].name, results[0].state].filter(Boolean).join(', ') : 'Current Location';
+              setLocation(name, latitude, longitude);
+              status.textContent = 'Location set';
+            })
+            .catch(() => { setLocation('Current Location', latitude, longitude); status.textContent = 'Location set'; });
+        } else {
+          setLocation('Current Location', latitude, longitude);
+          status.textContent = 'Location set (add API key to get the place name)';
+        }
+      },
+      err => { status.textContent = 'Could not get location: ' + err.message; },
+      { timeout: 10000 }
+    );
+  });
+
+  document.addEventListener('DOMContentLoaded', () => {
+    if (typeof pluginSettings !== 'undefined' && pluginSettings) {
+      if (pluginSettings.apiKey) $('apiKey').value = pluginSettings.apiKey;
+      if (pluginSettings.units) $('units').value = pluginSettings.units;
+      if (pluginSettings.lat && pluginSettings.lon) {
+        setLocation(pluginSettings.locationName || 'Saved location', pluginSettings.lat, pluginSettings.lon);
+      }
+    }
+  });
+})();
+</script>

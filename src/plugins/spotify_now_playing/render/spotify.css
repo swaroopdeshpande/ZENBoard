@@ -1,0 +1,456 @@
+/* ═══════════════════════════════════════════════════════════════
+   Spotify Now Playing - ZENBoard
+   Waveshare 7.5" BWR, 800x480, LANDSCAPE ONLY.
+
+   plugin.html applies the calibrated wooden-frame margins
+   (T12 / B0 / L8 / R11) as body margins, giving a 781x468 content
+   box. It also hardcodes an inline `padding: 1.5vw` on <body>, so we
+   override that here - all internal spacing is controlled below.
+
+   Constraints honoured: black/white/red only, white ground, no
+   gradients, no shadows, nothing thinner than 2px, no text under 17px.
+   ═══════════════════════════════════════════════════════════════ */
+
+body {
+  padding: 0 !important;
+  background: #fff;
+  font-family: 'DejaVu Sans', sans-serif;
+  color: #000;
+  -webkit-font-smoothing: none;
+}
+
+/* base plugin.css centres .container with flex; fill it completely */
+.container {
+  display: block !important;
+}
+
+.sp-root {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+}
+
+/* ══════════════════════ TOP BAR ══════════════════════ */
+
+.sp-top {
+  height: 56px;
+  flex: 0 0 56px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 2px solid #000;
+  padding: 0 14px 0 4px;
+}
+
+.sp-brand {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.sp-logo {
+  width: 30px;
+  height: 30px;
+  display: block;
+}
+
+.sp-wordmark {
+  font-size: 25px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  color: #000;
+}
+
+.sp-top-right {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.sp-eq {
+  width: 26px;
+  height: 18px;
+  display: block;
+}
+
+.sp-clock {
+  font-size: 22px;
+  font-weight: 700;
+  color: #000;
+}
+
+/* ══════════════════════ MAIN ══════════════════════ */
+
+.sp-main {
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+  gap: 26px;
+  padding: 12px 14px 10px 4px;
+  min-height: 0;
+}
+
+/* album art: thin black rule, no shadow */
+.sp-art {
+  flex: 0 0 326px;
+  width: 326px;
+  height: 326px;
+  border: 2px solid #000;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.sp-art-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  /* art is already dithered at 1:1 panel size - never resample it */
+  image-rendering: pixelated;
+}
+
+.sp-art-fallback svg {
+  width: 120px;
+  height: 120px;
+}
+
+/* ── right column ── */
+
+.sp-info {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 326px;
+  display: flex;
+  flex-direction: column;
+}
+
+.sp-label {
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: 2.5px;
+  color: #d40000;
+  text-transform: uppercase;
+}
+
+.sp-label-rule {
+  width: 46px;
+  height: 4px;
+  background: #d40000;
+  margin: 7px 0 14px 0;
+}
+
+.sp-title {
+  font-size: 37px;
+  font-weight: 700;
+  line-height: 1.13;
+  letter-spacing: -0.8px;
+  color: #000;
+  /* long track names: clamp to 2 lines rather than pushing the layout */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  word-break: break-word;
+}
+
+.sp-artist {
+  font-size: 23px;
+  font-weight: 600;
+  color: #000;
+  margin-top: 7px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sp-album {
+  font-size: 19px;
+  font-weight: 600;
+  font-style: italic;
+  color: #000;
+  margin-top: 5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sp-spacer {
+  flex: 1 1 auto;
+  min-height: 8px;
+}
+
+/* ── progress ── */
+
+.sp-progress {
+  margin-bottom: 12px;
+}
+
+.sp-bar {
+  position: relative;
+  width: 100%;
+  height: 5px;
+  background: #000;
+}
+
+.sp-bar-fill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 5px;
+  background: #d40000;
+}
+
+.sp-bar-dot {
+  position: absolute;
+  top: 50%;
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  background: #d40000;
+  transform: translate(-50%, -50%);
+}
+
+.sp-times {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 9px;
+  font-size: 18px;
+  font-weight: 700;
+  color: #000;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── controls ── */
+
+.sp-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 4px;
+}
+
+.sp-ctl {
+  width: 30px;
+  height: 30px;
+  display: block;
+  color: #000;
+}
+
+/* active shuffle / repeat use the red channel */
+.sp-ctl.sp-on {
+  color: #d40000;
+}
+
+.sp-playpause {
+  width: 62px;
+  height: 62px;
+  border-radius: 50%;
+  background: #d40000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.sp-playpause svg {
+  width: 34px;
+  height: 34px;
+  display: block;
+}
+
+/* ── empty / error state ── */
+
+.sp-main-empty {
+  align-items: center;
+  gap: 30px;
+  padding-left: 10px;
+}
+
+.sp-empty-mark svg {
+  width: 190px;
+  height: 190px;
+  display: block;
+}
+
+.sp-empty-copy {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.sp-empty-title {
+  font-size: 40px;
+  font-weight: 700;
+  letter-spacing: -0.8px;
+  line-height: 1.1;
+  color: #000;
+}
+
+.sp-empty-msg {
+  font-size: 19px;
+  font-weight: 600;
+  color: #000;
+  margin-top: 12px;
+  line-height: 1.35;
+}
+
+/* ══════════════════════ BOTTOM BAR ══════════════════════ */
+
+.sp-bottom {
+  height: 48px;
+  flex: 0 0 48px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-top: 2px solid #000;
+  padding: 0 14px 0 4px;
+}
+
+.sp-vol {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.sp-vol-icon {
+  width: 24px;
+  height: 24px;
+  display: block;
+  color: #000;
+}
+
+.sp-vol-bar {
+  position: relative;
+  width: 168px;
+  height: 4px;
+  background: #000;
+}
+
+.sp-vol-fill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 4px;
+  background: #d40000;
+}
+
+.sp-vol-dot {
+  position: absolute;
+  top: 50%;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #d40000;
+  transform: translate(-50%, -50%);
+}
+
+.sp-bottom-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-width: 0;
+}
+
+.sp-device {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 2px solid #000;
+  padding: 3px 10px;
+  min-width: 0;
+}
+
+.sp-device-icon {
+  width: 18px;
+  height: 18px;
+  display: block;
+  color: #000;
+  flex-shrink: 0;
+}
+
+.sp-device-name {
+  font-size: 17px;
+  font-weight: 700;
+  color: #000;
+  max-width: 190px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sp-heart {
+  width: 26px;
+  height: 26px;
+  display: block;
+  flex-shrink: 0;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   PORTRAIT (480x800 -> 468x781 usable, margins T8 / B11 / L0 / R12)
+   Same components, stacked vertically. Only layout-specific rules
+   are redefined here; everything else is shared with landscape.
+   ═══════════════════════════════════════════════════════════════ */
+
+.sp-main-p {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+  padding: 16px 14px 12px 14px;
+  min-height: 0;
+}
+
+.sp-art-p {
+  flex: 0 0 360px;
+  width: 360px;
+  height: 360px;
+}
+
+.sp-info-p {
+  width: 100%;
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* slightly smaller than landscape - narrower column, still dominant */
+.sp-title-p {
+  font-size: 33px;
+  line-height: 1.12;
+}
+
+.sp-vol-bar-p {
+  width: 120px;
+}
+
+.sp-device-name-p {
+  max-width: 130px;
+}
+
+/* empty state, stacked */
+.sp-main-p-empty {
+  justify-content: center;
+  gap: 34px;
+}
+
+.sp-empty-mark-p svg {
+  width: 210px;
+  height: 210px;
+  display: block;
+}
+
+.sp-main-p-empty .sp-empty-copy {
+  width: 100%;
+  text-align: center;
+}
+
+.sp-main-p-empty .sp-label-rule {
+  margin-left: auto;
+  margin-right: auto;
+}

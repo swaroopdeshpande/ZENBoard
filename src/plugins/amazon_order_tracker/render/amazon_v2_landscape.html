@@ -1,0 +1,57 @@
+{% extends "plugin.html" %}
+
+{% block content %}
+<div class="safe-content">
+  <div class="az-container landscape">
+
+    <!-- Header -->
+    <div class="az-header">
+      <div class="az-header-top">
+        <span class="az-logo">AMAZON</span>
+        <span class="az-mode">{{ display_mode|replace('_', ' ')|upper }}</span>
+      </div>
+      <div class="az-header-line"></div>
+    </div>
+
+    <!-- Orders -->
+    <div class="az-orders">
+      {% for order in orders %}
+      <div class="az-order">
+
+        <!-- Product Image or Status Icon -->
+        <div class="az-img-container {% if order.image_b64 %}has-image{% endif %}" data-status="{{ order.status }}">
+          {% if order.image_b64 %}
+            <img class="az-img" src="data:image/png;base64,{{ order.image_b64 }}" />
+          {% else %}
+            <div class="az-icon-glyph">{{ order.status_icon }}</div>
+          {% endif %}
+        </div>
+
+        <!-- Info -->
+        <div class="az-info">
+          <div class="az-product">{{ order.product_name|truncate(48) }}</div>
+
+          <div class="az-status-row">
+            <div class="az-status-badge" data-status="{{ order.status }}">
+              {{ order.status }}
+            </div>
+            {% if order.delivery_date %}
+            <span class="az-delivery-value">{{ order.delivery_label }}: {{ order.delivery_date }}</span>
+            {% endif %}
+            <span class="az-ordernum">#{{ order.order_number }}</span>
+          </div>
+        </div>
+
+      </div>
+      {% endfor %}
+
+      {% if orders|length < 3 %}
+      <div class="az-filler">
+        <span>That's everything for "{{ display_mode|replace('_', ' ') }}" right now.</span>
+      </div>
+      {% endif %}
+    </div>
+
+  </div>
+</div>
+{% endblock %}

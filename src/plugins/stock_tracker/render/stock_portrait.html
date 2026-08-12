@@ -1,0 +1,53 @@
+{% extends "plugin.html" %}
+
+{% block content %}
+<script>if({{ 'true' if dark else 'false' }}) document.body.classList.add('dark');</script>
+<div class="st-frame-p" style="width: {{ frame_w }}px; height: {{ frame_h }}px;">
+
+  <!-- TOP: bold red company + ticker -->
+  <div class="st-top-p">
+    <div class="st-ticker-row-p">
+      <span class="st-ticker">{{ ticker }}</span>
+      <span class="st-company-p">{{ company_name }}</span>
+    </div>
+    <div class="st-top-right-p">
+      <span class="st-exchange">{{ exchange }}</span>
+      <span class="st-sep">|</span>
+      <span class="st-dot {% if 'OPEN' in market_status %}st-dot-open{% endif %}">&#9679;</span>
+      <span class="st-status">{{ market_status }}</span>
+    </div>
+  </div>
+
+  <div class="st-rule"></div>
+
+  <!-- PRICE -->
+  <div class="st-price-block-p">
+    <div class="st-price-row">
+      <span class="st-price">{{ current_price }}</span>
+      <span class="st-currency">{{ currency }}</span>
+    </div>
+    <div class="st-change {% if change_positive %}st-up{% else %}st-down{% endif %}">
+      {% if change_positive %}&#9650;{% else %}&#9660;{% endif %} {{ change_str }}
+    </div>
+  </div>
+
+  <!-- CHART -->
+  <div class="st-chart-block-p">
+    <div class="st-period-badge">{{ period_label }}</div>
+    <div class="st-chart">{{ chart_svg|safe }}</div>
+  </div>
+
+  <div class="st-rule st-rule-thin"></div>
+
+  <!-- STATS -->
+  <div class="st-stats-p">
+    <div class="st-stat"><span class="st-stat-lbl">Day High</span><span class="st-stat-val">{{ day_high }}</span></div>
+    <div class="st-stat"><span class="st-stat-lbl">Day Low</span><span class="st-stat-val">{{ day_low }}</span></div>
+    <div class="st-stat"><span class="st-stat-lbl">Prev Close</span><span class="st-stat-val">{{ prev_close }}</span></div>
+    <div class="st-stat"><span class="st-stat-lbl">Volume</span><span class="st-stat-val">{{ volume }}</span></div>
+    <div class="st-stat"><span class="st-stat-lbl">52W High</span><span class="st-stat-val">{{ week52_high }}</span></div>
+    <div class="st-stat"><span class="st-stat-lbl">52W Low</span><span class="st-stat-val">{{ week52_low }}</span></div>
+  </div>
+
+</div>
+{% endblock %}

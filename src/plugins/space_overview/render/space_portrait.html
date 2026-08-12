@@ -1,0 +1,91 @@
+<style>
+
+  /* Display margin enforcement (calibrated frame offset) */
+  .safe-content {
+    width: 781px;
+    height: 468px;
+    margin: 12px 11px 0 8px;  /* T=12 R=11 B=0 L=8 (horizontal) */
+    background: white;
+    overflow: hidden;
+  }
+
+  /* Vertical/portrait mode support */
+  @media (max-height: 500px), (orientation: portrait) {
+    .safe-content {
+      width: 468px;
+      height: 781px;
+      margin: 8px 12px 11px 0;  /* T=8 R=12 B=11 L=0 (vertical) */
+    }
+  }
+
+</style>
+{% extends "plugin.html" %}
+{% block content %}
+<div class="space-frame">
+
+    <div class="space-header">
+        <span class="space-dot">•</span>
+        <span class="space-title">SPACE OVERVIEW</span>
+        <span class="space-dot">•</span>
+    </div>
+
+    <!-- Map -->
+    {% if map_b64 %}
+    <img class="space-map space-map-portrait" src="data:image/png;base64,{{ map_b64 }}" alt="ISS Map">
+    {% endif %}
+
+    <!-- ISS stats row -->
+    <div class="iss-stats-row">
+        <div class="iss-stat-p">
+            <div class="stat-lbl">SPEED</div>
+            <div class="stat-val-p">{{ iss.speed }} <span class="stat-unit">KM/H</span></div>
+        </div>
+        <div class="iss-divider-v"></div>
+        <div class="iss-stat-p">
+            <div class="stat-lbl">ALTITUDE</div>
+            <div class="stat-val-p">{{ iss.altitude }} <span class="stat-unit">KM</span></div>
+        </div>
+        <div class="iss-divider-v"></div>
+        <div class="iss-stat-p">
+            <div class="stat-lbl">TIME</div>
+            <div class="stat-val-p">{{ timestamp }}</div>
+        </div>
+    </div>
+
+    <!-- Next Pass -->
+    <div class="pass-box-p">
+        <div class="pass-header">
+            <span class="pass-icon">📅</span>
+            <span class="pass-label">NEXT PASS</span>
+        </div>
+        <div class="pass-row-p">
+            <div class="pass-countdown">{{ next_pass.countdown }}</div>
+            <div class="pass-badge">{{ next_pass.visibility }}</div>
+        </div>
+        {% if next_pass.start_time %}
+        <div class="pass-time">{{ next_pass.start_time }}</div>
+        {% endif %}
+    </div>
+
+    <!-- Launches -->
+    <div class="launches-box-p">
+        {% for launch in launches %}
+        <div class="launch-row">
+            <div class="launch-dot {% if loop.first %}dot-active{% endif %}"></div>
+            <div class="launch-countdown">{{ launch.countdown }}</div>
+            <div class="launch-name">{{ launch.name[:24] }}</div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Moon -->
+    <div class="moon-box-p">
+        <div class="moon-icon-p">🌕</div>
+        <div class="moon-info-p">
+            <div class="moon-phase">{{ moon.phase_name }}</div>
+            <div class="moon-detail">{{ moon.illumination }}% ILLUMINATION &nbsp;|&nbsp; FULL {{ moon.next_full }}</div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

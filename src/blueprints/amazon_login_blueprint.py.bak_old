@@ -1,0 +1,121 @@
+"""
+Amazon Login Blueprint - Simplified Cookie Paste
+Handles cookie capture from user paste
+"""
+
+import json
+import logging
+from pathlib import Path
+from flask import Blueprint, jsonify, request
+
+logger = logging.getLogger(__name__)
+
+amazon_bp = Blueprint('amazon', __name__, url_prefix='/amazon')
+
+SESSION_DIR = Path("/tmp/amazon_tracker_cache")
+SESSION_DIR.mkdir(exist_ok=True)
+SESSION_FILE = SESSION_DIR / "amazon_session.json"
+
+
+@amazon_bp.route('/save-cookies', methods=['POST'])
+def save_cookies():
+    """Save Amazon cookies from user paste."""
+    try:
+        data = request.get_json()
+        session_id = data.get('sessionId', '').strip()
+        ubid_main = data.get('ubidMain', '').strip()
+
+        if not session_id:
+            return jsonify({
+                'success': False,
+                'error': 'session-id cookie required'
+            })
+
+        # Validate looks like a cookie value (not empty, reasonable length)
+        if len(session_id) < 10 or len(session_id) > 500:
+            return jsonify({
+                'success': False,
+                'error': 'session-id looks invalid. Make sure you copied the entire value'
+            })
+
+        # Build cookies dict for requests library
+        cookies = {
+            'session-id': session_id
+        }
+
+        # Add optional ubid-main if provided
+        if ubid_main and len(ubid_main) > 5:
+            cookies['ubid-main'] = ubid_main
+
+        # Save to file
+        import time
+        session_data = {
+            'timestamp': time.time(),
+            'cookies': cookies,
+            'source': 'manual_paste'
+        }
+
+        with open(SESSION_FILE, 'w') as f:
+            json.dump(session_data, f)
+
+        logger.info(f"Amazon cookies saved: {list(cookies.keys())}")
+
+        return jsonify({
+            'success': True,
+            'message': f'Saved {len(cookies)} cookie(s)'
+        })
+
+    except Exception as e:
+        logger.error(f"Save cookies error: {e}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        })
+
+
+@amazon_bp.route('/session-status', methods=['GET'])
+def session_status():
+    """Check if Amazon session exists and is valid."""
+    try:
+        if SESSION_FILE.exists():
+            with open(SESSION_FILE, 'r') as f:
+                session_data = json.load(f)
+
+            import time
+            age = time.time() - session_data.get('timestamp', 0)
+            valid = age < 604800  # 7 days
+
+            return jsonify({
+                'loggedIn': valid,
+                'age_hours': round(age / 3600, 1)
+            })
+
+        return jsonify({
+            'loggedIn': False
+        })
+
+    except Exception as e:
+        logger.error(f"Status check error: {e}")
+        return jsonify({
+            'loggedIn': False,
+            'error': str(e)
+        })
+
+
+@amazon_bp.route('/clear-cookies', methods=['POST'])
+def clear_cookies():
+    """Clear saved Amazon session."""
+    try:
+        if SESSION_FILE.exists():
+            SESSION_FILE.unlink()
+        logger.info("Amazon session cleared")
+        return jsonify({'success': True})
+    except Exception as e:
+        logger.error(f"Clear error: {e}")
+        return jsonify({'success': False, 'error': str(e)})
+
+
+def register_amazon_routes(app):
+    """Register Amazon routes with Flask app."""
+    app.register_blueprint(amazon_bp)
+    logger.info("Amazon login routes registered")

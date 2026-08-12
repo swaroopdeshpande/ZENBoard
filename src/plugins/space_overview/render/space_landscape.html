@@ -1,0 +1,126 @@
+<style>
+
+  /* Display margin enforcement (calibrated frame offset) */
+  .safe-content {
+    width: 781px;
+    height: 468px;
+    margin: 12px 11px 0 8px;  /* T=12 R=11 B=0 L=8 (horizontal) */
+    background: white;
+    overflow: hidden;
+  }
+
+  /* Vertical/portrait mode support */
+  @media (max-height: 500px), (orientation: portrait) {
+    .safe-content {
+      width: 468px;
+      height: 781px;
+      margin: 8px 12px 11px 0;  /* T=8 R=12 B=11 L=0 (vertical) */
+    }
+  }
+
+</style>
+{% extends "plugin.html" %}
+{% block content %}
+{% if theme == 'light' %}<script>document.body.classList.add('light');</script>{% endif %}
+<div class="space-frame">
+
+    <!-- HEADER -->
+    <div class="space-header">
+        <span class="space-dot">•</span>
+        <span class="space-title">SPACE OVERVIEW</span>
+        <span class="space-dot">•</span>
+    </div>
+
+    <!-- MAIN GRID -->
+    <div class="space-main">
+
+        <!-- LEFT: World Map -->
+        <div class="space-map-col">
+            {% if map_b64 %}
+            <img class="space-map" src="data:image/png;base64,{{ map_b64 }}" alt="ISS Map">
+            {% endif %}
+
+            <!-- Bottom left: Moon + Events -->
+            <div class="space-bottom-row">
+                <div class="moon-box">
+                    <div class="moon-icon">🌕</div>
+                    <div class="moon-info">
+                        <div class="moon-phase">{{ moon.phase_name }}</div>
+                        <div class="moon-detail">{{ moon.illumination }}% &nbsp; ILLUMINATION</div>
+                        <div class="moon-detail">FULL {{ moon.next_full }}</div>
+                    </div>
+                </div>
+
+                <div class="events-box">
+                    <div class="events-title">UPCOMING LAUNCHES <span class="space-dot">•</span></div>
+                    <div class="events-timeline">
+                        {% for launch in launches %}
+                        <div class="event-item">
+                            <div class="event-dot {% if loop.first %}dot-active{% endif %}"></div>
+                            <div class="event-info">
+                                <div class="event-countdown">{{ launch.countdown }}</div>
+                                <div class="event-name">{{ launch.name[:20] }}</div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT: ISS Status + Next Pass -->
+        <div class="space-right-col">
+
+            <!-- ISS Status box -->
+            <div class="iss-box">
+                <div class="iss-box-header">
+                    <span class="iss-icon">✕</span>
+                    <span class="iss-label">ISS STATUS</span>
+                </div>
+                <div class="iss-stats">
+                    <div class="iss-stat">
+                        <div class="stat-lbl">SPEED</div>
+                        <div class="stat-val">{{ iss.speed }}</div>
+                        <div class="stat-unit">KM/H</div>
+                    </div>
+                    <div class="iss-divider"></div>
+                    <div class="iss-stat">
+                        <div class="stat-lbl">ALTITUDE</div>
+                        <div class="stat-val">{{ iss.altitude }}</div>
+                        <div class="stat-unit">KM</div>
+                    </div>
+                </div>
+                <div class="iss-coords">
+                    <div class="coord-row">
+                        <span class="coord-lbl">LATITUDE</span>
+                        <span class="coord-val">{{ iss.lat }}°</span>
+                    </div>
+                    <div class="coord-row">
+                        <span class="coord-lbl">LONGITUDE</span>
+                        <span class="coord-val">{{ iss.lng }}°</span>
+                    </div>
+                    <div class="coord-row">
+                        <span class="coord-lbl">TIMESTAMP</span>
+                        <span class="coord-val">{{ timestamp }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Next Pass box -->
+            <div class="pass-box">
+                <div class="pass-header">
+                    <span class="pass-icon">📅</span>
+                    <span class="pass-label">NEXT PASS</span>
+                </div>
+                <div class="pass-countdown">{{ next_pass.countdown }}</div>
+                {% if next_pass.start_time %}
+                <div class="pass-time">{{ next_pass.start_time }}</div>
+                {% endif %}
+                <div class="pass-badge">{{ next_pass.visibility }}</div>
+            </div>
+
+        </div>
+    </div>
+
+</div>
+{% endblock %}

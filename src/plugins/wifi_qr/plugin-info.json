@@ -1,0 +1,6 @@
+{
+    "display_name": "WiFi QR Setup",
+    "id": "wifi_qr",
+    "class": "WifiQr",
+    "repository": ""
+}

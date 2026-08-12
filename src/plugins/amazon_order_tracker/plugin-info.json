@@ -1,0 +1,6 @@
+{
+    "display_name": "Amazon Order Tracker",
+    "id": "amazon_order_tracker",
+    "class": "AmazonOrderTracker",
+    "repository": ""
+}

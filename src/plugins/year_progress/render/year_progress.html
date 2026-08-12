@@ -1,0 +1,41 @@
+<style>
+
+  /* Display margin enforcement (calibrated frame offset) */
+  .safe-content {
+    width: 781px;
+    height: 468px;
+    margin: 12px 11px 0 8px;  /* T=12 R=11 B=0 L=8 (horizontal) */
+    background: white;
+    overflow: hidden;
+  }
+
+  /* Vertical/portrait mode support */
+  @media (max-height: 500px), (orientation: portrait) {
+    .safe-content {
+      width: 468px;
+      height: 781px;
+      margin: 8px 12px 11px 0;  /* T=8 R=12 B=11 L=0 (vertical) */
+    }
+  }
+
+</style>
+{% extends "plugin.html" %}
+
+{% block content %}
+
+<div class="progress-container">
+    <div class="progress-wrapper">
+        <div class="progress-title">{{year}}</div>
+        <div class="progress-subtitle">PROGRESS</div>
+        <div class="progress-bar">
+            <div class="progress-fill" style="width: {{ year_percent }}%; background-color: {{plugin_settings.textColor}};"></div>
+            <div class="progress-remaining" style="background-image: radial-gradient({{plugin_settings.textColor}} 1px, transparent 1px);"></div>
+        </div>
+        <div class="progress-labels">
+            <span>{{year_percent}}% DONE</span>
+            <span>{{days_left}} DAYS LEFT</span>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

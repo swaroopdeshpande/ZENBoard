@@ -1,0 +1,13 @@
+[Unit]
+Description=ZenBoard GPIO Button Service
+After=network.target inkypi.service
+
+[Service]
+Type=simple
+User=zenith
+ExecStart=/usr/bin/python3 /usr/local/bin/zenboard_gpio.py
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

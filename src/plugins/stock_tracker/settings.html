@@ -1,0 +1,58 @@
+<div class="settings-container">
+
+    <div class="form-group">
+        <label class="form-label">Stock Ticker Symbol</label>
+        <input type="text" id="ticker" name="ticker" placeholder="e.g. AAPL, SBIN.NS, INFY.NS, TSLA" class="form-input">
+        <small>
+            For Indian stocks (NSE) add <strong>.NS</strong> suffix (e.g. SBIN.NS, RELIANCE.NS, TCS.NS).
+            For BSE add <strong>.BO</strong>. US stocks use plain ticker (AAPL, MSFT, TSLA).
+        </small>
+    </div>
+
+    <div class="form-group">
+        <label class="form-label">Chart Period</label>
+        <select id="period" name="period" class="form-input">
+            <option value="1d">1 Day (intraday)</option>
+            <option value="5d">1 Week</option>
+            <option value="1mo">1 Month</option>
+            <option value="3mo">3 Months</option>
+            <option value="6mo">6 Months</option>
+            <option value="1y">1 Year</option>
+            <option value="5y">5 Years</option>
+            <option value="max">Max</option>
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label class="form-label">Display Mode</label>
+        <select id="displayMode" name="displayMode" class="form-input">
+            <option value="light">Light (white background)</option>
+            <option value="dark">Dark (black background)</option>
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label class="form-label">Cache Duration (seconds)</label>
+        <input type="number" id="cacheTtl" name="cacheTtl" min="60" max="86400" value="300" class="form-input">
+        <small>How long to cache stock data. 300 = 5 minutes.</small>
+    </div>
+
+    <div class="form-group">
+        <small style="color:#666;">
+            Data from Yahoo Finance's free public endpoint (no API key needed).
+            Fits the calibrated safe area exactly in both landscape and portrait.
+        </small>
+    </div>
+
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        if (typeof pluginSettings !== 'undefined' && pluginSettings) {
+            document.getElementById('ticker').value = pluginSettings.ticker || '';
+            document.getElementById('period').value = pluginSettings.period || '1mo';
+            document.getElementById('cacheTtl').value = pluginSettings.cacheTtl || '300';
+            if (pluginSettings.displayMode) document.getElementById('displayMode').value = pluginSettings.displayMode;
+        }
+    });
+</script>

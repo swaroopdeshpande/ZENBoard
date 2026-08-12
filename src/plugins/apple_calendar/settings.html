@@ -1,0 +1,32 @@
+<div class="settings-container">
+
+    <div class="form-group">
+        <label class="form-label">Calendars (ICS / iCal URLs)</label>
+        <small style="color:#666; display:block; margin-bottom:8px;">
+            Paste any public/secret .ics feed URL - Google Calendar ("Secret address in iCal format"),
+            Apple iCloud public calendar link, Outlook ICS link, or a raw webcal:// link. Add as many as you like.
+        </small>
+        <div id="calendarUrlList">
+            <input type="text" name="calendarURLs[]" placeholder="https://calendar.google.com/calendar/ical/.../basic.ics" class="form-input" style="margin-bottom:8px;">
+        </div>
+        <button type="button" class="btn" onclick="(function(){
+            var list = document.getElementById('calendarUrlList');
+            var input = document.createElement('input');
+            input.type = 'text';
+            input.name = 'calendarURLs[]';
+            input.placeholder = 'https://...ics';
+            input.className = 'form-input';
+            input.style.marginBottom = '8px';
+            list.appendChild(input);
+        })()">+ Add another calendar</button>
+    </div>
+
+    <div class="form-group">
+        <label class="form-label">Theme</label>
+        <select id="theme" name="theme" class="form-input">
+            <option value="red">Red mode (white background, red accents)</option>
+            <option value="black">Black mode (black background, red accents)</option>
+        </select>
+    </div>
+
+</div>

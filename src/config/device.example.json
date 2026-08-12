@@ -1,0 +1,181 @@
+{
+    "name": "InkyPi",
+    "orientation": "horizontal",
+    "inverted_image": null,
+    "scheduler_sleep_time": 60,
+    "startup": false,
+    "display_type": "epd7in5b_V2",
+    "resolution": [
+        800,
+        480
+    ],
+    "playlist_config": {
+        "playlists": [
+            {
+                "name": "new",
+                "start_time": "09:00",
+                "end_time": "22:30",
+                "plugins": [
+                    {
+                        "plugin_id": "rss",
+                        "name": "NEWS",
+                        "plugin_settings": {
+                            "title": "NEWS",
+                            "includeImages": "false",
+                            "fontSize": "large",
+                            "feedUrl": "https://kannada.oneindia.com/rss/feeds/oneindia-kannada-fb.xml",
+                            "selectedFrame": "None",
+                            "topMargin": "",
+                            "bottomMargin": "",
+                            "leftMargin": "",
+                            "rightMargin": "",
+                            "backgroundOption": "color",
+                            "backgroundColor": "#ffffff",
+                            "textColor": "#000000"
+                        },
+                        "refresh": {
+                            "interval": 86400
+                        },
+                        "latest_refresh_time": "2026-08-07T19:06:29.117430+05:30"
+                    },
+                    {
+                        "plugin_id": "unsplash",
+                        "name": "Rains",
+                        "plugin_settings": {
+                            "search_query": "black and white geometry",
+                            "collections": "",
+                            "content_filter": "low",
+                            "color": "",
+                            "orientation": "landscape"
+                        },
+                        "refresh": {
+                            "interval": 3600
+                        },
+                        "latest_refresh_time": "2026-08-07T20:28:52.259806+05:30"
+                    },
+                    {
+                        "plugin_id": "kannada_quotes",
+                        "name": "Kannada",
+                        "plugin_settings": {
+                            "apiKey": "",
+                            "person": "Random kannada jnapeetha award winner"
+                        },
+                        "refresh": {
+                            "scheduled": "08:30"
+                        },
+                        "latest_refresh_time": "2026-08-07T20:43:11.465588+05:30"
+                    },
+                    {
+                        "plugin_id": "oil_price_tracker",
+                        "name": "Oil",
+                        "plugin_settings": {
+                            "apiKey": "",
+                            "oilCode": "BRENT_CRUDE_USD",
+                            "showAll": "on"
+                        },
+                        "refresh": {
+                            "scheduled": "09:00"
+                        },
+                        "latest_refresh_time": "2026-08-07T17:05:02.331284+05:30"
+                    },
+                    {
+                        "plugin_id": "amazon_order_tracker",
+                        "name": "amazon new",
+                        "plugin_settings": {
+                            "tokenJson": "{}",
+                            "cacheTtl": "3600"
+                        },
+                        "refresh": {
+                            "scheduled": "11:00"
+                        },
+                        "latest_refresh_time": "2026-08-07T18:49:08.169728+05:30"
+                    },
+                    {
+                        "plugin_id": "calendar",
+                        "name": "Calendar",
+                        "plugin_settings": {
+                            "calendarColors[]": [
+                                "#007bff"
+                            ],
+                            "calendarURLs[]": [
+                                ""
+                            ],
+                            "viewMode": "dayGridMonth",
+                            "language": "en",
+                            "displayTitle": "true",
+                            "displayWeekends": "true",
+                            "displayEventTime": "true",
+                            "fontSize": "normal",
+                            "selectedFrame": "None",
+                            "topMargin": "",
+                            "bottomMargin": "",
+                            "leftMargin": "",
+                            "rightMargin": "",
+                            "backgroundOption": "color",
+                            "backgroundColor": "#ffffff",
+                            "textColor": "#000000"
+                        },
+                        "refresh": {
+                            "interval": 7200
+                        },
+                        "latest_refresh_time": "2026-08-07T19:32:38.916486+05:30"
+                    }
+                ],
+                "current_plugin_index": 2
+            }
+        ],
+        "active_playlist": "new"
+    },
+    "refresh_info": {
+        "refresh_time": "2026-08-07T20:43:11.465588+05:30",
+        "image_hash": "",
+        "refresh_type": "Playlist",
+        "plugin_id": "kannada_quotes",
+        "playlist": "new",
+        "plugin_instance": "Kannada"
+    },
+    "plugin_order": [
+        "ai_image",
+        "ai_text",
+        "apod",
+        "calendar",
+        "clock",
+        "comic",
+        "countdown",
+        "github",
+        "image_album",
+        "image_folder",
+        "image_upload",
+        "image_url",
+        "newspaper",
+        "rss",
+        "screenshot",
+        "todo_list",
+        "unsplash",
+        "weather",
+        "wpotd",
+        "year_progress",
+        "kannada_quotes",
+        "lines_plugin",
+        "oil_price_tracker",
+        "amazon_order_tracker"
+    ],
+    "log_system_stats": null,
+    "timezone": "Asia/Calcutta",
+    "time_format": "12h",
+    "plugin_cycle_interval_seconds": 3600,
+    "image_settings": {
+        "saturation": 1.0,
+        "brightness": 1.0,
+        "sharpness": 1.0,
+        "contrast": 1.0
+    },
+    "plugins": [
+        {
+            "plugin_id": "quote_card",
+            "class": "Plugin",
+            "name": "Quote & Cartoon Face Card"
+        }
+    ],
+    "welcome_name": "ZENBoard"
+}

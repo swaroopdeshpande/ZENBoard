@@ -1,0 +1,264 @@
+<!-- Amazon Order Tracker - Gmail Edition -->
+<div class="settings-section">
+  <h3>Amazon Order Tracker</h3>
+
+  <!-- Display Mode -->
+  <div class="setting">
+    <label for="displayMode">Display Mode</label>
+    <select name="displayMode" id="displayMode">
+      <option value="todays_deliveries">Today's Deliveries</option>
+      <option value="in_transit">In Transit</option>
+      <option value="latest_orders">Latest Orders</option>
+      <option value="all_active">All Active Orders</option>
+      <option value="this_week">This Week</option>
+      <option value="detailed">Detailed View</option>
+    </select>
+  </div>
+
+  <!-- Cache TTL -->
+  <div class="setting">
+    <label for="cacheTtl">Refresh Interval (seconds)</label>
+    <input type="number" name="cacheTtl" id="cacheTtl" value="3600" min="300" step="60" />
+    <small>Minimum 5 minutes</small>
+  </div>
+
+  <!-- Gmail Authentication -->
+  <div class="settings-subsection">
+    <h4>🔐 Gmail Authentication</h4>
+
+    <div id="tokenStatus" class="token-status hidden">
+      <div class="status-dot online">●</div>
+      <span>Gmail connected</span>
+      <button id="clearTokenBtn" class="btn-small danger" type="button">Disconnect</button>
+    </div>
+
+    <div id="tokenForm" class="token-form">
+      <p style="font-size: 13px; color: #666; margin-bottom: 12px;">
+        Paste your Gmail OAuth token (JSON format):
+      </p>
+
+      <div class="setting">
+        <textarea id="gmailToken" placeholder='{"token": "...", "refresh_token": "...", ...}'
+                  style="width: 100%; height: 200px; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-family: monospace; font-size: 11px; resize: vertical;"></textarea>
+        <small style="color: #999;">Paste entire gmail_token.js content here. Token stored locally on Pi only.</small>
+      </div>
+
+      <button id="saveTokenBtn" class="btn btn-primary" type="button" style="margin-top: 12px;">
+        ✓ Save Gmail Token
+      </button>
+    </div>
+  </div>
+
+  <!-- Info -->
+  <div class="settings-subsection info-box">
+    <h4>ℹ️ How It Works</h4>
+    <ul>
+      <li>Parses Amazon order emails from your Gmail</li>
+      <li>Extracts order #, product, status, delivery date</li>
+      <li>Displays filtered by mode (today, in-transit, etc)</li>
+      <li>Orders refresh every hour (custom interval)</li>
+      <li>Gmail token stored <strong>only on your Pi</strong></li>
+    </ul>
+  </div>
+
+</div>
+
+<style>
+.settings-section {
+  max-width: 600px;
+}
+
+.settings-subsection {
+  margin-top: 24px;
+  padding: 16px;
+  background: #f9f9f9;
+  border-radius: 6px;
+  border-left: 3px solid #1f77d1;
+}
+
+.settings-subsection h4 {
+  margin-top: 0;
+  margin-bottom: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+}
+
+.settings-subsection ul {
+  margin: 0;
+  padding-left: 20px;
+  list-style: none;
+}
+
+.settings-subsection li {
+  margin: 6px 0;
+  font-size: 13px;
+  color: #666;
+  padding-left: 20px;
+  position: relative;
+}
+
+.settings-subsection li:before {
+  content: "→";
+  position: absolute;
+  left: 0;
+  color: #1f77d1;
+  font-weight: bold;
+}
+
+.info-box {
+  border-left-color: #0066cc !important;
+}
+
+.info-box h4 {
+  color: #0066cc;
+}
+
+.info-box li:before {
+  color: #0066cc;
+}
+
+.token-status {
+  padding: 12px;
+  background: #e3f2fd;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 13px;
+  border: 1px solid #1f77d1;
+  margin-bottom: 12px;
+}
+
+.token-status.hidden {
+  display: none;
+}
+
+.status-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.status-dot.online {
+  background: #4caf50;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.token-form {
+  background: white;
+  padding: 12px;
+  border-radius: 4px;
+}
+
+.btn-small {
+  padding: 4px 12px;
+  font-size: 12px;
+  margin-left: auto;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+.btn-small.danger {
+  background: #f44336;
+  color: white;
+}
+
+.btn-small.danger:hover {
+  background: #da190b;
+}
+
+textarea {
+  font-family: monospace;
+}
+</style>
+
+<script>
+document.getElementById('saveTokenBtn').addEventListener('click', async function() {
+  const tokenJson = document.getElementById('gmailToken').value.trim();
+
+  if (!tokenJson) {
+    alert('Please paste the Gmail token JSON');
+    return;
+  }
+
+  // Validate JSON
+  let tokenData;
+  try {
+    tokenData = JSON.parse(tokenJson);
+  } catch (e) {
+    alert('Invalid JSON format');
+    return;
+  }
+
+  if (!tokenData.token || !tokenData.refresh_token) {
+    alert('Token must contain "token" and "refresh_token" fields');
+    return;
+  }
+
+  const btn = this;
+  btn.disabled = true;
+  btn.textContent = '⏳ Saving...';
+
+  try {
+    const response = await fetch('/amazon/save-gmail-token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token: tokenData })
+    });
+
+    const data = await response.json();
+
+    if (data.success) {
+      document.getElementById('tokenForm').classList.add('hidden');
+      document.getElementById('tokenStatus').classList.remove('hidden');
+      document.getElementById('gmailToken').value = '';
+      alert('✓ Gmail token saved! Orders will fetch on next refresh.');
+    } else {
+      alert('✗ Error: ' + data.error);
+    }
+  } catch (e) {
+    alert('✗ Error: ' + e.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '✓ Save Gmail Token';
+  }
+});
+
+document.getElementById('clearTokenBtn')?.addEventListener('click', function() {
+  if (confirm('Disconnect Gmail?')) {
+    fetch('/amazon/clear-gmail-token', { method: 'POST' }).then(() => {
+      location.reload();
+    });
+  }
+});
+
+// Check login status on load
+window.addEventListener('load', function() {
+  fetch('/amazon/gmail-status')
+    .then(r => r.json())
+    .then(data => {
+      if (data.connected) {
+        document.getElementById('tokenForm').classList.add('hidden');
+        document.getElementById('tokenStatus').classList.remove('hidden');
+      } else {
+        document.getElementById('tokenForm').classList.remove('hidden');
+        document.getElementById('tokenStatus').classList.add('hidden');
+      }
+    })
+    .catch(() => {});
+});
+</script>
+
+<style>
+.hidden {
+  display: none !important;
+}
+</style>

@@ -1,0 +1,137 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+.temple-frame {
+    width: 100%;
+    height: 100%;
+    background-color: #ffffff;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Noto Sans Kannada', 'Noto Sans', serif;
+    position: relative;
+    border: 8px solid #000000;
+}
+
+/* Temple-style top border pattern */
+.temple-border-top {
+    width: 100%;
+    height: 40px;
+    background: linear-gradient(90deg, #000000 0%, #000000 2%, #ffffff 2%, #ffffff 8%, #000000 8%, #000000 10%, #ffffff 10%, #ffffff 16%, #000000 16%, #000000 18%, #ffffff 18%, #ffffff 24%, #000000 24%, #000000 26%, #ffffff 26%, #ffffff 32%, #000000 32%, #000000 34%, #ffffff 34%, #ffffff 40%, #000000 40%, #000000 42%, #ffffff 42%, #ffffff 48%, #000000 48%, #000000 50%, #ffffff 50%, #ffffff 56%, #000000 56%, #000000 58%, #ffffff 58%, #ffffff 64%, #000000 64%, #000000 66%, #ffffff 66%, #ffffff 72%, #000000 72%, #000000 74%, #ffffff 74%, #ffffff 80%, #000000 80%, #000000 82%, #ffffff 82%, #ffffff 88%, #000000 88%, #000000 90%, #ffffff 90%, #ffffff 96%, #000000 96%);
+    border-bottom: 3px solid #000000;
+    position: relative;
+}
+
+.temple-border-top::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 90%;
+    height: 2px;
+    background-color: #ff0000;
+    opacity: 0.4;
+}
+
+/* Temple-style bottom border pattern */
+.temple-border-bottom {
+    width: 100%;
+    height: 40px;
+    background: linear-gradient(90deg, #000000 0%, #000000 2%, #ffffff 2%, #ffffff 8%, #000000 8%, #000000 10%, #ffffff 10%, #ffffff 16%, #000000 16%, #000000 18%, #ffffff 18%, #ffffff 24%, #000000 24%, #000000 26%, #ffffff 26%, #ffffff 32%, #000000 32%, #000000 34%, #ffffff 34%, #ffffff 40%, #000000 40%, #000000 42%, #ffffff 42%, #ffffff 48%, #000000 48%, #000000 50%, #ffffff 50%, #ffffff 56%, #000000 56%, #000000 58%, #ffffff 58%, #ffffff 64%, #000000 64%, #000000 66%, #ffffff 66%, #ffffff 72%, #000000 72%, #000000 74%, #ffffff 74%, #ffffff 80%, #000000 80%, #000000 82%, #ffffff 82%, #ffffff 88%, #000000 88%, #000000 90%, #ffffff 90%, #ffffff 96%, #000000 96%);
+    border-top: 3px solid #000000;
+    position: relative;
+}
+
+.temple-border-bottom::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 90%;
+    height: 2px;
+    background-color: #ff0000;
+    opacity: 0.4;
+}
+
+/* Main quote container */
+.quote-container {
+    flex: 1;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 30px;
+    position: relative;
+}
+
+.temple-accent-left {
+    width: 8px;
+    height: 60%;
+    background: repeating-linear-gradient(
+        180deg,
+        #000000 0px,
+        #000000 10px,
+        #ffffff 10px,
+        #ffffff 20px
+    );
+    margin-right: 30px;
+    border: 2px solid #000000;
+}
+
+.temple-accent-right {
+    width: 8px;
+    height: 60%;
+    background: repeating-linear-gradient(
+        180deg,
+        #000000 0px,
+        #000000 10px,
+        #ffffff 10px,
+        #ffffff 20px
+    );
+    margin-left: 30px;
+    border: 2px solid #000000;
+}
+
+/* Quote content */
+.quote-content {
+    text-align: center;
+    max-width: 85%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.quote-symbol {
+    font-size: 48px;
+    color: #ff0000;
+    margin-bottom: 16px;
+    opacity: 0.8;
+}
+
+.quote-text {
+    font-size: 36px;
+    font-weight: 600;
+    color: #000000;
+    line-height: 1.5;
+    letter-spacing: 0.5px;
+    margin-bottom: 24px;
+    text-align: center;
+}
+
+.author-name {
+    font-size: 24px;
+    color: #333333;
+    font-style: italic;
+    letter-spacing: 1px;
+    margin-top: 16px;
+    padding-top: 12px;
+    border-top: 2px solid #ff0000;
+    width: 80%;
+}

@@ -1,0 +1,38 @@
+<div class="form-group">
+    <label for="textPrompt" class="form-label">Text Prompt:</label>
+    <input type="text" id="textPrompt" name="textPrompt" placeholder="Type something..." required class="form-input">
+</div>
+
+<div class="form-group">
+    <label for="imageModel" class="form-label">Image Model (Hugging Face, free tier):</label>
+    <select id="imageModel" name="imageModel" class="form-input">
+        <option value="black-forest-labs/FLUX.1-schnell" selected>FLUX.1 [schnell] - best quality, capped free tier</option>
+        <option value="stabilityai/stable-diffusion-xl-base-1.0">Stable Diffusion XL - capped free tier</option>
+        <option value="pollinations/flux">Pollinations - unlimited free, no key, variable style</option>
+    </select>
+    <small style="color:#888">
+        FLUX/SDXL route via Hugging Face's fal-ai provider (needs the key below, limited by HF's small monthly free credit).
+        Pollinations needs no key at all and has no usage cap, but doesn't guarantee which model backend serves each request.
+    </small>
+</div>
+
+<div class="form-group">
+    <label for="randomizePrompt" class="form-label">Randomize Text Prompt:</label>
+    <div class="toggle-container">
+        <input type="checkbox" id="randomizePrompt" name="randomizePrompt" class="toggle-checkbox" value="false" onclick="this.value=this.checked ? 'true' : 'false';">
+        <label for="randomizePrompt" class="toggle-label"></label>
+    </div>
+    <small style="color:#888">Uses OpenRouter's free tier (same key as the AI Text plugin) to creatively rewrite your prompt. Skipped if that key isn't set.</small>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        if (loadPluginSettings) {
+            document.getElementById('textPrompt').value = pluginSettings.textPrompt || '';
+            document.getElementById('randomizePrompt').checked = pluginSettings.randomizePrompt === 'true';
+            if (pluginSettings.imageModel) {
+                document.getElementById('imageModel').value = pluginSettings.imageModel;
+            }
+        }
+    });
+</script>

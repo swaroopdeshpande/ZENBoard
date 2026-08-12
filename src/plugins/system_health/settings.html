@@ -1,0 +1,17 @@
+<div class="settings-container">
+    <div class="form-group">
+        <label class="form-label">Display Mode</label>
+        <select id="displayMode" name="displayMode" class="form-input">
+            <option value="light">Light (white background)</option>
+            <option value="dark">Dark (black background)</option>
+        </select>
+    </div>
+
+    <div class="form-group">
+        <small style="color:#666;">
+            No other configuration needed - reads live from the Pi itself (psutil, vcgencmd, systemd).
+            Red highlights indicate a metric past its warning threshold (CPU/mem/disk/swap %,
+            temp, load average, or a power throttle/undervoltage event - current or historical).
+        </small>
+    </div>
+</div>

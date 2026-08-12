@@ -1,0 +1,45 @@
+{% extends "plugin.html" %}
+
+{% block content %}
+<div class="safe-content">
+  <div class="tvq-frame">
+    <div class="tvq-frame-inner">
+      <span class="tvq-corner tl"></span>
+      <span class="tvq-corner tr"></span>
+      <span class="tvq-corner bl"></span>
+      <span class="tvq-corner br"></span>
+
+      {% if logo_uri %}
+      <img class="tvq-show-logo" src="{{ logo_uri }}" alt="" />
+      {% endif %}
+
+      <div class="tvq-container">
+
+        <!-- Portrait -->
+        <div class="tvq-portrait">
+          {% if portrait_uri %}
+            <img class="tvq-portrait-img" src="{{ portrait_uri }}" />
+          {% else %}
+            <div class="tvq-portrait-placeholder">
+              <span>{{ character_name[0] }}</span>
+            </div>
+          {% endif %}
+        </div>
+
+        <!-- Quote -->
+        <div class="tvq-content">
+          <div class="tvq-quote">&ldquo;{{ quote }}&rdquo;</div>
+          <div class="tvq-attribution">{{ character_name }}</div>
+        </div>
+
+        <!-- Show tag -->
+        <div class="tvq-show-tag">
+          <span class="tvq-show-icon">&#9635;</span>
+          <span>{{ show }}</span>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

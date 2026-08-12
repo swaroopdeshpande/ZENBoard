@@ -1,0 +1,56 @@
+{% extends "plugin.html" %}
+
+{% block content %}
+<div class="safe-content">
+  <div class="az-container detailed">
+
+    {% if order %}
+    <!-- Header -->
+    <div class="az-header-detailed">
+      <span class="az-logo">AMAZON</span>
+      <span class="az-mode-small">ORDER TRACKING</span>
+    </div>
+
+    <!-- Large Product Image or Status Icon -->
+    <div class="az-img-container-detailed {% if order.image_b64 %}has-image{% endif %}" data-status="{{ order.status }}">
+      {% if order.image_b64 %}
+        <img class="az-img-detailed" src="data:image/png;base64,{{ order.image_b64 }}" />
+      {% else %}
+        <div class="az-icon-glyph-detailed">{{ order.status_icon }}</div>
+      {% endif %}
+    </div>
+
+    <!-- Product Info -->
+    <div class="az-detail-content">
+      <h1 class="az-product-detailed">{{ order.product_name }}</h1>
+
+      <!-- Status Badge -->
+      <div class="az-status-badge-detailed" data-status="{{ order.status }}">
+        <span class="az-status-icon">●</span>
+        <span class="az-status-text">{{ order.status }}</span>
+      </div>
+
+      <!-- Delivery Info -->
+      {% if order.delivery_date %}
+      <div class="az-delivery-detailed">
+        <span class="az-delivery-label-detailed">{{ order.delivery_label }}</span>
+        <span class="az-delivery-value-detailed">{{ order.delivery_date }}</span>
+      </div>
+      {% endif %}
+
+      <!-- Order Details -->
+      <div class="az-details-grid">
+        <div class="az-detail-item">
+          <span class="az-detail-label">ORDER #</span>
+          <span class="az-detail-val">{{ order.order_number }}</span>
+        </div>
+      </div>
+    </div>
+
+    {% else %}
+    <div class="az-error">No orders found</div>
+    {% endif %}
+
+  </div>
+</div>
+{% endblock %}

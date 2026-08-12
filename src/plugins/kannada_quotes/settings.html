@@ -1,0 +1,24 @@
+<div class="settings-container">
+    <div class="form-group">
+        <label class="form-label">Display Mode</label>
+        <select id="displayMode" name="displayMode" class="form-input">
+            <option value="landscape">Landscape</option>
+            <option value="portrait">Portrait</option>
+        </select>
+    </div>
+    <div class="form-group">
+        <label class="form-label">Dark Mode</label>
+        <select id="darkMode" name="darkMode" class="form-input">
+            <option value="false">Light</option>
+            <option value="true">Dark</option>
+        </select>
+    </div>
+</div>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    if (typeof pluginSettings !== 'undefined' && pluginSettings) {
+        if (pluginSettings.displayMode) document.getElementById('displayMode').value = pluginSettings.displayMode || 'landscape';
+        if (pluginSettings.darkMode)    document.getElementById('darkMode').value = pluginSettings.darkMode || 'false';
+    }
+});
+</script>

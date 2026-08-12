@@ -1,0 +1,184 @@
+<div class="settings-section">
+  <h3>Spotify Now Playing</h3>
+
+  <div class="setting">
+    <label for="refreshNote">Recommended refresh interval</label>
+    <p class="sp-note">
+      Set this instance's refresh to <strong>60 seconds</strong> in the playlist.
+      InkyPi skips the e-paper refresh automatically whenever the rendered image
+      is unchanged, so a paused or idle Spotify will not wake the panel.
+    </p>
+  </div>
+
+  <!-- ── connection ── -->
+  <div class="settings-subsection">
+    <h4>Spotify Account</h4>
+
+    <div id="spCredsWarn" class="sp-warn hidden">
+      Add <code>SPOTIFY_CLIENT_ID</code> and <code>SPOTIFY_CLIENT_SECRET</code> on the
+      <a href="/api-keys" target="_blank">API Keys page</a> first.
+    </div>
+
+    <div id="spConnected" class="sp-status-ok hidden">
+      <span class="sp-dot"></span>
+      <span>Spotify connected</span>
+      <button id="spDisconnect" class="sp-btn-danger" type="button">Disconnect</button>
+    </div>
+
+    <div id="spConnectFlow" class="hidden">
+      <p class="sp-step">
+        <strong>1.</strong> In your
+        <a href="https://developer.spotify.com/dashboard" target="_blank">Spotify dashboard</a>,
+        add this exact Redirect URI to your app:
+      </p>
+      <div class="sp-uri" id="spRedirectUri">http://127.0.0.1:8888/callback</div>
+      <p class="sp-hint">
+        Spotify only permits HTTPS or an explicit loopback address, so the Pi's own
+        LAN address cannot be used. This URI never needs to actually load.
+      </p>
+
+      <p class="sp-step"><strong>2.</strong> Authorize (any device / browser is fine):</p>
+      <button id="spAuthorize" class="sp-btn" type="button">Open Spotify authorization</button>
+
+      <p class="sp-step">
+        <strong>3.</strong> Your browser will land on a page that fails to load
+        (<code>127.0.0.1</code> refused to connect) &mdash; that is expected.
+        Copy the <em>entire URL</em> from the address bar and paste it here:
+      </p>
+      <input type="text" id="spPasted" class="sp-input"
+             placeholder="http://127.0.0.1:8888/callback?code=..." />
+      <button id="spSubmit" class="sp-btn" type="button">Connect Spotify</button>
+      <div id="spError" class="sp-error hidden"></div>
+    </div>
+  </div>
+
+  <div class="settings-subsection info-box">
+    <h4>Notes</h4>
+    <ul>
+      <li>Shows track, artist, album, artwork, progress, shuffle/repeat, device and volume</li>
+      <li>Album artwork is converted to black/white/red and cached per album</li>
+      <li>Paused shows <strong>PAUSED</strong>; idle shows <strong>NOTHING PLAYING</strong></li>
+      <li>Access tokens refresh automatically; the refresh token is stored only on this Pi</li>
+    </ul>
+  </div>
+</div>
+
+<style>
+.settings-section { max-width: 620px; }
+.settings-subsection {
+  margin-top: 24px; padding: 16px; background: #f9f9f9;
+  border-radius: 6px; border-left: 3px solid #1db954;
+}
+.settings-subsection h4 { margin: 0 0 12px; font-size: 14px; color: #333; }
+.info-box { border-left-color: #0066cc !important; }
+.info-box h4 { color: #0066cc; }
+.settings-subsection ul { margin: 0; padding-left: 20px; list-style: none; }
+.settings-subsection li {
+  margin: 6px 0; font-size: 13px; color: #666;
+  padding-left: 18px; position: relative;
+}
+.settings-subsection li:before {
+  content: "→"; position: absolute; left: 0; color: #0066cc; font-weight: bold;
+}
+.sp-note, .sp-hint { font-size: 13px; color: #666; line-height: 1.5; margin: 6px 0 0; }
+.sp-hint { font-style: italic; }
+.sp-step { font-size: 13px; color: #444; margin: 16px 0 8px; line-height: 1.5; }
+.sp-uri {
+  font-family: monospace; font-size: 13px; background: #fff;
+  border: 1px solid #ddd; border-radius: 4px; padding: 9px 11px;
+  word-break: break-all; user-select: all;
+}
+.sp-input {
+  width: 100%; padding: 9px 11px; border: 1px solid #ddd; border-radius: 4px;
+  font-family: monospace; font-size: 12px; margin-bottom: 10px;
+}
+.sp-btn {
+  padding: 9px 16px; font-size: 14px; background: #1db954; color: #fff;
+  border: none; border-radius: 4px; cursor: pointer;
+}
+.sp-btn:hover { background: #17a044; }
+.sp-btn-danger {
+  padding: 4px 12px; font-size: 12px; margin-left: auto;
+  background: #f44336; color: #fff; border: none; border-radius: 3px; cursor: pointer;
+}
+.sp-status-ok {
+  display: flex; align-items: center; gap: 10px; padding: 12px;
+  background: #e8f5e9; border: 1px solid #1db954; border-radius: 4px; font-size: 13px;
+}
+.sp-dot { width: 10px; height: 10px; border-radius: 50%; background: #1db954; }
+.sp-warn {
+  padding: 11px; background: #fff8e1; border: 1px solid #ffb300;
+  border-radius: 4px; font-size: 13px; color: #7a5c00; margin-bottom: 12px;
+}
+.sp-error {
+  margin-top: 10px; padding: 10px; background: #ffebee; border: 1px solid #e53935;
+  border-radius: 4px; font-size: 13px; color: #b71c1c;
+}
+code { background: #eee; padding: 2px 5px; border-radius: 3px; font-family: monospace; font-size: 12px; }
+.hidden { display: none !important; }
+</style>
+
+<script>
+(function () {
+  const $ = (id) => document.getElementById(id);
+
+  function refreshStatus() {
+    fetch('/spotify/status')
+      .then(r => r.json())
+      .then(d => {
+        $('spRedirectUri').textContent = d.redirect_uri;
+        $('spCredsWarn').classList.toggle('hidden', !!d.credentials_set);
+        $('spConnected').classList.toggle('hidden', !d.connected);
+        $('spConnectFlow').classList.toggle('hidden', !!d.connected);
+      })
+      .catch(() => {});
+  }
+
+  $('spAuthorize').addEventListener('click', function () {
+    fetch('/spotify/auth-url')
+      .then(r => r.json())
+      .then(d => {
+        if (d.url) { window.open(d.url, '_blank'); }
+        else { showError(d.error || 'Could not build authorization URL'); }
+      })
+      .catch(e => showError(e.message));
+  });
+
+  function showError(msg) {
+    const el = $('spError');
+    el.textContent = msg;
+    el.classList.remove('hidden');
+  }
+
+  $('spSubmit').addEventListener('click', function () {
+    const pasted = $('spPasted').value.trim();
+    $('spError').classList.add('hidden');
+    if (!pasted) { showError('Paste the redirect URL first'); return; }
+
+    const btn = this;
+    btn.disabled = true;
+    btn.textContent = 'Connecting...';
+
+    fetch('/spotify/exchange', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ pasted: pasted })
+    })
+      .then(r => r.json())
+      .then(d => {
+        if (d.success) { $('spPasted').value = ''; refreshStatus(); }
+        else { showError(d.error || 'Failed'); }
+      })
+      .catch(e => showError(e.message))
+      .finally(() => { btn.disabled = false; btn.textContent = 'Connect Spotify'; });
+  });
+
+  $('spDisconnect').addEventListener('click', function () {
+    if (!confirm('Disconnect Spotify?')) return;
+    fetch('/spotify/disconnect', { method: 'POST' }).then(refreshStatus);
+  });
+
+  window.addEventListener('load', refreshStatus);
+  refreshStatus();
+})();
+</script>
