@@ -31,7 +31,7 @@ class WifiQr(BasePlugin):
             status = {}
 
         ap_ssid = status.get("ap_ssid") or "ZenBoard-Setup"
-        ap_password = status.get("ap_password") or "zenboard123"
+        ap_password = status.get("ap_password") or "changeme-zenboard"
         ap_ip = status.get("ap_ip") or "192.168.4.1"
         setup_url = f"http://{ap_ip}/setup"
 

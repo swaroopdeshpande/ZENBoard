@@ -82,7 +82,7 @@ lifetime; this makes usage visible.
 
 `zenboard_wifi_monitor.service` (`/usr/local/bin/zenboard_wifi_monitor.py`) runs at
 boot: waits up to 45s for a known WiFi connection. If none found, spins up an
-`nmcli`-managed AP (`ZenBoard-Setup` / `zenboard123`, `192.168.4.1`), signals InkyPi via
+`nmcli`-managed AP (`ZenBoard-Setup`, password read from `/etc/zenboard/ap_password`, `192.168.4.1`), signals InkyPi via
 `POST /api/wifi_setup/show_qr` (which now also triggers an actual display refresh — this
 was a real bug, the route used to only write a status file and never pushed to the
 panel), and serves a captive setup page (`wifi_setup_bp` in `blueprints/main.py`) where
