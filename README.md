@@ -1,7 +1,7 @@
 # ZenBoard
 
 <p align="center">
-  <img src="images/hero.png" alt="ZenBoard - e-ink dashboard in a wooden frame" width="100%">
+  <img src="images/hero.jpg" alt="ZenBoard - e-ink dashboard in a wooden frame" width="100%">
 </p>
 
 A personal e-ink dashboard, built on top of [InkyPi](https://github.com/fatihak/InkyPi),
@@ -56,12 +56,12 @@ in here.
 ## Gallery
 
 <p align="center">
-  <img src="images/frame.png" alt="The frame" width="49%">
-  <img src="images/plugins.png" alt="Plugin gallery" width="49%">
+  <img src="images/itachi.jpg" alt="AI-generated image plugin, red LED accent" width="49%">
+  <img src="images/weather.jpg" alt="Weather dashboard" width="49%">
 </p>
 <p align="center">
-  <img src="images/led-strip.png" alt="WS2812B LED accent strip" width="49%">
-  <img src="images/presence.png" alt="mmWave presence sensor" width="49%">
+  <img src="images/space.jpg" alt="Space Overview - ISS tracker and upcoming launches" width="49%">
+  <img src="images/sheldon.jpg" alt="TV Quotes with cross-hatch character portrait" width="32%">
 </p>
 
 ## Credits
