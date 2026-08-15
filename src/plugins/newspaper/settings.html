@@ -46,12 +46,55 @@
     </div>
 </div>
 
+<!-- Prajavani-only options. The Freedom Forum titles are front-page-only, so
+     these are hidden unless the Prajavani e-paper source is selected. -->
+<div class="form-group" id="prajavaniOptions" style="display:none;">
+    <div class="form-group">
+        <label for="prajavaniCrop" class="form-label">Page view:</label>
+        <select id="prajavaniCrop" name="prajavaniCrop" class="form-input">
+            <option value="full">Whole page</option>
+            <option value="top">Top of page (larger, more readable)</option>
+        </select>
+    </div>
+    <div class="form-group">
+        <label for="prajavaniSkipAds" class="form-label">Skip advertisement pages:</label>
+        <select id="prajavaniSkipAds" name="prajavaniSkipAds" class="form-input">
+            <option value="true">Yes</option>
+            <option value="false">No</option>
+        </select>
+    </div>
+    <p style="font-size:12px; opacity:0.75; line-height:1.5;">
+        A random page is picked each refresh, never a front page. Only the free
+        Bengaluru edition is available without a subscription, and it typically
+        offers just a few full pages per day &mdash; so the rotation is small.
+    </p>
+</div>
+
 <script>
     // Pass the newspapers data as a JavaScript object
     const newspapers = {{ newspapers|tojson }};
 </script>
 
 <script>
+
+    function togglePrajavaniOptions() {
+        const slug = (document.getElementById("newspaperSlug").value || "").toUpperCase();
+        const box = document.getElementById("prajavaniOptions");
+        if (box) box.style.display = (slug === "PRAJAVANI") ? "block" : "none";
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+        if (typeof pluginSettings !== "undefined" && pluginSettings) {
+            if (pluginSettings.prajavaniCrop) {
+                document.getElementById("prajavaniCrop").value = pluginSettings.prajavaniCrop;
+            }
+            if (pluginSettings.prajavaniSkipAds) {
+                document.getElementById("prajavaniSkipAds").value = pluginSettings.prajavaniSkipAds;
+            }
+        }
+        togglePrajavaniOptions();
+    });
+
     function updateSlugAndLocation() {
         const newspaperInput = document.getElementById("newspaper");
         const slugInput = document.getElementById("newspaperSlug");
@@ -72,6 +115,7 @@
             // Always filter newspapers based on the current location
             filterNewspapersByLocation();
         }
+        togglePrajavaniOptions();
     }
 
     function filterNewspapersByLocation() {
