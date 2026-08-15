@@ -1,0 +1,26 @@
+<div class="settings-container">
+    <div class="form-group">
+        <label class="form-label">Data source</label>
+        <p style="font-size:13px; line-height:1.6; opacity:0.85;">
+            Apple Health has no cloud API, so this plugin renders whatever your
+            iPhone last pushed. Set up an iOS <b>Shortcuts personal automation</b>
+            that reads your Health samples and POSTs JSON to:
+        </p>
+        <p style="font-size:13px; font-family:monospace; margin-top:8px;">
+            <span id="pushUrl">/api/apple_health/push</span>
+        </p>
+        <script>
+            // Built from whatever host you loaded this page on, rather than a
+            // hardcoded address - keeps the real IP out of the public repo and
+            // shows the correct one whether you're on LAN or Tailscale.
+            document.getElementById('pushUrl').textContent =
+                window.location.origin + '/api/apple_health/push';
+        </script>
+        <p style="font-size:13px; line-height:1.6; margin-top:8px; opacity:0.85;">
+            Check what arrived at
+            <span style="font-family:monospace;">/api/apple_health/latest</span>.
+            Goals (Move/Exercise/Stand) come from the same payload, so the rings
+            match your watch exactly.
+        </p>
+    </div>
+</div>

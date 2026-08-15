@@ -8,6 +8,7 @@ from pathlib import Path
 
 from PIL import Image, ImageDraw, ImageFont
 from plugins.base_plugin.base_plugin import BasePlugin
+from utils.image_utils import stem_darken
 
 logger = logging.getLogger(__name__)
 
@@ -87,9 +88,22 @@ class Ereader(BasePlugin):
             page, len(pages), portrait
         )
 
-        # Tag for partial refresh (page turns within same orientation)
+        # Tag for partial refresh (page turns within same orientation) -
+        # but force a real full refresh (with Clear()) every 15 page turns
+        # so faint ghosting never has a chance to silently build up across
+        # a long reading session. The skip-Clear "partial" mode still
+        # redraws every pixel correctly each time, it just never resets
+        # the panel - this periodic full Clear() is that reset.
         if action in ("next", "prev") and partial_ok:
-            img._partial = True
+            all_states = self._load_all_states()
+            turn_count = all_states.get("_partial_turn_count", 0) + 1
+            if turn_count >= 15:
+                turn_count = 0
+                logger.info("Ereader: forcing full refresh (15 partial turns reached)")
+            else:
+                img._partial = True
+            all_states["_partial_turn_count"] = turn_count
+            self._save_all_states(all_states)
 
         # Notify LED service of orientation
         try:
@@ -148,12 +162,23 @@ class Ereader(BasePlugin):
 
     def _save_state(self, book_file, state):
         try:
-            try:
-                with open(STATE_FILE) as f:
-                    all_states = json.load(f)
-            except Exception:
-                all_states = {}
+            all_states = self._load_all_states()
             all_states[book_file] = state
+            self._save_all_states(all_states)
+        except Exception as e:
+            logger.warning(f"State save failed: {e}")
+
+    @staticmethod
+    def _load_all_states():
+        try:
+            with open(STATE_FILE) as f:
+                return json.load(f)
+        except Exception:
+            return {}
+
+    @staticmethod
+    def _save_all_states(all_states):
+        try:
             with open(STATE_FILE, "w") as f:
                 json.dump(all_states, f)
         except Exception as e:
@@ -236,7 +261,10 @@ class Ereader(BasePlugin):
     def _extract_pdf(self, book_file):
         import fitz
         doc = fitz.open(book_file)
-        return "\n\n".join(p.get_text() for p in doc)
+        try:
+            return "\n\n".join(p.get_text() for p in doc)
+        finally:
+            doc.close()
 
     # ── Pagination ─────────────────────────────────────────────────────
     def _paginate(self, text, font_name, font_size, portrait):
@@ -293,7 +321,7 @@ class Ereader(BasePlugin):
                      page_num, total_pages, portrait):
         bg    = BG_OPTIONS.get(bg_name, (255, 255, 255))
         black = TEXT_COLOR.get(bg_name, (0, 0, 0))
-        grey  = (180, 180, 180) if bg_name == "black" else (120, 120, 120)
+        grey  = (255, 255, 255) if bg_name == "black" else (0, 0, 0)  # was low-contrast gray - dithers into visible noise on this BWR panel
 
         if portrait:
             # Draw on a 480×800 canvas, then rotate 90° → 800×480
@@ -315,7 +343,7 @@ class Ereader(BasePlugin):
 
         # Status bar
         bar_y = ch - STATUS_BAR_H
-        draw.line([(MARGIN, bar_y), (cw - MARGIN, bar_y)], fill=(180, 180, 180), width=1)
+        draw.line([(MARGIN, bar_y), (cw - MARGIN, bar_y)], fill=black, width=1)
         draw.text((MARGIN, bar_y + 8),
                   f"Page {page_num + 1} of {total_pages}",
                   font=sfont, fill=grey)
@@ -325,14 +353,14 @@ class Ereader(BasePlugin):
             bx = MARGIN + 110
             bw = cw - MARGIN * 2 - 120
             prog = int((page_num / (total_pages - 1)) * bw)
-            draw.rectangle([(bx, bar_y + 14), (bx + bw, bar_y + 18)], fill=(210, 210, 210))
-            draw.rectangle([(bx, bar_y + 14), (bx + prog, bar_y + 18)], fill=(60, 60, 60))
+            draw.rectangle([(bx, bar_y + 14), (bx + bw, bar_y + 18)], outline=black, width=1)
+            draw.rectangle([(bx, bar_y + 14), (bx + prog, bar_y + 18)], fill=black)
 
         # Rotate for portrait
         if portrait:
             img = img.rotate(90, expand=True)  # 480×800 → 800×480
 
-        return img
+        return stem_darken(img)
 
     # ── Font loader ────────────────────────────────────────────────────
     def _load_font(self, font_name, font_size):

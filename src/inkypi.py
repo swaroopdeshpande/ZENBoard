@@ -27,6 +27,8 @@ from display.display_manager import DisplayManager
 from refresh_task import RefreshTask
 from blueprints.main import main_bp
 from blueprints.main import wifi_setup_bp
+from blueprints.family_notes_blueprint import family_notes_bp
+from blueprints.apple_health_blueprint import apple_health_bp
 from blueprints.amazon_login_blueprint import amazon_bp
 from blueprints.spotify_blueprint import spotify_bp
 from blueprints.settings import settings_bp
@@ -80,6 +82,8 @@ app.config['MAX_FORM_PARTS'] = 10_000
 # Register Blueprints
 app.register_blueprint(main_bp)
 app.register_blueprint(wifi_setup_bp)
+app.register_blueprint(family_notes_bp)
+app.register_blueprint(apple_health_bp)
 app.register_blueprint(settings_bp)
 app.register_blueprint(plugin_bp)
 app.register_blueprint(playlist_bp)

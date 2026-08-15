@@ -2,7 +2,10 @@
   "sheldon": {
     "display_name": "Sheldon Cooper",
     "show": "The Big Bang Theory",
-    "portraits": ["sheldon.png"],
+    "portraits": [
+      "sheldon.png",
+      "sheldon_2.png"
+    ],
     "quotes": [
       "I'm not crazy. My mother had me tested.",
       "Bazinga!",
@@ -27,7 +30,10 @@
   "penny": {
     "display_name": "Penny",
     "show": "The Big Bang Theory",
-    "portraits": ["penny.png"],
+    "portraits": [
+      "penny.png",
+      "penny_2.png"
+    ],
     "quotes": [
       "Sweetie, I love you, but you're the worst liar in the world.",
       "I make coffee. Which, when you think about it, is a lot like nursing, but I don't have to change bedpans.",
@@ -44,7 +50,10 @@
   "leonard": {
     "display_name": "Leonard Hofstadter",
     "show": "The Big Bang Theory",
-    "portraits": ["leonard.png"],
+    "portraits": [
+      "leonard.png",
+      "leonard_2.png"
+    ],
     "quotes": [
       "Anything worth doing has a certain amount of risk associated with it.",
       "I'm not just anybody. I'm your boyfriend.",
@@ -59,7 +68,10 @@
   "howard": {
     "display_name": "Howard Wolowitz",
     "show": "The Big Bang Theory",
-    "portraits": ["howard.png"],
+    "portraits": [
+      "howard.png",
+      "howard_2.png"
+    ],
     "quotes": [
       "I have a Master's degree, from MIT, I'll have you know. People assume because I don't have a PhD, they can call me 'Mister.' Well, it's 'Master.' I have a Master's degree.",
       "I'm engaged to a microbiologist. That's like a triple word score in Words with Nerds.",
@@ -72,7 +84,10 @@
   "raj": {
     "display_name": "Raj Koothrappali",
     "show": "The Big Bang Theory",
-    "portraits": ["raj.png"],
+    "portraits": [
+      "raj.png",
+      "raj_2.png"
+    ],
     "quotes": [
       "I can't talk to women unless I've had a drink. And frankly, one drink isn't enough. I need to be at the point where I'm one drink away from a coma.",
       "In my culture, arranged marriages are considered completely normal.",
@@ -83,7 +98,10 @@
   "amy": {
     "display_name": "Amy Farrah Fowler",
     "show": "The Big Bang Theory",
-    "portraits": ["amy.png"],
+    "portraits": [
+      "amy.png",
+      "amy_2.png"
+    ],
     "quotes": [
       "I'm a neurobiologist. I know how the brain works better than anyone at this table, and even I don't understand men.",
       "Sheldon, I appreciate the fact that intimacy is a difficult and frightening thing for you.",
@@ -94,7 +112,10 @@
   "bernadette": {
     "display_name": "Bernadette Rostenkowski",
     "show": "The Big Bang Theory",
-    "portraits": ["bernadette.png"],
+    "portraits": [
+      "bernadette.png",
+      "bernadette_2.png"
+    ],
     "quotes": [
       "I may look like a nice sweet little girl, but I will cut you.",
       "I have a PhD in microbiology. I could kill you and testify at my own trial as an expert witness.",

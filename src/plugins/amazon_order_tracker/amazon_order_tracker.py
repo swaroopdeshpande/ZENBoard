@@ -3,6 +3,8 @@ Amazon Order Tracker - Gmail API Edition v3
 Robust subject-pattern parsing, dedup, correct status priority sort.
 """
 
+import email
+import imaplib
 import logging
 import json
 import re
@@ -10,14 +12,12 @@ import time
 import base64
 import io
 from datetime import datetime, timedelta
+from email.header import decode_header
+from email.utils import parsedate_to_datetime
 from pathlib import Path
 
 import requests
 from PIL import Image
-from google.oauth2.credentials import Credentials
-from google.auth.transport.requests import Request
-from google.auth.exceptions import RefreshError
-from googleapiclient.discovery import build
 
 from plugins.base_plugin.base_plugin import BasePlugin
 
@@ -27,7 +27,6 @@ CACHE_DIR = Path("/home/zenith/InkyPi/src/plugins/amazon_order_tracker/.cache")
 CACHE_DIR.mkdir(exist_ok=True)
 
 CACHE_FILE = CACHE_DIR / "amazon_orders_cache.json"
-TOKEN_FILE = CACHE_DIR / "gmail_token.json"
 
 # Subject prefix -> status. Checked in order (most specific first).
 # Real-world subjects mined from actual Amazon.in account (see conversation):
@@ -80,6 +79,13 @@ MORE_ITEMS_RE = re.compile(r"and\s+(\d+)\s+(?:more|other)\s+items?", re.IGNORECA
 # Out-for-delivery/Delivered templates - those only have logos/icons).
 IMAGE_URL_RE = re.compile(r"https://m\.media-amazon\.com/images/I/[A-Za-z0-9+_./-]+\.jpg")
 
+# "Arriving Wed, Aug 13" / "Arriving today" / "Guaranteed delivery by Wed, August 13"
+ARRIVING_RE = re.compile(
+    r"(?:Arriving|Guaranteed delivery by)\s*[:\-]?\s*"
+    r"(today|tomorrow|[A-Za-z]{3,9},?\s+[A-Za-z]{3,9}\s+\d{1,2})",
+    re.IGNORECASE,
+)
+
 STATUS_ICON = {
     "Ordered": "ORD",
     "Shipped": "SHP",
@@ -130,9 +136,9 @@ class AmazonOrderTracker(BasePlugin):
         logger.info("=== Amazon Order Tracker (Gmail v3): Starting ===")
 
         display_mode = settings.get("displayMode", "todays_deliveries")
-        cache_ttl = int(settings.get("cacheTtl", "3600"))
+        cache_ttl = int(settings.get("cacheTtl", "900"))
 
-        orders = self._get_orders(cache_ttl)
+        orders, auth_error = self._get_orders(cache_ttl, settings)
         if not orders:
             raise RuntimeError("No Amazon orders found in Gmail. Check credentials.")
 
@@ -185,6 +191,7 @@ class AmazonOrderTracker(BasePlugin):
                 "order": display_orders[0] if display_orders else None,
                 "display_mode": display_mode,
                 "multi": len(display_orders) > 1,
+                "auth_error": auth_error,
                 "plugin_settings": settings,
             }
         )
@@ -233,6 +240,10 @@ class AmazonOrderTracker(BasePlugin):
                 o for o in orders
                 if o.get("status") in ("Out for Delivery", "Delivery Attempted")
                 or (o.get("status") == "Delivered" and o.get("is_today"))
+                # Shipped order carrying an "Arriving today" promise from the
+                # email body - don'''t wait on Amazon'''s Out-for-delivery email
+                # to actually send before showing it as due today.
+                or (o.get("status") == "Shipped" and o.get("arriving_today"))
             ]
 
         elif mode == "in_transit":
@@ -266,54 +277,53 @@ class AmazonOrderTracker(BasePlugin):
     # Fetch / cache
     # ------------------------------------------------------------------
 
-    def _get_orders(self, cache_ttl):
+    def _get_orders(self, cache_ttl, settings):
+        """Returns (orders, auth_error). auth_error is set whenever we had to
+        fall back to a stale cache because the live Gmail fetch failed - the
+        caller surfaces this as a visible banner instead of silently serving
+        old data with no indication anything's wrong (that silent fallback
+        is exactly what let a week-old "Shipped" status sit unnoticed)."""
         if CACHE_FILE.exists():
             try:
                 with open(CACHE_FILE, "r") as f:
                     cached = json.load(f)
                 if time.time() - cached.get("timestamp", 0) < cache_ttl:
                     logger.info("Using cached orders")
-                    return cached.get("orders", [])
+                    return cached.get("orders", []), None
             except Exception as e:
                 logger.warning(f"Cache read failed: {e}")
 
         try:
-            orders = self._fetch_from_gmail()
+            orders = self._fetch_via_imap(settings)
             self._save_cache(orders)
-            return orders
+            return orders, None
         except Exception as e:
             logger.error(f"Gmail fetch failed: {e}")
             if CACHE_FILE.exists():
                 try:
                     with open(CACHE_FILE, "r") as f:
                         cached = json.load(f)
-                    return cached.get("orders", [])
+                    cache_age_hours = round((time.time() - cached.get("timestamp", 0)) / 3600, 1)
+                    return cached.get("orders", []), {
+                        "message": str(e),
+                        "cache_age_hours": cache_age_hours,
+                    }
                 except Exception:
                     pass
             raise RuntimeError(f"Failed to fetch orders: {e}")
 
-    def _fetch_from_gmail(self):
-        logger.info("Fetching Amazon orders from Gmail...")
+    def _fetch_via_imap(self, settings):
+        """Gmail App Password + IMAP - no OAuth, no Google Cloud project, no
+        7-day refresh-token expiry. Uses Gmail's X-GM-RAW IMAP extension,
+        which accepts the exact same search syntax as the old Gmail API
+        query did, so the filtering logic didn't need to change."""
+        gmail_email = (settings.get("gmailEmail") or "").strip()
+        app_password = (settings.get("gmailAppPassword") or "").strip().replace(" ", "")
 
-        if not TOKEN_FILE.exists():
-            raise RuntimeError("No Gmail token found. Paste token in settings.")
+        if not gmail_email or not app_password:
+            raise RuntimeError("Gmail address and app password required. Set them in plugin settings.")
 
-        with open(TOKEN_FILE, "r") as f:
-            token_data = json.load(f)
-
-        creds = Credentials.from_authorized_user_info(token_data)
-
-        if creds.expired:
-            try:
-                creds.refresh(Request())
-                # Persist refreshed token
-                with open(TOKEN_FILE, "w") as f:
-                    json.dump(json.loads(creds.to_json()), f)
-            except RefreshError as e:
-                logger.error(f"Token refresh failed: {e}")
-                raise RuntimeError("Gmail token expired or invalid")
-
-        service = build("gmail", "v1", credentials=creds)
+        logger.info("Fetching Amazon orders via IMAP...")
 
         query = (
             'from:(amazon.in) '
@@ -321,36 +331,72 @@ class AmazonOrderTracker(BasePlugin):
             '"Delivery attempted" OR "Problem during shipping" OR "Payment declined" OR '
             'cancelled OR canceled OR refund OR return)'
         )
-        results = service.users().messages().list(userId="me", q=query, maxResults=150).execute()
-        messages = results.get("messages", [])
-        logger.info(f"Gmail search returned {len(messages)} messages")
 
-        by_order = {}
-        skipped = 0
+        # 15s socket timeout - imaplib has NO timeout by default, so a
+        # single stalled read can hang the whole render forever with zero
+        # error logged (this hung for 10+ minutes before this fix landed).
+        imap = imaplib.IMAP4_SSL("imap.gmail.com", timeout=15)
+        try:
+            imap.login(gmail_email, app_password)
+        except imaplib.IMAP4.error as e:
+            raise RuntimeError(f"IMAP login failed - check email/app password: {e}")
 
-        for msg in messages:
-            try:
-                msg_data = service.users().messages().get(userId="me", id=msg["id"]).execute()
-                order = self._parse_amazon_email(msg_data)
-                if not order:
+        try:
+            imap.select("INBOX", readonly=True)
+            escaped_query = query.replace(chr(92), chr(92)+chr(92)).replace(chr(34), chr(92)+chr(34))
+            typ, data = imap.uid("search", None, "X-GM-RAW", f'"{escaped_query}"')
+            if typ != "OK":
+                raise RuntimeError(f"IMAP search failed: {typ}")
+
+            uids = data[0].split()
+            # newest first, capped the same way the old maxResults=150 was
+            uids = uids[-150:]
+            logger.info(f"IMAP search returned {len(uids)} messages")
+
+            by_order = {}
+            skipped = 0
+
+            # One fetch per message - batching multiple full RFC822 bodies
+            # into a single FETCH command turned out to stall badly on this
+            # Pi (likely buffering a multi-MB single response with images
+            # inline is too much at once); per-message fetches make steady,
+            # visible progress even though each is its own round-trip.
+            # timeout=15 on the connection means a single stuck fetch can
+            # only cost 15s, not hang forever like before this fix.
+            uid_list = list(reversed(uids))
+            for idx, uid in enumerate(uid_list):
+                try:
+                    typ, msg_data = imap.uid("fetch", uid, "(RFC822)")
+                    if typ != "OK" or not msg_data or not msg_data[0]:
+                        skipped += 1
+                        continue
+                    raw = msg_data[0][1]
+                    msg = email.message_from_bytes(raw)
+                    order = self._parse_amazon_email(msg)
+                    if not order:
+                        skipped += 1
+                        continue
+
+                    key = order["order_number"] or f"unknown-{uid}"
+                    existing = by_order.get(key)
+                    if not existing:
+                        by_order[key] = order
+                    else:
+                        self._merge_order(existing, order)
+                except Exception as e:
+                    logger.debug(f"Parse error on uid {uid}: {e}")
                     skipped += 1
-                    continue
 
-                key = order["order_number"] or f"unknown-{msg['id']}"
+                if (idx + 1) % 20 == 0:
+                    logger.info(f"Fetched {idx + 1}/{len(uid_list)}")
 
-                existing = by_order.get(key)
-                if not existing:
-                    by_order[key] = order
-                else:
-                    # Merge: keep most advanced status, best product name, earliest order date
-                    self._merge_order(existing, order)
-
-            except Exception as e:
-                logger.debug(f"Parse error on message {msg.get('id')}: {e}")
-                skipped += 1
-
-        logger.info(f"Parsed {len(by_order)} unique orders, skipped {skipped} emails")
-        return list(by_order.values())
+            logger.info(f"Parsed {len(by_order)} unique orders, skipped {skipped} emails")
+            return list(by_order.values())
+        finally:
+            try:
+                imap.logout()
+            except Exception:
+                pass
 
     @staticmethod
     def _merge_order(existing, new):
@@ -358,7 +404,7 @@ class AmazonOrderTracker(BasePlugin):
 
         Amazon always sends status emails in chronological order (Ordered ->
         Shipped -> Out for delivery -> Delivered, or an exception like
-        Problem/Cancelled/Refunded at any point). Gmail search result order
+        Problem/Cancelled/Refunded at any point). IMAP search result order
         is NOT guaranteed chronological, so purely compare timestamps -
         whichever email is newer wins the status, full stop. This avoids a
         stale "Shipped" surviving over a later "Problem during shipping" or
@@ -383,14 +429,31 @@ class AmazonOrderTracker(BasePlugin):
         if new.get("image_url") and not existing.get("image_url"):
             existing["image_url"] = new["image_url"]
 
+        # Sticky "arriving today" signal - an Out-for-delivery email doesn't
+        # repeat the "Arriving <date>" promise text, so don't let a later
+        # merge erase an earlier-detected one.
+        if new.get("arriving_today") and not existing.get("arriving_today"):
+            existing["arriving_today"] = True
+
     # ------------------------------------------------------------------
     # Email parsing
     # ------------------------------------------------------------------
 
-    def _parse_amazon_email(self, msg_data):
+    @staticmethod
+    def _decode_subject(raw_subject):
+        parts = decode_header(raw_subject)
+        out = []
+        for text, enc in parts:
+            if isinstance(text, bytes):
+                out.append(text.decode(enc or "utf-8", "ignore"))
+            else:
+                out.append(text)
+        return "".join(out)
+
+    def _parse_amazon_email(self, msg):
         try:
-            headers = {h["name"]: h["value"] for h in msg_data["payload"]["headers"]}
-            raw_subject = headers.get("Subject", "").strip()
+            raw_subject = msg.get("Subject", "") or ""
+            raw_subject = self._decode_subject(raw_subject).strip()
 
             if not raw_subject:
                 return None
@@ -409,7 +472,7 @@ class AmazonOrderTracker(BasePlugin):
 
             product_name = self._extract_product_name(subject)
 
-            body = self._get_email_body(msg_data["payload"])
+            body = self._get_email_body(msg)
             order_num = ORDER_NUM_RE.search(subject)
             order_num = order_num.group(1) if order_num else None
             if not order_num and body:
@@ -420,9 +483,16 @@ class AmazonOrderTracker(BasePlugin):
                 return None
 
             # Product photo: only present in Ordered/Shipped templates.
-            html_body = self._get_email_html(msg_data["payload"])
+            html_body = self._get_email_html(msg)
             img_match = IMAGE_URL_RE.search(html_body) if html_body else None
             image_url = img_match.group(0) if img_match else None
+
+            # "Arriving <date>" promise text - lets a Shipped order that's
+            # actually due today show as due today instead of generic "In
+            # Transit", without waiting on Amazon's Out-for-delivery email.
+            arrive_source = html_body or body or ""
+            arrive_match = ARRIVING_RE.search(arrive_source)
+            arriving_today = bool(arrive_match) and arrive_match.group(1).lower() == "today"
 
             if not product_name:
                 product_name = f"Order #{order_num}"
@@ -431,13 +501,18 @@ class AmazonOrderTracker(BasePlugin):
                 if more:
                     product_name = f"{product_name} +{more.group(1)} more"
 
-            # Email timestamp (ms since epoch) -> reliable chronology, no
-            # fragile text-date parsing needed.
-            internal_ms = int(msg_data.get("internalDate", "0"))
-            email_dt = datetime.fromtimestamp(internal_ms / 1000) if internal_ms else datetime.now()
+            date_hdr = msg.get("Date")
+            try:
+                email_dt = parsedate_to_datetime(date_hdr) if date_hdr else datetime.now()
+                if email_dt.tzinfo:
+                    email_dt = email_dt.astimezone().replace(tzinfo=None)
+            except Exception:
+                email_dt = datetime.now()
             is_today = email_dt.date() == datetime.now().date()
 
             delivery_label = self._delivery_label(status, email_dt, is_today)
+            if status == "Shipped" and arriving_today:
+                delivery_label = "Today"
 
             return {
                 "order_number": order_num,
@@ -448,6 +523,7 @@ class AmazonOrderTracker(BasePlugin):
                 "delivery_date": delivery_label,
                 "email_date_obj": email_dt.isoformat(),
                 "is_today": is_today,
+                "arriving_today": arriving_today,
                 "email_subject": subject,
                 "image_url": image_url,
             }
@@ -491,46 +567,46 @@ class AmazonOrderTracker(BasePlugin):
             return "Cancelled"
         return ""
 
-    def _get_email_body(self, payload):
+    @staticmethod
+    def _get_email_body(msg):
         try:
-            if "parts" in payload:
-                for part in payload["parts"]:
-                    if part["mimeType"] == "text/plain":
-                        data = part["body"].get("data", "")
-                        if data:
-                            return base64.urlsafe_b64decode(data).decode("utf-8", "ignore")
-                    if "parts" in part:
-                        nested = self._get_email_body(part)
-                        if nested:
-                            return nested
+            if msg.is_multipart():
+                for part in msg.walk():
+                    if part.get_content_type() == "text/plain" and not part.get_filename():
+                        payload = part.get_payload(decode=True)
+                        if payload:
+                            charset = part.get_content_charset() or "utf-8"
+                            return payload.decode(charset, "ignore")
             else:
-                data = payload["body"].get("data", "")
-                if data:
-                    return base64.urlsafe_b64decode(data).decode("utf-8", "ignore")
+                if msg.get_content_type() == "text/plain":
+                    payload = msg.get_payload(decode=True)
+                    if payload:
+                        charset = msg.get_content_charset() or "utf-8"
+                        return payload.decode(charset, "ignore")
         except Exception as e:
             logger.debug(f"Body extraction error: {e}")
         return ""
 
-    def _get_email_html(self, payload):
+    @staticmethod
+    def _get_email_html(msg):
         try:
-            if "parts" in payload:
-                for part in payload["parts"]:
-                    if part["mimeType"] == "text/html":
-                        data = part["body"].get("data", "")
-                        if data:
-                            return base64.urlsafe_b64decode(data).decode("utf-8", "ignore")
-                    if "parts" in part:
-                        nested = self._get_email_html(part)
-                        if nested:
-                            return nested
+            if msg.is_multipart():
+                for part in msg.walk():
+                    if part.get_content_type() == "text/html" and not part.get_filename():
+                        payload = part.get_payload(decode=True)
+                        if payload:
+                            charset = part.get_content_charset() or "utf-8"
+                            return payload.decode(charset, "ignore")
             else:
-                if payload.get("mimeType") == "text/html":
-                    data = payload["body"].get("data", "")
-                    if data:
-                        return base64.urlsafe_b64decode(data).decode("utf-8", "ignore")
+                if msg.get_content_type() == "text/html":
+                    payload = msg.get_payload(decode=True)
+                    if payload:
+                        charset = msg.get_content_charset() or "utf-8"
+                        return payload.decode(charset, "ignore")
         except Exception as e:
             logger.debug(f"HTML extraction error: {e}")
         return ""
+
 
     # ------------------------------------------------------------------
     # Product image fetch + BWR conversion (for the small handful of

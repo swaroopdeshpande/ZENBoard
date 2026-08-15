@@ -1,0 +1,15 @@
+[Unit]
+Description=ZenBoard WiFi Monitor
+After=NetworkManager.service
+Wants=NetworkManager.service
+
+[Service]
+Type=simple
+User=root
+ExecStart=/usr/local/inkypi/venv_inkypi/bin/python3 /usr/local/bin/zenboard_wifi_monitor.py
+Restart=no
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

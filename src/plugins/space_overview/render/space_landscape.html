@@ -21,8 +21,7 @@
 </style>
 {% extends "plugin.html" %}
 {% block content %}
-{% if theme == 'light' %}<script>document.body.classList.add('light');</script>{% endif %}
-<div class="space-frame">
+<div class="space-frame {% if theme == 'light' %}light{% endif %}">
 
     <!-- HEADER -->
     <div class="space-header">

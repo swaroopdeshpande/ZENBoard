@@ -1,4 +1,4 @@
-<!-- Amazon Order Tracker - Gmail Edition -->
+<!-- Amazon Order Tracker - IMAP Edition -->
 <div class="settings-section">
   <h3>Amazon Order Tracker</h3>
 
@@ -18,34 +18,28 @@
   <!-- Cache TTL -->
   <div class="setting">
     <label for="cacheTtl">Refresh Interval (seconds)</label>
-    <input type="number" name="cacheTtl" id="cacheTtl" value="3600" min="300" step="60" />
+    <input type="number" name="cacheTtl" id="cacheTtl" value="900" min="300" step="60" />
     <small>Minimum 5 minutes</small>
   </div>
 
   <!-- Gmail Authentication -->
   <div class="settings-subsection">
-    <h4>🔐 Gmail Authentication</h4>
+    <h4>🔐 Gmail Connection</h4>
 
-    <div id="tokenStatus" class="token-status hidden">
-      <div class="status-dot online">●</div>
-      <span>Gmail connected</span>
-      <button id="clearTokenBtn" class="btn-small danger" type="button">Disconnect</button>
+    <div class="setting">
+      <label for="gmailEmail">Gmail address</label>
+      <input type="email" name="gmailEmail" id="gmailEmail" placeholder="you@gmail.com" />
     </div>
 
-    <div id="tokenForm" class="token-form">
-      <p style="font-size: 13px; color: #666; margin-bottom: 12px;">
-        Paste your Gmail OAuth token (JSON format):
-      </p>
-
-      <div class="setting">
-        <textarea id="gmailToken" placeholder='{"token": "...", "refresh_token": "...", ...}'
-                  style="width: 100%; height: 200px; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-family: monospace; font-size: 11px; resize: vertical;"></textarea>
-        <small style="color: #999;">Paste entire gmail_token.js content here. Token stored locally on Pi only.</small>
-      </div>
-
-      <button id="saveTokenBtn" class="btn btn-primary" type="button" style="margin-top: 12px;">
-        ✓ Save Gmail Token
-      </button>
+    <div class="setting">
+      <label for="gmailAppPassword">App Password</label>
+      <input type="password" name="gmailAppPassword" id="gmailAppPassword" placeholder="16-character app password" />
+      <small style="color:#666;">
+        Not your regular Gmail password. Generate one at
+        <a href="https://myaccount.google.com/apppasswords" target="_blank">myaccount.google.com/apppasswords</a>
+        (needs 2-Step Verification turned on first). This never expires until you revoke it -
+        no Google Cloud project, no re-authenticating every week.
+      </small>
     </div>
   </div>
 
@@ -53,11 +47,11 @@
   <div class="settings-subsection info-box">
     <h4>ℹ️ How It Works</h4>
     <ul>
-      <li>Parses Amazon order emails from your Gmail</li>
+      <li>Parses Amazon order emails from your Gmail via IMAP</li>
       <li>Extracts order #, product, status, delivery date</li>
+      <li>Detects "Arriving today" straight from shipping emails, not just the Out-for-delivery one</li>
       <li>Displays filtered by mode (today, in-transit, etc)</li>
-      <li>Orders refresh every hour (custom interval)</li>
-      <li>Gmail token stored <strong>only on your Pi</strong></li>
+      <li>App password stored <strong>only on your Pi</strong>, in plugin settings</li>
     </ul>
   </div>
 
@@ -117,148 +111,15 @@
 .info-box li:before {
   color: #0066cc;
 }
-
-.token-status {
-  padding: 12px;
-  background: #e3f2fd;
-  border-radius: 4px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  font-size: 13px;
-  border: 1px solid #1f77d1;
-  margin-bottom: 12px;
-}
-
-.token-status.hidden {
-  display: none;
-}
-
-.status-dot {
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  display: inline-block;
-}
-
-.status-dot.online {
-  background: #4caf50;
-  animation: pulse 2s infinite;
-}
-
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
-}
-
-.token-form {
-  background: white;
-  padding: 12px;
-  border-radius: 4px;
-}
-
-.btn-small {
-  padding: 4px 12px;
-  font-size: 12px;
-  margin-left: auto;
-  border: none;
-  border-radius: 3px;
-  cursor: pointer;
-}
-
-.btn-small.danger {
-  background: #f44336;
-  color: white;
-}
-
-.btn-small.danger:hover {
-  background: #da190b;
-}
-
-textarea {
-  font-family: monospace;
-}
 </style>
 
 <script>
-document.getElementById('saveTokenBtn').addEventListener('click', async function() {
-  const tokenJson = document.getElementById('gmailToken').value.trim();
-
-  if (!tokenJson) {
-    alert('Please paste the Gmail token JSON');
-    return;
-  }
-
-  // Validate JSON
-  let tokenData;
-  try {
-    tokenData = JSON.parse(tokenJson);
-  } catch (e) {
-    alert('Invalid JSON format');
-    return;
-  }
-
-  if (!tokenData.token || !tokenData.refresh_token) {
-    alert('Token must contain "token" and "refresh_token" fields');
-    return;
-  }
-
-  const btn = this;
-  btn.disabled = true;
-  btn.textContent = '⏳ Saving...';
-
-  try {
-    const response = await fetch('/amazon/save-gmail-token', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ token: tokenData })
-    });
-
-    const data = await response.json();
-
-    if (data.success) {
-      document.getElementById('tokenForm').classList.add('hidden');
-      document.getElementById('tokenStatus').classList.remove('hidden');
-      document.getElementById('gmailToken').value = '';
-      alert('✓ Gmail token saved! Orders will fetch on next refresh.');
-    } else {
-      alert('✗ Error: ' + data.error);
+document.addEventListener('DOMContentLoaded', () => {
+    if (typeof pluginSettings !== 'undefined' && pluginSettings) {
+        if (pluginSettings.displayMode) document.getElementById('displayMode').value = pluginSettings.displayMode;
+        if (pluginSettings.cacheTtl) document.getElementById('cacheTtl').value = pluginSettings.cacheTtl;
+        if (pluginSettings.gmailEmail) document.getElementById('gmailEmail').value = pluginSettings.gmailEmail;
+        if (pluginSettings.gmailAppPassword) document.getElementById('gmailAppPassword').value = pluginSettings.gmailAppPassword;
     }
-  } catch (e) {
-    alert('✗ Error: ' + e.message);
-  } finally {
-    btn.disabled = false;
-    btn.textContent = '✓ Save Gmail Token';
-  }
-});
-
-document.getElementById('clearTokenBtn')?.addEventListener('click', function() {
-  if (confirm('Disconnect Gmail?')) {
-    fetch('/amazon/clear-gmail-token', { method: 'POST' }).then(() => {
-      location.reload();
-    });
-  }
-});
-
-// Check login status on load
-window.addEventListener('load', function() {
-  fetch('/amazon/gmail-status')
-    .then(r => r.json())
-    .then(data => {
-      if (data.connected) {
-        document.getElementById('tokenForm').classList.add('hidden');
-        document.getElementById('tokenStatus').classList.remove('hidden');
-      } else {
-        document.getElementById('tokenForm').classList.remove('hidden');
-        document.getElementById('tokenStatus').classList.add('hidden');
-      }
-    })
-    .catch(() => {});
 });
 </script>
-
-<style>
-.hidden {
-  display: none !important;
-}
-</style>

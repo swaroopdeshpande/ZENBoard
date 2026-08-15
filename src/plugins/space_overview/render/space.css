@@ -3,7 +3,7 @@
 body {
     width: 800px;
     height: 480px;
-    background: #0a0a0a;
+    background: #000000;
     font-family: 'Courier New', Courier, monospace;
     color: #ffffff;
     overflow: hidden;
@@ -12,7 +12,7 @@ body {
 .space-frame {
     width: 800px;
     height: 480px;
-    background: #0a0a0a;
+    background: #000000;
     border: 1.5px solid #333333;
     display: flex;
     flex-direction: column;
@@ -291,7 +291,7 @@ body.light {
     color: #000000;
 }
 
-.light .space-frame {
+.light .space-frame, .space-frame.light {
     background: #ffffff;
     border-color: #cccccc;
     color: #000000;
@@ -328,7 +328,6 @@ body.light {
 .light .pass-badge { color: #000000; border-color: #999999; }
 .light .space-right-col { background: #ffffff; }
 
-.light .space-map { filter: invert(1); }
 .light .moon-phase { color: #000000; font-size: 14px; }
 .light .moon-detail { color: #333333; font-size: 12px; }
 .light .moon-icon { font-size: 32px; filter: sepia(1) saturate(10) hue-rotate(330deg); }

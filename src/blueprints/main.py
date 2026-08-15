@@ -174,14 +174,22 @@ def ereader_delete():
     
     return jsonify({"success": True})
 
-@main_bp.route('/api/ereader/gpio-turn', methods=['POST'])
-def ereader_gpio_turn():
-    data = request.get_json() or {}
-    action = data.get('action', 'next')
-    import json
-    with open("/tmp/ereader_gpio_trigger.json", "w") as f:
-        json.dump({"action": action}, f)
-    return jsonify({"success": True, "action": action})
+@main_bp.route('/api/presence/changed', methods=['POST'])
+def presence_changed():
+    """Posted by zenboard_presence.service when someone walks in.
+
+    Only matters if a scheduled refresh was skipped while the room was empty
+    (see RefreshTask._presence_allows_refresh) - then the frame catches up so
+    what you walk up to is current, rather than whatever was last painted
+    before the room emptied.
+    """
+    refresh_task = current_app.config['REFRESH_TASK']
+
+    if not refresh_task.running:
+        return jsonify({"success": False, "error": "Refresh task not running"}), 503
+
+    woke = refresh_task.presence_wake()
+    return jsonify({"success": True, "refreshed": woke}), 200
 
 # ── LED ROUTES ── Append to ~/InkyPi/src/blueprints/main.py
 
@@ -432,6 +440,25 @@ scanNetworks();
 </html>"""
 
 
+def _ap_password():
+    """Setup-AP password, read from the same root-only file
+    zenboard_wifi_monitor.py uses. Deliberately not hardcoded - this repo is
+    public. Falls back to a placeholder so the QR screen still renders on an
+    incomplete install rather than 500ing during WiFi recovery."""
+    value = os.environ.get("ZENBOARD_AP_PASSWORD")
+    if value:
+        return value.strip()
+    try:
+        with open("/etc/zenboard/ap_password") as f:
+            value = f.read().strip()
+        if value:
+            return value
+    except Exception:
+        pass
+    logger.warning("AP password file missing/empty, showing placeholder on QR screen")
+    return "changeme-zenboard"
+
+
 @wifi_setup_bp.route('/api/wifi_setup/show_qr', methods=['POST'])
 def show_qr():
     """Called by wifi_monitor to trigger QR code display on e-ink."""
@@ -441,7 +468,7 @@ def show_qr():
             "mode": "ap",
             "ap_ssid": data.get("ap_ssid", "ZenBoard-Setup"),
             "ap_ip": data.get("ap_ip", "192.168.4.1"),
-            "ap_password": "zenboard123",
+            "ap_password": _ap_password(),
             "timestamp": time.time(),
         }, f)
 

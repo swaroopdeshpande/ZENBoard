@@ -1,0 +1,14 @@
+[Unit]
+Description=ZenBoard LED <-> MQTT Bridge (Home Assistant)
+After=network.target mosquitto.service zenboard_led.service
+Wants=mosquitto.service
+
+[Service]
+Type=simple
+ExecStart=/usr/local/inkypi/venv_inkypi/bin/python3 /usr/local/bin/zenboard_led_mqtt.py
+Restart=on-failure
+RestartSec=5
+User=root
+
+[Install]
+WantedBy=multi-user.target

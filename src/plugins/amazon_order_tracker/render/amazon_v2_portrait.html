@@ -8,6 +8,8 @@
     <div class="az-header-portrait">
       <span class="az-logo-portrait">AMAZON</span>
       <div class="az-header-line-portrait"></div>
+      <div class="az-header-line-portrait"></div>
+      {% if auth_error %}<div class="az-auth-banner">&#9888; GMAIL RECONNECT NEEDED - {{ auth_error.cache_age_hours }}h old</div>{% endif %}
     </div>
 
     <!-- Orders Stack -->

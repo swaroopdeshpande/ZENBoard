@@ -87,12 +87,13 @@ class WeatherTerminal(BasePlugin):
         lon = settings.get("lon")
         location_name = settings.get("locationName") or "Bengaluru"
         units = settings.get("units", "metric")
+        dark = settings.get("displayMode", "dark") != "light"
 
         if not lat or not lon:
             # fall back to Bengaluru if nothing picked yet
             lat, lon = KARNATAKA_CITIES[0]["lat"], KARNATAKA_CITIES[0]["lon"]
 
-        data = self._fetch(api_key, float(lat), float(lon), units)
+        data = self._fetch(api_key, float(lat), float(lon), units, dark)
 
         tz_name = device_config.get_config("timezone") or "UTC"
         try:
@@ -113,6 +114,7 @@ class WeatherTerminal(BasePlugin):
             data["hourly"], units,
             width=(safe["usable_width"] - 40) if is_landscape else (safe["usable_width"] - 40),
             height=92 if is_landscape else 110,
+            dark=dark,
         )
 
         image = self.render_image(
@@ -127,6 +129,7 @@ class WeatherTerminal(BasePlugin):
                 "hourly": data["hourly"][:6],
                 "graph_svg": graph,
                 "unit_label": "F" if units == "imperial" else "C",
+                "dark": dark,
                 "frame_w": safe["usable_width"],
                 "frame_h": safe["usable_height"],
                 "plugin_settings": {
@@ -135,8 +138,8 @@ class WeatherTerminal(BasePlugin):
                     "leftMargin": safe.get("left", 8),
                     "rightMargin": safe.get("right", 11),
                     "backgroundOption": "color",
-                    "backgroundColor": "#000000",
-                    "textColor": "#ffffff",
+                    "backgroundColor": "#000000" if dark else "#ffffff",
+                    "textColor": "#ffffff" if dark else "#000000",
                     "selectedFrame": "None",
                 },
             },
@@ -152,7 +155,7 @@ class WeatherTerminal(BasePlugin):
     # Data
     # ------------------------------------------------------------------
 
-    def _fetch(self, api_key, lat, lon, units):
+    def _fetch(self, api_key, lat, lon, units, dark=True):
         cur_resp = requests.get(
             CURRENT_URL,
             params={"lat": lat, "lon": lon, "units": units, "appid": api_key},
@@ -196,9 +199,9 @@ class WeatherTerminal(BasePlugin):
                 "is_night": w.get("icon", "").endswith("n"),
             })
 
-        current["icon_svg"] = self._icon_svg(current["icon"], 56, is_night=weather.get("icon", "").endswith("n"))
+        current["icon_svg"] = self._icon_svg(current["icon"], 84, is_night=weather.get("icon", "").endswith("n"), dark=dark)
         for h in hourly:
-            h["icon_svg"] = self._icon_svg(h["icon"], 20, is_night=h["is_night"])
+            h["icon_svg"] = self._icon_svg(h["icon"], 20, is_night=h["is_night"], dark=dark)
 
         return {"current": current, "hourly": hourly}
 
@@ -212,9 +215,10 @@ class WeatherTerminal(BasePlugin):
     # ------------------------------------------------------------------
 
     @staticmethod
-    def _icon_svg(key, size, is_night=False):
+    def _icon_svg(key, size, is_night=False, dark=True):
+        fg = "#ffffff" if dark else "#000000"
         s = size / 24.0  # viewBox is 0..24, scale via width/height only
-        stroke = 'stroke="#ffffff" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"'
+        stroke = f'stroke="{fg}" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"'
         head = f'<svg width="{size}" height="{size}" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">'
         tail = '</svg>'
 
@@ -252,7 +256,7 @@ class WeatherTerminal(BasePlugin):
         if key == "storm":
             body = (
                 f'<path d="M6.5 13h10.7a4 4 0 0 0 .7-7.94A5.2 5.2 0 0 0 8.5 3.1 4.4 4.4 0 0 0 5 7.2 4.4 4.4 0 0 0 6.5 13z" {stroke}/>'
-                f'<path d="M13 13.5l-3 5h3.2l-2.4 5.5 6-6.5h-3.3l2.5-4z" fill="#ffffff" stroke="#ffffff" stroke-width="1" stroke-linejoin="round"/>'
+                f'<path d="M13 13.5l-3 5h3.2l-2.4 5.5 6-6.5h-3.3l2.5-4z" fill="{fg}" stroke="{fg}" stroke-width="1" stroke-linejoin="round"/>'
             )
             return head + body + tail
 
@@ -272,9 +276,12 @@ class WeatherTerminal(BasePlugin):
     # ------------------------------------------------------------------
 
     @staticmethod
-    def _build_graph(hourly, units, width, height):
+    def _build_graph(hourly, units, width, height, dark=True):
         if not hourly or len(hourly) < 2:
             return ""
+
+        fg = "#ffffff" if dark else "#000000"
+        accent = "#d40000"
 
         temps = [h["temp"] for h in hourly]
         lo, hi = min(temps), max(temps)
@@ -302,40 +309,40 @@ class WeatherTerminal(BasePlugin):
             f'xmlns="http://www.w3.org/2000/svg">'
         ]
 
-        # dashed "now" vertical line
+        # dashed "now" vertical line - red accent
         parts.append(
             f'<line x1="{now_x:.1f}" y1="{pad_top - 14:.1f}" x2="{now_x:.1f}" '
-            f'y2="{height - pad_bottom + 6:.1f}" stroke="#ffffff" stroke-width="1.5" '
-            f'stroke-dasharray="3,4" opacity="0.85" />'
+            f'y2="{height - pad_bottom + 6:.1f}" stroke="{accent}" stroke-width="1.5" '
+            f'stroke-dasharray="3,4" opacity="0.9" />'
         )
         parts.append(
-            f'<text x="{now_x:.1f}" y="{pad_top - 20:.1f}" fill="#ffffff" '
+            f'<text x="{max(now_x, 18):.1f}" y="{pad_top - 20:.1f}" fill="{accent}" '
             f'font-size="12" font-weight="700" text-anchor="middle" '
             f'letter-spacing="1.5">NOW</text>'
         )
 
         # trend line + points
         parts.append(
-            f'<polyline points="{line_pts}" fill="none" stroke="#ffffff" '
+            f'<polyline points="{line_pts}" fill="none" stroke="{fg}" '
             f'stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round" />'
         )
         for x, y in pts:
-            parts.append(f'<circle cx="{x:.1f}" cy="{y:.1f}" r="2.4" fill="#ffffff" />')
+            parts.append(f'<circle cx="{x:.1f}" cy="{y:.1f}" r="2.4" fill="{fg}" />')
 
-        # High label
+        # High label - red accent
         hx, hy = pts[hi_idx]
         anchor = "start" if hi_idx < n - 1 else "end"
         dx = 6 if hi_idx < n - 1 else -6
         parts.append(
-            f'<text x="{hx+dx:.1f}" y="{hy-22:.1f}" fill="#ffffff" font-size="12" '
+            f'<text x="{hx+dx:.1f}" y="{hy-22:.1f}" fill="{accent}" font-size="12" '
             f'font-weight="700" text-anchor="{anchor}" letter-spacing="1">HIGH</text>'
         )
         parts.append(
-            f'<text x="{hx+dx:.1f}" y="{hy-6:.1f}" fill="#ffffff" font-size="20" '
+            f'<text x="{hx+dx:.1f}" y="{hy-6:.1f}" fill="{accent}" font-size="20" '
             f'font-weight="800" text-anchor="{anchor}">{hi}&#176;</text>'
         )
         parts.append(
-            f'<text x="{hx+dx:.1f}" y="{hy+12:.1f}" fill="#aaaaaa" font-size="11" '
+            f'<text x="{hx+dx:.1f}" y="{hy+12:.1f}" fill="{fg}" font-size="11" '
             f'font-weight="600" text-anchor="{anchor}">{hourly[hi_idx]["time_label"]}</text>'
         )
 
@@ -346,24 +353,24 @@ class WeatherTerminal(BasePlugin):
         dx2 = 6 if lo_idx < n - 1 else -6
         if height - ly < 62:
             parts.append(
-                f'<text x="{lx+dx2:.1f}" y="{ly-24:.1f}" fill="#ffffff" font-size="12" '
+                f'<text x="{lx+dx2:.1f}" y="{ly-24:.1f}" fill="{fg}" font-size="12" '
                 f'font-weight="700" text-anchor="{anchor2}" letter-spacing="1">LOW</text>'
             )
             parts.append(
-                f'<text x="{lx+dx2:.1f}" y="{ly-8:.1f}" fill="#ffffff" font-size="20" '
+                f'<text x="{lx+dx2:.1f}" y="{ly-8:.1f}" fill="{fg}" font-size="20" '
                 f'font-weight="800" text-anchor="{anchor2}">{lo}&#176;</text>'
             )
         else:
             parts.append(
-                f'<text x="{lx+dx2:.1f}" y="{ly+22:.1f}" fill="#ffffff" font-size="12" '
+                f'<text x="{lx+dx2:.1f}" y="{ly+22:.1f}" fill="{fg}" font-size="12" '
                 f'font-weight="700" text-anchor="{anchor2}" letter-spacing="1">LOW</text>'
             )
             parts.append(
-                f'<text x="{lx+dx2:.1f}" y="{ly+40:.1f}" fill="#ffffff" font-size="20" '
+                f'<text x="{lx+dx2:.1f}" y="{ly+40:.1f}" fill="{fg}" font-size="20" '
                 f'font-weight="800" text-anchor="{anchor2}">{lo}&#176;</text>'
             )
             parts.append(
-                f'<text x="{lx+dx2:.1f}" y="{ly+56:.1f}" fill="#aaaaaa" font-size="11" '
+                f'<text x="{lx+dx2:.1f}" y="{ly+56:.1f}" fill="{fg}" font-size="11" '
                 f'font-weight="600" text-anchor="{anchor2}">{hourly[lo_idx]["time_label"]}</text>'
             )
 

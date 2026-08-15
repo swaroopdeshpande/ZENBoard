@@ -1,6 +1,7 @@
 import threading
 import time
 import os
+import json
 import logging
 import psutil
 import pytz
@@ -11,6 +12,12 @@ from model import RefreshInfo, PlaylistManager
 from PIL import Image
 
 logger = logging.getLogger(__name__)
+
+# Written by zenboard_presence.service (see /usr/local/bin/zenboard_presence.py)
+PRESENCE_STATE_FILE = "/tmp/zenboard_presence.json"
+# Heartbeat older than this means the presence service is hung/stopped, not
+# that the room is empty - gating fails open in that case.
+PRESENCE_STALE_SECONDS = 300
 
 class RefreshTask:
     """Handles the logic for refreshing the display using a background thread."""
@@ -28,6 +35,12 @@ class RefreshTask:
         self.refresh_event = threading.Event()
         self.refresh_event.set()
         self.refresh_result = {}
+
+        # Presence-gated refresh: e-ink panels have a finite number of
+        # refreshes, and repainting an empty room spends them on nobody.
+        # Skipped refreshes are remembered so walking back in triggers one
+        # catch-up repaint rather than silently waiting out the full cycle.
+        self.skipped_while_empty = False
 
     def start(self):
         """Starts the background thread for refreshing the display."""
@@ -101,6 +114,13 @@ class RefreshTask:
 
                         # handle refresh based on playlists
                         logger.info(f"Running interval refresh check. | current_time: {current_dt.strftime('%Y-%m-%d %H:%M:%S')}")
+
+                        allowed, reason = self._presence_allows_refresh()
+                        if not allowed:
+                            self.skipped_while_empty = True
+                            logger.info(f"Skipping scheduled refresh - {reason}")
+                            continue
+
                         playlist, plugin_instance = self._determine_next_plugin(playlist_manager, latest_refresh, current_dt)
                         if plugin_instance:
                             refresh_action = PlaylistRefresh(playlist, plugin_instance)
@@ -163,6 +183,50 @@ class RefreshTask:
                 raise self.refresh_result.get("exception")
         else:
             logger.warning("Background refresh task is not running, unable to do a manual update")
+
+    def _presence_allows_refresh(self):
+        """(allowed, reason). Fails OPEN everywhere: gating disabled, no state
+        file, unreadable state, or a stale heartbeat all refresh normally. A
+        broken sensor should degrade to the old always-refresh behaviour, never
+        leave the frame frozen on a stale plugin."""
+        if not self.device_config.get_config("presence_gated_refresh", default=False):
+            return True, None
+
+        try:
+            with open(PRESENCE_STATE_FILE) as f:
+                state = json.load(f)
+        except FileNotFoundError:
+            return True, None
+        except Exception as e:
+            logger.warning(f"Presence state unreadable, refreshing anyway: {e}")
+            return True, None
+
+        now = time.time()
+        if now - float(state.get("updated_at", 0) or 0) > PRESENCE_STALE_SECONDS:
+            logger.warning("Presence state is stale (service down?), refreshing anyway")
+            return True, None
+
+        if state.get("present"):
+            return True, None
+
+        grace_minutes = self.device_config.get_config("presence_empty_grace_minutes", default=30)
+        empty_for = now - float(state.get("last_seen", 0) or 0)
+        if empty_for < grace_minutes * 60:
+            return True, None
+
+        return False, f"room empty for {int(empty_for // 60)}m"
+
+    def presence_wake(self):
+        """Someone walked in. Only wakes the thread if a refresh was actually
+        skipped - otherwise every entry into the room would trigger a repaint
+        and cost more panel wear than the gating saves."""
+        with self.condition:
+            if not self.skipped_while_empty:
+                return False
+            logger.info("Presence returned, triggering catch-up refresh")
+            self.skipped_while_empty = False
+            self.condition.notify_all()
+            return True
 
     def signal_config_change(self):
         """Notify the background thread that config has changed (e.g., interval updated)."""

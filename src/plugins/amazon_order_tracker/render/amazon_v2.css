@@ -560,3 +560,15 @@ body {
   font-size: 18px;
   color: #333;
 }
+
+.az-auth-banner {
+  background: #d40000;
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 900;
+  text-align: center;
+  letter-spacing: 0.5px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  margin: 4px 0 6px 0;
+}

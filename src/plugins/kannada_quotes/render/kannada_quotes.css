@@ -4,134 +4,178 @@
     padding: 0;
 }
 
-.temple-frame {
+/* base_plugin's plugin.html sets body padding/margin inline (1.5vw padding,
+   5px default margin) - that's fine for plugins whose content fades into
+   white, but this design draws its own border as the outermost visual
+   element, so any leftover body padding shows as a stark gap outside the
+   frame. Kill it outright rather than trying to net it out via margins. */
+html, body {
+    padding: 0 !important;
+    margin: 0 !important;
     width: 100%;
     height: 100%;
+}
+
+/* Calibrated frame offset: T=0 R=10 B=10 L=10 (landscape) */
+.manuscript {
+    width: 780px;
+    height: 470px;
+    margin: 0 10px 10px 10px;
     background-color: #ffffff;
+    position: relative;
+    border: 6px solid #000000;
+    padding: 14px;
+    /* .container is display:flex - a flex item's default min-height:auto
+       lets intrinsic content size override an explicit height, so a long
+       quote silently grows this box past 470px and shoves the border/
+       corners off-canvas. overflow:hidden makes the item's automatic
+       minimum size 0 instead, so the explicit height actually holds. */
+    overflow: hidden;
+}
+
+/* Portrait canvas is narrow (480x800), not short - max-height would also
+   match the normal 800x480 landscape render (480 <= 500) and silently
+   swap in the wrong box size. Match on width instead. */
+@media (max-width: 500px) {
+    .manuscript {
+        width: 458px;
+        height: 771px;
+        margin: 0 10px 10px 10px;
+    }
+}
+
+/* Ornamental corner motifs - solid diamond/petal shapes, no gradients/opacity
+   (BWR panel dithers anything but pure black/white/red) */
+.corner {
+    position: absolute;
+    width: 34px;
+    height: 34px;
+    z-index: 2;
+}
+
+.corner::before, .corner::after {
+    content: '';
+    position: absolute;
+    background: #000000;
+}
+
+/* petal cluster: a diamond core + two side petals */
+.corner::before {
+    width: 16px;
+    height: 16px;
+    transform: rotate(45deg);
+}
+
+.corner::after {
+    width: 34px;
+    height: 4px;
+    top: 15px;
+}
+
+.corner-tl { top: 8px; left: 8px; }
+.corner-tl::before { top: 8px; left: 8px; }
+
+.corner-tr { top: 8px; right: 8px; }
+.corner-tr::before { top: 8px; right: 8px; }
+
+.corner-bl { bottom: 8px; left: 8px; }
+.corner-bl::before { bottom: 8px; left: 8px; }
+
+.corner-br { bottom: 8px; right: 8px; }
+.corner-br::before { bottom: 8px; right: 8px; }
+
+.inner-border {
+    width: 100%;
+    height: 100%;
+    border: 2px solid #000000;
+    outline: 1px solid #000000;
+    outline-offset: 4px;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    font-family: 'Noto Sans Kannada', 'Noto Sans', serif;
-    position: relative;
-    border: 8px solid #000000;
-}
-
-/* Temple-style top border pattern */
-.temple-border-top {
-    width: 100%;
-    height: 40px;
-    background: linear-gradient(90deg, #000000 0%, #000000 2%, #ffffff 2%, #ffffff 8%, #000000 8%, #000000 10%, #ffffff 10%, #ffffff 16%, #000000 16%, #000000 18%, #ffffff 18%, #ffffff 24%, #000000 24%, #000000 26%, #ffffff 26%, #ffffff 32%, #000000 32%, #000000 34%, #ffffff 34%, #ffffff 40%, #000000 40%, #000000 42%, #ffffff 42%, #ffffff 48%, #000000 48%, #000000 50%, #ffffff 50%, #ffffff 56%, #000000 56%, #000000 58%, #ffffff 58%, #ffffff 64%, #000000 64%, #000000 66%, #ffffff 66%, #ffffff 72%, #000000 72%, #000000 74%, #ffffff 74%, #ffffff 80%, #000000 80%, #000000 82%, #ffffff 82%, #ffffff 88%, #000000 88%, #000000 90%, #ffffff 90%, #ffffff 96%, #000000 96%);
-    border-bottom: 3px solid #000000;
+    padding: 30px 46px;
     position: relative;
 }
 
-.temple-border-top::before {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 90%;
-    height: 2px;
-    background-color: #ff0000;
-    opacity: 0.4;
+/* Small centered emblem at top, like a manuscript colophon mark */
+.kalasha {
+    font-family: 'Noto Serif Kannada', serif;
+    font-size: 26px;
+    color: #d40000;
+    margin-bottom: 18px;
+    line-height: 1;
 }
 
-/* Temple-style bottom border pattern */
-.temple-border-bottom {
-    width: 100%;
-    height: 40px;
-    background: linear-gradient(90deg, #000000 0%, #000000 2%, #ffffff 2%, #ffffff 8%, #000000 8%, #000000 10%, #ffffff 10%, #ffffff 16%, #000000 16%, #000000 18%, #ffffff 18%, #ffffff 24%, #000000 24%, #000000 26%, #ffffff 26%, #ffffff 32%, #000000 32%, #000000 34%, #ffffff 34%, #ffffff 40%, #000000 40%, #000000 42%, #ffffff 42%, #ffffff 48%, #000000 48%, #000000 50%, #ffffff 50%, #ffffff 56%, #000000 56%, #000000 58%, #ffffff 58%, #ffffff 64%, #000000 64%, #000000 66%, #ffffff 66%, #ffffff 72%, #000000 72%, #000000 74%, #ffffff 74%, #ffffff 80%, #000000 80%, #000000 82%, #ffffff 82%, #ffffff 88%, #000000 88%, #000000 90%, #ffffff 90%, #ffffff 96%, #000000 96%);
-    border-top: 3px solid #000000;
-    position: relative;
-}
-
-.temple-border-bottom::before {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 90%;
-    height: 2px;
-    background-color: #ff0000;
-    opacity: 0.4;
-}
-
-/* Main quote container */
-.quote-container {
-    flex: 1;
-    width: 100%;
+.quote-block {
     display: flex;
+    flex-direction: column;
     align-items: center;
-    justify-content: center;
-    padding: 40px 30px;
-    position: relative;
-}
-
-.temple-accent-left {
-    width: 8px;
-    height: 60%;
-    background: repeating-linear-gradient(
-        180deg,
-        #000000 0px,
-        #000000 10px,
-        #ffffff 10px,
-        #ffffff 20px
-    );
-    margin-right: 30px;
-    border: 2px solid #000000;
-}
-
-.temple-accent-right {
-    width: 8px;
-    height: 60%;
-    background: repeating-linear-gradient(
-        180deg,
-        #000000 0px,
-        #000000 10px,
-        #ffffff 10px,
-        #ffffff 20px
-    );
-    margin-left: 30px;
-    border: 2px solid #000000;
-}
-
-/* Quote content */
-.quote-content {
     text-align: center;
-    max-width: 85%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
+    max-width: 100%;
+    position: relative;
 }
 
-.quote-symbol {
-    font-size: 48px;
-    color: #ff0000;
-    margin-bottom: 16px;
-    opacity: 0.8;
+.quote-mark {
+    font-family: Georgia, serif;
+    font-size: 46px;
+    line-height: 0.4;
+    color: #d40000;
+    font-weight: 700;
+}
+
+.quote-mark-close {
+    margin-top: 14px;
 }
 
 .quote-text {
-    font-size: 36px;
-    font-weight: 600;
+    font-family: 'Noto Serif Kannada', serif;
+    font-size: 34px;
+    font-weight: 500;
     color: #000000;
-    line-height: 1.5;
-    letter-spacing: 0.5px;
-    margin-bottom: 24px;
+    line-height: 1.6;
+    letter-spacing: 0.3px;
+    margin: 10px 0;
     text-align: center;
 }
 
+.signature-line {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    margin-top: 28px;
+    width: 70%;
+}
+
+.rule {
+    flex: 1;
+    height: 2px;
+    background-color: #000000;
+    position: relative;
+}
+
+.rule::after {
+    content: '';
+    position: absolute;
+    top: -3px;
+    right: 0;
+    width: 8px;
+    height: 8px;
+    background: #d40000;
+    transform: rotate(45deg);
+}
+
+.signature-line .rule:first-child::after {
+    right: auto;
+    left: 0;
+}
+
 .author-name {
-    font-size: 24px;
-    color: #333333;
-    font-style: italic;
-    letter-spacing: 1px;
-    margin-top: 16px;
-    padding-top: 12px;
-    border-top: 2px solid #ff0000;
-    width: 80%;
+    font-family: 'Noto Sans Kannada', sans-serif;
+    font-size: 22px;
+    font-weight: 700;
+    color: #000000;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
 }

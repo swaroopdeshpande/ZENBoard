@@ -1,0 +1,35 @@
+{% extends "plugin.html" %}
+
+{% block content %}
+<div class="fn-frame fn-frame-p" style="width: {{ frame_w }}px; height: {{ frame_h }}px;">
+
+  <div class="fn-header">
+    <span class="fn-pin">&#128204;</span>
+    <span class="fn-title">FAMILY NOTES</span>
+  </div>
+  <div class="fn-url fn-url-p">/notes</div>
+
+  {% if has_notes %}
+  <div class="fn-rows">
+    {% for row in rows %}
+    <div class="fn-row {% if row.is_latest %}fn-row-latest{% endif %} {% if row.done %}fn-row-done{% endif %}">
+      <div class="fn-row-main">
+        <span class="fn-row-check">{% if row.done %}&#9745;{% else %}&#9744;{% endif %}</span>
+        <span class="fn-row-from">{{ row.from_name }}</span>
+        <span class="fn-row-msg">{{ row.message }}</span>
+      </div>
+      <span class="fn-row-when">{{ row.when }}</span>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="fn-empty">
+    <div class="fn-pin">&#128204;</div>
+    <div class="fn-empty-title">No notes yet</div>
+    <div class="fn-empty-sub">Leave one from your phone at</div>
+    <div class="fn-empty-url">/notes</div>
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}

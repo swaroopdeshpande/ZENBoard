@@ -31,6 +31,14 @@
     </div>
 
     <div class="form-group">
+        <label class="form-label">Display Mode</label>
+        <select id="displayMode" name="displayMode" class="form-input">
+            <option value="dark">Dark (black background)</option>
+            <option value="light">Light (white background)</option>
+        </select>
+    </div>
+
+    <div class="form-group">
         <label class="form-label">Temperature Units</label>
         <select id="units" name="units" class="form-input">
             <option value="metric">Celsius (°C)</option>
@@ -39,7 +47,7 @@
     </div>
 
     <div class="form-group">
-        <small style="color:#666;">Dark mode only, matching the reference design. Refreshes are cheap (2 API calls/render) - a 15-30 min interval is plenty.</small>
+        <small style="color:#666;">Refreshes are cheap (2 API calls/render) - a 15-30 min interval is plenty.</small>
     </div>
 
 </div>
@@ -163,6 +171,7 @@
     if (typeof pluginSettings !== 'undefined' && pluginSettings) {
       if (pluginSettings.apiKey) $('apiKey').value = pluginSettings.apiKey;
       if (pluginSettings.units) $('units').value = pluginSettings.units;
+      if (pluginSettings.displayMode) $('displayMode').value = pluginSettings.displayMode;
       if (pluginSettings.lat && pluginSettings.lon) {
         setLocation(pluginSettings.locationName || 'Saved location', pluginSettings.lat, pluginSettings.lon);
       }

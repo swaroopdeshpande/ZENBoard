@@ -1,42 +1,26 @@
-<style>
-
-  /* Display margin enforcement (calibrated frame offset) */
-  .safe-content {
-    width: 781px;
-    height: 468px;
-    margin: 12px 11px 0 8px;  /* T=12 R=11 B=0 L=8 (horizontal) */
-    background: white;
-    overflow: hidden;
-  }
-
-  /* Vertical/portrait mode support */
-  @media (max-height: 500px), (orientation: portrait) {
-    .safe-content {
-      width: 468px;
-      height: 781px;
-      margin: 8px 12px 11px 0;  /* T=8 R=12 B=11 L=0 (vertical) */
-    }
-  }
-
-</style>
 {% extends "plugin.html" %}
 
 {% block content %}
-<div class="temple-frame">
-    <div class="temple-border-top"></div>
-    
-    <div class="quote-container">
-        <div class="temple-accent-left"></div>
-        
-        <div class="quote-content">
-            <div class="quote-symbol">❖</div>
-            <div class="quote-text">{{ quote }}</div>
-            <div class="author-name">— {{ author }}</div>
+<div class="manuscript">
+    <div class="corner corner-tl"></div>
+    <div class="corner corner-tr"></div>
+    <div class="corner corner-bl"></div>
+    <div class="corner corner-br"></div>
+
+    <div class="inner-border">
+        <div class="kalasha">ॐ</div>
+
+        <div class="quote-block">
+            <div class="quote-mark">“</div>
+            <div class="quote-text" style="font-size: {{ quote_font_size }}px;">{{ quote }}</div>
+            <div class="quote-mark quote-mark-close">”</div>
         </div>
-        
-        <div class="temple-accent-right"></div>
+
+        <div class="signature-line">
+            <span class="rule"></span>
+            <span class="author-name">{{ author }}</span>
+            <span class="rule"></span>
+        </div>
     </div>
-    
-    <div class="temple-border-bottom"></div>
 </div>
 {% endblock %}

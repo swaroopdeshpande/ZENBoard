@@ -1,0 +1,65 @@
+{% extends "plugin.html" %}
+
+{% block content %}
+<div class="health" style="width: {{ usable_width }}px; height: {{ usable_height }}px;">
+
+    <div class="topbar">
+        <div class="title">ACTIVITY</div>
+        <div class="topbar-right">
+            {% if stale_note %}<div class="stale">{{ stale_note }}</div>{% endif %}
+            <div class="date">{{ today }}</div>
+        </div>
+    </div>
+
+    <div class="body">
+        <div class="rings">
+            <svg width="{{ svg_size }}" height="{{ svg_size }}" viewBox="0 0 {{ svg_size }} {{ svg_size }}">
+                {% for ring in rings %}
+                <!-- track: a hairline outline, not a gray ring - any mid-tone
+                     dithers into visible noise under BWR quantization -->
+                <circle cx="{{ svg_size // 2 }}" cy="{{ svg_size // 2 }}" r="{{ ring.radius }}"
+                        fill="none" stroke="#000000" stroke-width="1.5" />
+                {% endfor %}
+
+                {% for ring in rings %}
+                    {% if ring.full_circle %}
+                    <circle cx="{{ svg_size // 2 }}" cy="{{ svg_size // 2 }}" r="{{ ring.radius }}"
+                            fill="none" stroke="{{ ring.color }}" stroke-width="{{ ring.stroke }}"
+                            {% if ring.dasharray %}stroke-dasharray="{{ ring.dasharray }}"{% endif %} />
+                    {% elif ring.path %}
+                    <path d="{{ ring.path }}" fill="none"
+                          stroke="{{ ring.color }}" stroke-width="{{ ring.stroke }}"
+                          stroke-linecap="{% if ring.dasharray %}butt{% else %}round{% endif %}"
+                          {% if ring.dasharray %}stroke-dasharray="{{ ring.dasharray }}"{% endif %} />
+                    {% endif %}
+                {% endfor %}
+            </svg>
+        </div>
+
+        <div class="panel">
+            <div class="legend">
+                {% for ring in rings %}
+                <div class="legend-row">
+                    <span class="swatch {% if ring.color == '#d40000' %}swatch-red{% endif %}
+                                        {% if ring.unit == 'HRS' %}swatch-seg{% endif %}"></span>
+                    <span class="legend-label">{{ ring.label }}</span>
+                    <span class="legend-value">{{ ring.value }}<span class="of">/{{ ring.goal }}</span></span>
+                    <span class="legend-unit">{{ ring.unit }}</span>
+                </div>
+                {% endfor %}
+            </div>
+
+            <div class="divider"></div>
+
+            <div class="stats">
+                {% for stat in stats %}
+                <div class="stat">
+                    <div class="stat-label">{{ stat.label }}</div>
+                    <div class="stat-value">{{ stat.value }}{% if stat.unit %}<span class="stat-unit">{{ stat.unit }}</span>{% endif %}</div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

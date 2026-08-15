@@ -185,6 +185,16 @@
             <option value="breathe">🌬️ Breathe</option>
             <option value="rainbow">🌈 Rainbow</option>
             <option value="chase">✨ Chase</option>
+            <optgroup label="Smooth / ambient">
+            <option value="pacifica">🌊 Pacifica</option>
+            <option value="aurora">🌌 Aurora</option>
+            <option value="sunrise">🌅 Sunrise</option>
+            <option value="candle">🕯️ Candle</option>
+            <option value="sinelon">💫 Sinelon</option>
+            <option value="plasma">🫧 Plasma</option>
+            <option value="lake">🏞️ Lake</option>
+            <option value="twinklefox">✨ Twinkle</option>
+            </optgroup>
             <option value="off">❌ Off</option>
         </select>
     </div>
@@ -455,7 +465,7 @@ function updateBrightnessLabel(val) {
 function toggleBreatheRow() {
     const mode = document.getElementById('ledMode').value;
     document.getElementById('breatheRow').style.display = mode === 'breathe' ? 'flex' : 'none';
-    document.getElementById('colorRow').style.display = ['rainbow', 'warm_glow', 'off'].includes(mode) ? 'none' : 'flex';
+    document.getElementById('colorRow').style.display = ['rainbow', 'warm_glow', 'off', 'pacifica', 'aurora', 'sunrise', 'candle', 'plasma'].includes(mode) ? 'none' : 'flex';
 }
 
 function applyPreset(name) {

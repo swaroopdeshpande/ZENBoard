@@ -1,0 +1,13 @@
+[Unit]
+Description=ZenBoard LED Service
+After=network.target
+
+[Service]
+Type=simple
+User=root
+ExecStart=/usr/local/inkypi/venv_inkypi/bin/python3 /usr/local/bin/zenboard_led.py
+Restart=on-failure
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target

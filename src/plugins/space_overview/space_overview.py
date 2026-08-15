@@ -50,7 +50,8 @@ class SpaceOverview(BasePlugin):
         dimensions = device_config.get_resolution()
         is_landscape = dimensions[0] > dimensions[1]
 
-        map_b64 = self._render_map(data, dimensions, is_landscape)
+        theme = settings.get("theme", "dark")
+        map_b64 = self._render_map(data, dimensions, is_landscape, theme)
 
         template = "space_landscape.html" if is_landscape else "space_portrait.html"
         return self.render_image(
@@ -64,7 +65,11 @@ class SpaceOverview(BasePlugin):
                 "launches": data["launches"],
                 "map_b64": map_b64,
                 "timestamp": data["timestamp"],
-                "plugin_settings": settings,
+                "plugin_settings": {
+                    **settings,
+                    "backgroundColor": "#ffffff" if theme == "light" else "#000000",
+                    "textColor": "#000000" if theme == "light" else "#ffffff",
+                },
                 "logo_position": settings.get("logoPosition", "bottom-right"),
                 "theme": settings.get("theme", "dark"),
             },
@@ -228,70 +233,74 @@ class SpaceOverview(BasePlugin):
             logger.error(f"Launches error: {e}")
             return [{"name": "Data unavailable", "countdown": "N/A", "provider": ""}]
 
-    def _render_map(self, data, dimensions, is_landscape):
-        """Render world map with ISS position and orbit path."""
+    _WORLD_OUTLINE_CACHE = None
+
+    @classmethod
+    def _load_world_outline(cls):
+        """Lightweight landmass outline - a pre-simplified, stripped-down static
+        JSON (287 polygons, ~130KB, 0.1-degree precision) derived once from
+        Natural Earth's 110m country boundaries. No cartopy/shapely/PROJ - those
+        pull in compiled GEOS bindings and download shapefiles at runtime, which
+        OOM-crashed this Pi Zero 2W (512MB RAM). This loads with plain json.load()
+        in a few ms and plots with matplotlib's ordinary ax.fill(), since
+        equirectangular projection just means lng/lat *is* x/y - no projection
+        math needed."""
+        if cls._WORLD_OUTLINE_CACHE is None:
+            import os
+            path = os.path.join(os.path.dirname(__file__), "world_outline.json")
+            try:
+                with open(path) as f:
+                    cls._WORLD_OUTLINE_CACHE = json.load(f)["polygons"]
+            except Exception as e:
+                logger.warning(f"World outline load failed: {e}")
+                cls._WORLD_OUTLINE_CACHE = []
+        return cls._WORLD_OUTLINE_CACHE
+
+    def _render_map(self, data, dimensions, is_landscape, theme="dark"):
+        """Render world map with landmass, ISS position, and orbit path."""
         try:
+            dark = theme != "light"
+            bg = "#000000" if dark else "#ffffff"
+            land = "#ffffff" if dark else "#000000"
+
             w, h = dimensions
             fig_w = (w * 0.58) / 96 if is_landscape else (w * 0.95) / 96
             fig_h = (h * 0.52) / 96 if is_landscape else (h * 0.38) / 96
 
             fig, ax = plt.subplots(figsize=(fig_w, fig_h), dpi=96)
-            fig.patch.set_facecolor("#0a0a0a")
-            ax.set_facecolor("#0a0a0a")
+            fig.patch.set_facecolor(bg)
+            ax.set_facecolor(bg)
 
-            # Draw dotted world map using country boundaries
-            try:
-                import cartopy.crs as ccrs
-                import cartopy.feature as cfeature
-                ax.remove()
-                ax = fig.add_subplot(1, 1, 1, projection=ccrs.PlateCarree())
-                ax.set_facecolor("#0a0a0a")
-                ax.set_global()
+            # Landmass - solid fill, no anti-aliased gray edges (BWR
+            # quantization dithers low-contrast grays badly - pure black/white
+            # /red only, learned the hard way on other plugins this project).
+            polygons = self._load_world_outline()
+            for poly in polygons:
+                xs = [p[0] for p in poly]
+                ys = [p[1] for p in poly]
+                ax.fill(xs, ys, facecolor=land, edgecolor="none", linewidth=0)
 
-                # Add land as dotted pattern
-                ax.add_feature(cfeature.LAND, facecolor="#2a2a2a", edgecolor="#444444", linewidth=0.3)
-                ax.add_feature(cfeature.OCEAN, facecolor="#0a0a0a")
-                ax.add_feature(cfeature.COASTLINE, edgecolor="#555555", linewidth=0.4)
-                ax.gridlines(color="#1a1a1a", linewidth=0.3, linestyle="--")
+            iss_lat = data["iss"]["lat"]
+            iss_lng = data["iss"]["lng"]
 
-                iss_lat = data["iss"]["lat"]
-                iss_lng = data["iss"]["lng"]
+            # Simulate orbit path (ISS orbital period ~92 min, inclination ~51.6°)
+            orbit_lngs = np.linspace(iss_lng - 180, iss_lng + 180, 200)
+            orbit_lats = 51.6 * np.sin(np.radians(orbit_lngs - iss_lng + 90))
 
-                # Simulate orbit path (ISS orbital period ~92 min, inclination ~51.6°)
-                orbit_lngs = np.linspace(iss_lng - 180, iss_lng + 180, 200)
-                orbit_lats = 51.6 * np.sin(np.radians(orbit_lngs - iss_lng + 90))
+            # Past path - dashed red, future path - solid red (distinguished by
+            # dash pattern, not a grayscale tone, for the same BWR reason above)
+            ax.plot(orbit_lngs[:100], orbit_lats[:100],
+                   color="#d40000", linewidth=1.0, linestyle="--", alpha=0.85)
+            ax.plot(orbit_lngs[100:], orbit_lats[100:],
+                   color="#d40000", linewidth=1.4, alpha=1.0)
 
-                # Past path (dashed)
-                ax.plot(orbit_lngs[:100], orbit_lats[:100],
-                       color="#888888", linewidth=0.8, linestyle="--",
-                       transform=ccrs.PlateCarree(), alpha=0.6)
+            # ISS marker
+            ax.scatter([iss_lng], [iss_lat], color="#ffffff", s=70, zorder=5,
+                      linewidths=1.8, edgecolors="#d40000")
 
-                # Future path (solid)
-                ax.plot(orbit_lngs[100:], orbit_lats[100:],
-                       color="#ffffff", linewidth=1.0,
-                       transform=ccrs.PlateCarree(), alpha=0.8)
-
-                # ISS dot
-                ax.scatter([iss_lng], [iss_lat], color="white", s=60, zorder=5,
-                          transform=ccrs.PlateCarree(), linewidths=1.5, edgecolors="#aaaaaa")
-
-                ax.set_extent([-180, 180, -90, 90])
-
-            except Exception as e:
-                logger.warning(f"Cartopy failed: {e}, using gridmap")
-                # Fallback without cartopy — simple grid
-                ax.set_xlim(-180, 180)
-                ax.set_ylim(-90, 90)
-                ax.set_facecolor("#0a0a0a")
-                ax.grid(color="#333333", linewidth=0.5, alpha=0.8)
-
-                iss_lat = data["iss"]["lat"]
-                iss_lng = data["iss"]["lng"]
-
-                orbit_lngs = np.linspace(-180, 180, 200)
-                orbit_lats = 51.6 * np.sin(np.radians(orbit_lngs - iss_lng + 90))
-                ax.plot(orbit_lngs, orbit_lats, color="#ffffff", linewidth=1.0, alpha=0.7)
-                ax.scatter([iss_lng], [iss_lat], color="white", s=60, zorder=5)
+            ax.set_xlim(-180, 180)
+            ax.set_ylim(-90, 90)
+            ax.set_aspect("equal")
 
             ax.set_xticks([])
             ax.set_yticks([])
@@ -302,7 +311,7 @@ class SpaceOverview(BasePlugin):
 
             buf = io.BytesIO()
             plt.savefig(buf, format="png", bbox_inches="tight",
-                       facecolor="#0a0a0a", dpi=96, pad_inches=0)
+                       facecolor=bg, dpi=96, pad_inches=0)
             plt.close(fig)
             buf.seek(0)
             return base64.b64encode(buf.read()).decode("utf-8")

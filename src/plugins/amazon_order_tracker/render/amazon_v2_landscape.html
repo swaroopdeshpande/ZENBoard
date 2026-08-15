@@ -11,6 +11,8 @@
         <span class="az-mode">{{ display_mode|replace('_', ' ')|upper }}</span>
       </div>
       <div class="az-header-line"></div>
+      <div class="az-header-line"></div>
+      {% if auth_error %}<div class="az-auth-banner">&#9888; GMAIL RECONNECT NEEDED - showing data from {{ auth_error.cache_age_hours }}h ago</div>{% endif %}
     </div>
 
     <!-- Orders -->

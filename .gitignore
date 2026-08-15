@@ -30,3 +30,17 @@ amazon_orders_cache.json
 
 # Ereader pagination cache (regenerable)
 books/.cache_*.json
+
+# Pushed personal data - Apple Health payload (steps/sleep/resting HR).
+# Repo is public; this must never be committed.
+src/config/apple_health.json
+
+# Runtime state, not source - regenerated on the device, and it leaks
+# usage patterns (what was read, when the frame refreshed, LED settings).
+src/config/led_config.json
+src/config/refresh_stats.json
+books/.ereader_state.json
+**/.state/
+
+# Editor/patch backups
+*.bak

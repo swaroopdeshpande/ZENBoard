@@ -6,6 +6,8 @@
 
     {% if order %}
     <!-- Header -->
+    {% if auth_error %}<div class="az-auth-banner">&#9888; GMAIL RECONNECT NEEDED - {{ auth_error.cache_age_hours }}h old</div>{% endif %}
+    <div class="az-header-detailed">
     <div class="az-header-detailed">
       <span class="az-logo">AMAZON</span>
       <span class="az-mode-small">ORDER TRACKING</span>

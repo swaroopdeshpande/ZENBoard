@@ -1,0 +1,165 @@
+/* ═══════════════════════════════════════════════════════════════
+   Family Notes - ZENBoard
+   Row-segregated layout: each pinned note is its own row. Full refresh
+   only (tri-color partial refresh confirmed unsupported on this panel -
+   see docs/ZENBOARD.md). Explicit pixel sizing from get_safe_area().
+   Solid black/white/red only - no anti-aliased grays.
+   ═══════════════════════════════════════════════════════════════ */
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  padding: 0 !important;
+  background: #fff;
+  font-family: 'DejaVu Sans', sans-serif;
+  font-weight: bold;
+  color: #000;
+  -webkit-font-smoothing: none;
+}
+
+.container { display: block !important; }
+
+.fn-frame {
+  background: #fff;
+  color: #000;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 6px solid #000;
+  border-radius: 16px;
+  padding: 16px 22px;
+}
+
+/* ── header ── */
+
+.fn-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.fn-pin { font-size: 20px; transform: rotate(-15deg); display: inline-block; }
+
+.fn-title {
+  font-size: 18px;
+  font-weight: 900;
+  letter-spacing: 2px;
+  color: #000;
+}
+
+.fn-url {
+  margin-left: auto;
+  font-size: 13px;
+  font-weight: 800;
+  color: #d40000;
+}
+
+.fn-url-p { margin: 2px 0 8px 0; font-size: 12px; }
+
+/* ── rows ── */
+
+.fn-rows {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  margin-top: 10px;
+}
+
+.fn-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 14px;
+  flex: 0 0 auto;
+  min-height: 0;
+  border-top: 1.5px solid #000;
+  padding: 10px 4px;
+  overflow: hidden;
+}
+
+.fn-row:first-child { border-top: none; }
+
+.fn-row-latest {
+  border-left: 5px solid #d40000;
+  padding-left: 12px;
+  background: #fff;
+}
+
+.fn-row-main {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.fn-row-from {
+  font-size: 15px;
+  font-weight: 900;
+  color: #d40000;
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+.fn-row-msg {
+  font-size: 17px;
+  font-weight: 700;
+  color: #000;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.fn-row-when {
+  font-size: 12px;
+  font-weight: 700;
+  color: #000;
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+/* ── empty state ── */
+
+.fn-empty {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  text-align: center;
+}
+
+.fn-empty .fn-pin { font-size: 48px; margin-bottom: 8px; }
+
+.fn-empty-title {
+  font-size: 26px;
+  font-weight: 900;
+  color: #000;
+}
+
+.fn-empty-sub {
+  font-size: 15px;
+  font-weight: 700;
+  color: #000;
+}
+
+.fn-empty-url {
+  font-size: 22px;
+  font-weight: 900;
+  color: #d40000;
+  letter-spacing: 1px;
+  margin-top: 4px;
+}
+
+.fn-row-check { font-size: 15px; color: #000; flex: 0 0 auto; }
+
+.fn-row-done .fn-row-from,
+.fn-row-done .fn-row-msg {
+  text-decoration: line-through;
+  text-decoration-thickness: 2px;
+}

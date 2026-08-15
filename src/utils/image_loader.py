@@ -8,6 +8,7 @@ and high-performance strategies on capable devices (Pi 3/4).
 
 from PIL import Image, ImageOps
 from io import BytesIO
+import requests
 from utils.http_client import get_http_session
 import logging
 import gc

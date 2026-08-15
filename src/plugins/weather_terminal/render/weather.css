@@ -98,7 +98,7 @@ body {
 }
 
 .wx-current {
-  flex: 0 0 200px;
+  flex: 0 0 225px;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -110,13 +110,13 @@ body {
 .wx-current-icon svg { display: block; }
 
 .wx-current-temp {
-  font-size: 42px;
+  font-size: 68px;
   font-weight: 700;
   line-height: 1;
   color: #fff;
 }
 
-.wx-unit { font-size: 18px; font-weight: 700; vertical-align: super; }
+.wx-unit { font-size: 26px; font-weight: 700; vertical-align: super; }
 
 .wx-current-cond {
   font-size: 15px;
@@ -136,7 +136,7 @@ body {
 .wx-stat-box {
   background: transparent; border: 2px solid #ffffff;
   border-radius: 10px;
-  padding: 6px 14px;
+  padding: 4px 14px;
   display: flex;
   flex-direction: column;
   gap: 3px;
@@ -148,7 +148,7 @@ body {
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 700;
   letter-spacing: 1px;
   color: #ffffff;
@@ -157,7 +157,7 @@ body {
 
 .wx-stat-lbl svg { flex-shrink: 0; }
 
-.wx-stat-val { font-size: 21px; font-weight: 700; color: #fff; }
+.wx-stat-val { font-size: 24px; font-weight: 700; color: #fff; }
 
 /* hourly strip */
 
@@ -206,4 +206,39 @@ body {
 
 .wx-hourly-p {
   padding: 16px 14px 14px 14px;
+}
+
+/* ══════════════════════ LIGHT MODE ══════════════════════
+   Default design above is dark; this overrides to a white/black
+   layout with the same red accents (NOW marker, HIGH label) that
+   the graph already uses in both themes. */
+
+.wx-light,
+.wx-light.wx-frame,
+.wx-light.wx-frame-p {
+  background: #ffffff;
+  color: #000000;
+}
+
+.wx-light .wx-date,
+.wx-light .wx-updated-lbl,
+.wx-light .wx-location-name,
+.wx-light .wx-updated-time,
+.wx-light .wx-current-temp,
+.wx-light .wx-stat-lbl,
+.wx-light .wx-stat-val,
+.wx-light .wx-hour-time,
+.wx-light .wx-hour-temp,
+.wx-light .wx-hour-rain {
+  color: #000000;
+}
+
+.wx-light .wx-rule { background: #000000; }
+.wx-light .wx-stat-box { border-color: #000000; }
+.wx-light .wx-hour-sep { border-right-color: #cccccc; }
+.wx-light .wx-hour-rain { opacity: 1; }
+
+/* one deliberate red accent in both themes: current condition text */
+.wx-current-cond {
+  color: #d40000 !important;
 }
