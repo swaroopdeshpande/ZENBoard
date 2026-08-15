@@ -1,5 +1,9 @@
 # ZenBoard
 
+<p align="center">
+  <img src="images/hero.png" alt="ZenBoard - e-ink dashboard in a wooden frame" width="100%">
+</p>
+
 A personal e-ink dashboard, built on top of [InkyPi](https://github.com/fatihak/InkyPi),
 running on a Raspberry Pi Zero 2W with a Waveshare 7.5" tri-color (black/white/red)
 e-ink panel in a wooden frame, plus a WS2812B LED accent strip.
@@ -48,6 +52,17 @@ and [ZENBOARD.md](./docs/ZENBOARD.md) for the calibration and configuration spec
 this build (display margins, `image_settings`, the plugins above, etc.) — you'll want to
 recalibrate the display margins for your own frame rather than reuse the values checked
 in here.
+
+## Gallery
+
+<p align="center">
+  <img src="images/frame.png" alt="The frame" width="49%">
+  <img src="images/plugins.png" alt="Plugin gallery" width="49%">
+</p>
+<p align="center">
+  <img src="images/led-strip.png" alt="WS2812B LED accent strip" width="49%">
+  <img src="images/presence.png" alt="mmWave presence sensor" width="49%">
+</p>
 
 ## Credits
 
