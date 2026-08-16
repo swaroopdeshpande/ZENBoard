@@ -8,6 +8,7 @@ import pytz
 from datetime import datetime, timezone
 from plugins.plugin_registry import get_plugin_instance
 from utils.image_utils import compute_image_hash
+from utils import zen_logo
 from model import RefreshInfo, PlaylistManager
 from PIL import Image
 
@@ -132,6 +133,16 @@ class RefreshTask:
                             continue
                         plugin = get_plugin_instance(plugin_config)
                         image = refresh_action.execute(plugin, self.device_config, current_dt)
+
+                        # Corner mark, applied here rather than per plugin so
+                        # it also covers the ones that return a PIL image
+                        # directly and never render a template. Before the
+                        # hash, so an unchanged frame still dedupes correctly.
+                        if self.device_config.get_config("show_logo", default=True):
+                            image = zen_logo.stamp(
+                                image,
+                                size=self.device_config.get_config("logo_size", default=40))
+
                         image_hash = compute_image_hash(image)
 
                         refresh_info = refresh_action.get_refresh_info()
