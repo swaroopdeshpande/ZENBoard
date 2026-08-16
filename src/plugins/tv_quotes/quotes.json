@@ -7,24 +7,17 @@
       "sheldon_2.png"
     ],
     "quotes": [
-      "I'm not crazy. My mother had me tested.",
-      "Bazinga!",
-      "That's my spot.",
-      "I'm not lazy, I'm just motivationally challenged.",
-      "It's a well-established principle of physics that any home containing more than one physicist is potentially uninhabitable.",
+      "That is my spot. In an ever-changing world it is a simple point of consistency.",
       "I'm a physicist. I have a working knowledge of the entire universe and everything it contains.",
-      "Whether or not you find it interesting is not a criteria we use to decide what's true.",
-      "I'm not being rude. I'm using sarcasm to express contempt.",
-      "In this house we obey the laws of thermodynamics!",
-      "I've never been a fan of the outdoors. To me it is just an insufficiently controlled environment.",
-      "I'm not superstitious, but I am a little stitious.",
-      "If I appear insensitive to the plight of the homeless, it's because I am rich in spirit.",
-      "Scissors cuts paper, paper covers rock, rock crushes lizard, lizard poisons Spock, Spock smashes scissors, scissors decapitates lizard, lizard eats paper, paper disproves Spock, Spock vaporizes rock, and as it always has, rock crushes scissors.",
-      "Texas has a lot to offer. Aggressive Christianity, interesting gun laws, and a pervasive sense of entitled ignorance.",
-      "Knock knock knock, Penny. Knock knock knock, Penny. Knock knock knock, Penny.",
-      "I don't know if you're aware of this, but there's a rich mosaic of q's and a's out there in the world, and I've read most of them.",
-      "Hard work is a myth. It's talent and luck.",
-      "I have a very good reason for thinking what I think. I've thought about it a lot, and I'm very smart."
+      "Leonard, please don't take this the wrong way, but the day you win a Nobel Prize is the day I begin my research on the drag coefficient of tassels on flying carpets.",
+      "You're talking to one of the three men in the Western Hemisphere capable of following that train of thought.",
+      "It must be humbling to suck on so many levels.",
+      "Leonard, social protocol states: when a friend is upset, you offer them a hot beverage such as tea.",
+      "Obviously you're not well-suited for three-dimensional chess. Perhaps three-dimensional Candy Land would be more your speed.",
+      "Then I believe we've arrived at another quintessential Rock-Paper-Scissors-Lizard-Spock moment.",
+      "Bazinga!",
+      "I'm not crazy. My mother had me tested.",
+      "In this house we obey the laws of thermodynamics!"
     ]
   },
   "penny": {
@@ -35,16 +28,12 @@
       "penny_2.png"
     ],
     "quotes": [
-      "Sweetie, I love you, but you're the worst liar in the world.",
-      "I make coffee. Which, when you think about it, is a lot like nursing, but I don't have to change bedpans.",
-      "I'm not a nerd girl. Fine, I'm a nerd girl.",
-      "Honey, I'm not trying to insult you. I'm just letting you know that I don't understand a word you're saying.",
-      "I don't need luck, I have skill.",
-      "You know, for a girl who didn't go to college, I did pretty good.",
-      "I love that you get so excited about stuff. It's cute.",
-      "Look, I love you all dearly, but sometimes you're a lot.",
-      "I'm not crying because I'm sad. I'm crying because everyone is stupid.",
-      "Guys, I don't know if you've noticed, but I'm kind of hot."
+      "You know, for a smart guy, you really seem to have a hard time grasping the concept “Don't piss off the people who handle the things you eat”.",
+      "Look, you are a great guy, and it is the things you love that make you who you are.",
+      "It's not gonna explode, just keep driving. Warp speed ahead, Mr. Spock.",
+      "Not too bad for someone who doesn't know what “axiomatic” means.",
+      "You know, Amy, when we say girl talk, that just doesn't have to be about our lady parts.",
+      "I'm a Sagittarius, which probably tells you way more than you need to know..."
     ]
   },
   "leonard": {
@@ -55,14 +44,13 @@
       "leonard_2.png"
     ],
     "quotes": [
-      "Anything worth doing has a certain amount of risk associated with it.",
-      "I'm not just anybody. I'm your boyfriend.",
-      "String theory is not dead. Elegant, elegant math.",
-      "I'm sorry, Penny. That's not what I meant. What I meant is that I don't know what I meant.",
-      "It's a magical moment. Let's not ruin it by talking about how many video games it took to get here.",
-      "Look, I'm sorry that string theory is a colossal failure that's gained no scientific traction in 30 years.",
-      "I have a PhD, not that you'd know it from how I'm treated around here.",
-      "We're scientists. We solve problems, we don't create them."
+      "We don't need strength, we're physicists. We are the intellectual descendants of Archimedes. Give me a lever and a fulcrum and I could move the earth.",
+      "Come on, we have a combined IQ of 360, we should be able to figure out how to get into a stupid building.",
+      "I think Sheldon might be the larval form of his species and someday he'll spin a cocoon and emerge two months later with moth wings and an exoskeleton.",
+      "My parents focused on celebrating achievements, and my being expelled from a birth canal was not considered one of them.",
+      "That's the social protocol. It's what you do when you have a friend who's proud of something they really suck at.",
+      "Scientists do not compromise. Our minds are trained to synthesize facts and come to inarguable conclusions. Not to mention Sheldon is bat-crap crazy.",
+      "Howard lives with his mother, and Raj can't speak to women unless he's drunk."
     ]
   },
   "howard": {
@@ -73,12 +61,12 @@
       "howard_2.png"
     ],
     "quotes": [
-      "I have a Master's degree, from MIT, I'll have you know. People assume because I don't have a PhD, they can call me 'Mister.' Well, it's 'Master.' I have a Master's degree.",
-      "I'm engaged to a microbiologist. That's like a triple word score in Words with Nerds.",
-      "In space, no one can hear you complain that you're the only one of your friends without a PhD.",
-      "I speak Klingon.",
-      "Bazinga is Sheldon's thing. I have my own things.",
-      "Back in my day we didn't have Facebook, we had to poke each other in person."
+      "Sheldon, I have a masters degree in engineering. I wipe my bottom with warranties. Except for Apple Care. That pays for itself in the long run.",
+      "Over the years we've formulated a number of theories about how Sheldon might reproduce. I'm an advocate of mitosis.",
+      "I believe one day Sheldon will eat an enormous amount of Thai food and split into two Sheldons.",
+      "My mother calls me at work to see if I had a healthy bowel movement.",
+      "I'm guessing that future historians will condemn us for not taking this opportunity to kill Sheldon.",
+      "I'm torn. She might be dying. I wouldn't want to miss that. On the other hand, if I let it go to voice-mail, I could play it over and over."
     ]
   },
   "raj": {
@@ -89,10 +77,13 @@
       "raj_2.png"
     ],
     "quotes": [
-      "I can't talk to women unless I've had a drink. And frankly, one drink isn't enough. I need to be at the point where I'm one drink away from a coma.",
-      "In my culture, arranged marriages are considered completely normal.",
-      "I have social anxiety disorder that renders me functionally mute around women I'm not related to.",
-      "Excuse me, I don't talk to strangers unless properly lubricated."
+      "Gentlemen, I put it to you: the worst tapioca pudding is better than the best pudding of any other flavor.",
+      "Here's what I wonder about zombies. What happens if they can't get any human flesh to eat? They can't starve to death, they're already dead.",
+      "Do not tell me about my own culture, Sheldon! In the mood I'm in, I'll take you out, I swear to cow!",
+      "How do you do? Rajesh Ramayan Koothrappali. Call me Raj.",
+      "When I lie through my teeth to a woman, you nod and agree.",
+      "I couldn't find you guys, so I bought six new friends. Three sadly are dead.",
+      "I can't talk to women unless I've had a drink."
     ]
   },
   "amy": {
@@ -103,10 +94,13 @@
       "amy_2.png"
     ],
     "quotes": [
-      "I'm a neurobiologist. I know how the brain works better than anyone at this table, and even I don't understand men.",
-      "Sheldon, I appreciate the fact that intimacy is a difficult and frightening thing for you.",
-      "Bazinga is my boyfriend's word, but I like to use it too.",
-      "I have both a physical body and a needlessly complicated emotional one."
+      "I find the notion of romantic love to be an unnecessary cultural construct that has no value to human relationships.",
+      "I study the brain, the organ responsible for Beethoven's Fifth Symphony. Bernadette studies yeast, the organism responsible for Michelob Lite.",
+      "I don't object to the concept of a deity, but I'm baffled by the notion of one that takes attendance.",
+      "You know what's wonderful about the praying mantis? They devour their mate.",
+      "Like everybody else's: subject to entropy, decay, and eventual death. Thank you for asking.",
+      "Sheldon, just because you have a focus on cleanliness bordering on the psychotic doesn't mean I have to participate.",
+      "I've devised an experiment that I believe will increase your feelings for me, in an accelerated time frame."
     ]
   },
   "bernadette": {
@@ -117,9 +111,12 @@
       "bernadette_2.png"
     ],
     "quotes": [
-      "I may look like a nice sweet little girl, but I will cut you.",
-      "I have a PhD in microbiology. I could kill you and testify at my own trial as an expert witness.",
-      "Just because I'm getting married doesn't mean I'm going to stop working. I love my job."
+      "I know how to deal with stubborn children. My mother used to run an illegal day-care center in our basement.",
+      "Last month my company both invented and cured restless eye syndrome. Ca-ching, you blinky chumps!",
+      "I took Howard to the beach once. He almost burst into flames like a vampire.",
+      "None of Sheldon's theories have ever been definitively proven. My husband actually went to outer space.",
+      "You'd better find my husband's mother, 'cause one way or another, we're walkin' out of this airport with a dead woman!",
+      "Howie, I love you. And as your wife, your mother is every bit my problem as she is yours."
     ]
   }
 }
