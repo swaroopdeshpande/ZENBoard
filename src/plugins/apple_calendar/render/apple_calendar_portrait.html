@@ -1,34 +1,53 @@
 {% extends "plugin.html" %}
 
 {% block content %}
-<div class="cal-frame cal-frame-p {% if dark %}cal-dark{% endif %}" style="width: {{ frame_w }}px; height: {{ frame_h }}px;">
+<div class="cal cal-portrait {% if dark %}cal-dark{% endif %}" style="width: {{ frame_w }}px; height: {{ frame_h }}px;">
 
-  <div class="cal-header">
-    <span class="cal-month">{{ month_label }}</span>
+  <div class="cal-head">
+    <span class="cal-month">{{ month_name }}</span>
+    <span class="cal-year">{{ year }}</span>
   </div>
 
-  <div class="cal-weekdays">
-    {% for wd in weekday_labels %}
-    <div class="cal-wd {% if loop.index0 == 0 or loop.index0 == 6 %}cal-wd-red{% endif %}">{{ wd[:1] }}</div>
+  <div class="cal-wdrow">
+    {% for wd in weekday_labels %}<div class="cal-wd">{{ wd }}</div>{% endfor %}
+  </div>
+
+  {% for week in strip %}
+  <div class="cal-week">
+    {% for d in week %}
+    <div class="cal-day">
+      <div class="cal-num {% if d.is_today %}cal-today{% elif d.is_past %}cal-past{% endif %}">
+        {{ d.day }}
+        {% if d.dots %}
+        <div class="cal-dots">
+          {% for _ in range(d.dots) %}<span class="cal-dot"></span>{% endfor %}
+        </div>
+        {% endif %}
+      </div>
+    </div>
     {% endfor %}
   </div>
+  {% endfor %}
 
-  <div class="cal-grid">
-    {% for week in weeks %}
-      {% for day in week %}
-      <div class="cal-cell {% if not day.in_month %}cal-cell-dim{% endif %}">
-        <div class="cal-daynum {% if day.is_today %}cal-today{% endif %}">{{ day.day }}</div>
-        <div class="cal-events">
-          {% for ev in day.events %}
-          <div class="cal-evt" style="background:{{ ev.color }};">{{ ev.title }}</div>
-          {% endfor %}
-          {% if day.overflow %}
-          <div class="cal-more">+{{ day.overflow }}</div>
-          {% endif %}
-        </div>
+  <div class="cal-rule"></div>
+
+  <div class="cal-cols">
+    {% for day in upcoming %}
+    <div class="cal-col">
+      <div class="cal-collabel">{{ day.label }}</div>
+      {% for ev in day.events %}
+      <div class="cal-evt {% if ev.all_day %}cal-evt-allday{% endif %}">
+        {% if ev.time %}<div class="cal-evt-time">{{ ev.time }}</div>{% endif %}
+        <div class="cal-evt-title">{{ ev.title }}</div>
       </div>
       {% endfor %}
+      {% if day.overflow %}<div class="cal-more">+{{ day.overflow }} more</div>{% endif %}
+    </div>
     {% endfor %}
+
+    {% if not upcoming %}
+    <div class="cal-empty">Nothing scheduled</div>
+    {% endif %}
   </div>
 
 </div>

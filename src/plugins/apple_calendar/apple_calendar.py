@@ -1,12 +1,20 @@
 """
 Apple Calendar - ZENBoard
-Month-grid calendar styled after iOS Calendar: today as a filled red circle,
-events as small colored bars, strict bordered grid. Imports any number of
-ICS/iCal URLs (Google, Apple iCloud share links, Outlook, any webcal://) -
-no OAuth, just a public/secret .ics feed URL pasted in settings.
 
-Two themes: "red" (white bg, black text, red accents) and "black" (black bg,
-white text, red accents) - selectable in settings.
+Two-week strip across the top (this week and next, Monday-first) with today
+marked as a filled circle and a dot under any day that has events, then the
+next few days that actually have something on them listed underneath in
+columns.
+
+Imports any number of ICS/iCal URLs (Google, Apple iCloud share links,
+Outlook, any webcal://) - no OAuth, just a public/secret .ics feed URL
+pasted in settings.
+
+Note on colour: the panel is tri-colour BWR, so the greys in a typical
+calendar design are not available - a mid grey dithers into visible noise.
+Hierarchy is carried by weight and size instead, with red kept for genuine
+accents. All-day events use a hard-edged hatch (pure black lines on white)
+rather than a grey fill, which stays crisp under quantisation.
 """
 
 import logging
@@ -22,8 +30,12 @@ from utils.image_utils import stem_darken
 
 logger = logging.getLogger(__name__)
 
-DOT_COLORS = ["#d40000", "#000000", "#d40000", "#000000", "#d40000", "#000000"]
-WEEKDAY_LABELS = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"]
+WEEKDAY_LABELS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+
+MAX_UPCOMING_DAYS = 3        # columns underneath the strip
+MAX_EVENTS_PER_DAY = 4       # per column, before "+N more"
+LOOKAHEAD_DAYS = 21          # how far forward to hunt for days with events
+MAX_DOTS = 3                 # dots drawn under a day in the strip
 
 
 class AppleCalendar(BasePlugin):
@@ -49,29 +61,36 @@ class AppleCalendar(BasePlugin):
         except Exception:
             tz = pytz.timezone("Asia/Kolkata")
         now = datetime.now(tz)
+        today = now.replace(hour=0, minute=0, second=0, microsecond=0)
 
-        month_start = datetime(now.year, now.month, 1, tzinfo=tz)
-        offset = (month_start.weekday() + 1) % 7  # days since Sunday
-        grid_start = month_start - timedelta(days=offset)
-        grid_end = grid_start + timedelta(days=42)
+        # Monday of the current week, then a fortnight from there.
+        strip_start = today - timedelta(days=today.weekday())
+        strip_end = strip_start + timedelta(days=14)
+        fetch_end = today + timedelta(days=LOOKAHEAD_DAYS)
 
         events_by_day = {}
         if calendar_urls:
             try:
-                events_by_day = self._fetch_events(calendar_urls, tz, grid_start, grid_end)
+                events_by_day = self._fetch_events(
+                    calendar_urls, tz, strip_start, max(strip_end, fetch_end))
             except Exception as e:
                 logger.error(f"Apple Calendar: event fetch failed: {e}")
+        else:
+            logger.warning("Apple Calendar: no calendar URLs configured")
 
         dimensions = device_config.get_resolution()
         is_landscape = dimensions[0] > dimensions[1]
         if device_config.get_config("orientation") == "vertical":
             is_landscape = False
 
-        max_shown = 2 if is_landscape else 4
-        weeks = self._build_weeks(grid_start, now, month_start.month, events_by_day, max_shown)
+        strip = self._build_strip(strip_start, today, events_by_day)
+        upcoming = self._build_upcoming(
+            today, events_by_day,
+            max_days=MAX_UPCOMING_DAYS if is_landscape else 2)
 
         safe = self.get_safe_area(device_config)
-        template = "apple_calendar_landscape.html" if is_landscape else "apple_calendar_portrait.html"
+        template = ("apple_calendar_landscape.html" if is_landscape
+                    else "apple_calendar_portrait.html")
 
         image = self.render_image(
             dimensions,
@@ -79,9 +98,11 @@ class AppleCalendar(BasePlugin):
             "apple_calendar.css",
             {
                 "dark": theme == "black",
-                "month_label": now.strftime("%B %Y").upper(),
+                "month_name": now.strftime("%B"),
+                "year": now.strftime("%Y"),
                 "weekday_labels": WEEKDAY_LABELS,
-                "weeks": weeks,
+                "strip": strip,
+                "upcoming": upcoming,
                 "frame_w": safe["usable_width"],
                 "frame_h": safe["usable_height"],
                 "plugin_settings": {
@@ -102,15 +123,17 @@ class AppleCalendar(BasePlugin):
 
         image = stem_darken(image)
 
-        logger.info("=== Apple Calendar: Complete ===")
+        logger.info(f"=== Apple Calendar: Complete ({len(upcoming)} upcoming days) ===")
         return image
 
     # ------------------------------------------------------------------
+    # Event fetching
+    # ------------------------------------------------------------------
 
     def _fetch_events(self, urls, tz, start, end):
+        """{ 'YYYY-MM-DD': [ {title, all_day, start, end, sort}, ... ] }"""
         events_by_day = {}
-        for i, url in enumerate(urls):
-            color = DOT_COLORS[i % len(DOT_COLORS)]
+        for url in urls:
             try:
                 cal = self._fetch_ics(url)
             except Exception as e:
@@ -121,16 +144,46 @@ class AppleCalendar(BasePlugin):
             except Exception as e:
                 logger.warning(f"Apple Calendar: could not expand events for {url}: {e}")
                 continue
+
             for ev in occurrences:
-                dtstart = ev.decoded("dtstart")
-                if isinstance(dtstart, datetime):
-                    local = dtstart.astimezone(tz)
-                else:
+                try:
+                    dtstart = ev.decoded("dtstart")
+                except Exception:
+                    continue
+                try:
+                    dtend = ev.decoded("dtend")
+                except Exception:
+                    dtend = None
+
+                # A bare date (no time component) is an all-day event.
+                all_day = not isinstance(dtstart, datetime)
+
+                if all_day:
                     local = datetime(dtstart.year, dtstart.month, dtstart.day, tzinfo=tz)
-                key = local.strftime("%Y-%m-%d")
-                title = str(ev.get("summary") or "Untitled")
-                events_by_day.setdefault(key, []).append({"title": title, "color": color})
+                    time_label = ""
+                    sort_key = -1          # all-day events sit above timed ones
+                else:
+                    local = dtstart.astimezone(tz)
+                    time_label = self._fmt_time(local)
+                    if isinstance(dtend, datetime):
+                        time_label += " — " + self._fmt_time(dtend.astimezone(tz))
+                    sort_key = local.hour * 60 + local.minute
+
+                events_by_day.setdefault(local.strftime("%Y-%m-%d"), []).append({
+                    "title": str(ev.get("summary") or "Untitled"),
+                    "all_day": all_day,
+                    "time": time_label,
+                    "sort": sort_key,
+                })
+
+        for key in events_by_day:
+            events_by_day[key].sort(key=lambda e: e["sort"])
         return events_by_day
+
+    @staticmethod
+    def _fmt_time(dt):
+        # %-I is a GNU extension - fine on the Pi, and avoids a leading zero.
+        return dt.strftime("%-I:%M %p")
 
     @staticmethod
     def _fetch_ics(url):
@@ -140,23 +193,49 @@ class AppleCalendar(BasePlugin):
         resp.raise_for_status()
         return icalendar.Calendar.from_ical(resp.text)
 
+    # ------------------------------------------------------------------
+    # Layout data
+    # ------------------------------------------------------------------
+
     @staticmethod
-    def _build_weeks(grid_start, now, current_month, events_by_day, max_shown=3):
+    def _build_strip(strip_start, today, events_by_day):
+        """Two Monday-first weeks: this one and the next."""
         weeks = []
-        d = grid_start
-        today_key = now.strftime("%Y-%m-%d")
-        for _ in range(6):
+        d = strip_start
+        today_key = today.strftime("%Y-%m-%d")
+        for _ in range(2):
             week = []
             for _ in range(7):
                 key = d.strftime("%Y-%m-%d")
-                all_events = events_by_day.get(key, [])
+                count = len(events_by_day.get(key, []))
                 week.append({
                     "day": d.day,
-                    "in_month": d.month == current_month,
                     "is_today": key == today_key,
-                    "events": all_events[:max_shown],
-                    "overflow": max(0, len(all_events) - max_shown),
+                    "is_past": d < today,
+                    "dots": min(count, MAX_DOTS),
                 })
                 d += timedelta(days=1)
             weeks.append(week)
         return weeks
+
+    @staticmethod
+    def _build_upcoming(today, events_by_day, max_days=MAX_UPCOMING_DAYS):
+        """The next few days that actually have events, today included.
+
+        Deliberately skips empty days rather than showing blank columns -
+        with only three slots, a column reading 'nothing on' is wasted space.
+        """
+        out = []
+        for offset in range(0, LOOKAHEAD_DAYS + 1):
+            if len(out) >= max_days:
+                break
+            d = today + timedelta(days=offset)
+            evs = events_by_day.get(d.strftime("%Y-%m-%d"))
+            if not evs:
+                continue
+            out.append({
+                "label": d.strftime("%a %-d %b"),
+                "events": evs[:MAX_EVENTS_PER_DAY],
+                "overflow": max(0, len(evs) - MAX_EVENTS_PER_DAY),
+            })
+        return out
