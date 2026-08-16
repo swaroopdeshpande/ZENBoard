@@ -38,6 +38,8 @@ EFFECT_LIST = [
     # smooth/ambient set, modelled on the WLED effects of the same names
     "pacifica", "aurora", "sunrise", "candle", "sinelon", "plasma",
     "lake", "twinklefox",
+    # distance-reactive, driven by the mmWave sensor
+    "dist_hue", "dist_fade", "dist_ember", "dist_breathe", "dist_aurora", "dist_velocity",
 ]
 
 DEFAULT_CONFIG = {

@@ -195,6 +195,14 @@
             <option value="lake">🏞️ Lake</option>
             <option value="twinklefox">✨ Twinkle</option>
             </optgroup>
+            <optgroup label="Distance reactive (mmWave)">
+            <option value="dist_fade">🔅 Proximity Fade (your colour)</option>
+            <option value="dist_ember">🔥 Ember Approach</option>
+            <option value="dist_breathe">🫁 Approach Breath</option>
+            <option value="dist_aurora">🌌 Proximity Aurora</option>
+            <option value="dist_velocity">💨 Motion Reactive</option>
+            <option value="dist_hue">🌈 Distance Hue</option>
+            </optgroup>
             <option value="off">❌ Off</option>
         </select>
     </div>
@@ -265,6 +273,29 @@
         <button class="led-preset" onclick="applyPreset('focus')" title="Focus">🎯</button>
         <button class="led-preset" onclick="applyPreset('party')" title="Party">🎉</button>
         <button class="led-preset" onclick="applyPreset('off')" title="Off">⭕</button>
+    </div>
+
+    <!-- mmWave sensor telemetry -->
+    <div class="led-row" style="margin-top:6px;border-top:1px solid rgba(128,128,128,.3);padding-top:10px;">
+        <label class="led-lbl">Sensor</label>
+        <span id="snPresence" class="led-slider-val">-</span>
+    </div>
+    <div class="led-row">
+        <label class="led-lbl">Distance</label>
+        <span id="snDist" class="led-slider-val">-</span>
+    </div>
+    <div class="led-row">
+        <label class="led-lbl">Proximity</label>
+        <div class="led-slider-wrap">
+            <div style="flex:1;background:rgba(128,128,128,.25);border-radius:6px;height:12px;overflow:hidden;">
+                <div id="snProxBar" style="height:100%;width:0%;background:#CC0000;transition:width .3s;"></div>
+            </div>
+            <span id="snProxVal" class="led-slider-val">0%</span>
+        </div>
+    </div>
+    <div class="led-row">
+        <label class="led-lbl">Motion</label>
+        <span id="snVel" class="led-slider-val">-</span>
     </div>
 </div>
 
@@ -465,7 +496,7 @@ function updateBrightnessLabel(val) {
 function toggleBreatheRow() {
     const mode = document.getElementById('ledMode').value;
     document.getElementById('breatheRow').style.display = mode === 'breathe' ? 'flex' : 'none';
-    document.getElementById('colorRow').style.display = ['rainbow', 'warm_glow', 'off', 'pacifica', 'aurora', 'sunrise', 'candle', 'plasma'].includes(mode) ? 'none' : 'flex';
+    document.getElementById('colorRow').style.display = ['rainbow', 'warm_glow', 'off', 'pacifica', 'aurora', 'sunrise', 'candle', 'plasma', 'dist_hue'].includes(mode) ? 'none' : 'flex';
 }
 
 function applyPreset(name) {
@@ -490,8 +521,42 @@ document.addEventListener('DOMContentLoaded', ledLoad);
     </div>
 
     <script src="{{ url_for('static', filename='scripts/dashboard_v2.js') }}"></script>
+
+
 </body>
 </html>
 <div class="logo-watermark">
     <img src="{{ url_for('static', filename='images/logo.png') }}" alt="ZenBoard Logo" class="logo-img">
 </div>
+<script>
+// mmWave telemetry. Reads the breadcrumb files via /api/sensor rather than the
+// serial port - only zenboard_sensor.service may own the UART.
+async function pollSensor() {
+    const set = (id, v) => { const e = document.getElementById(id); if (e) e.textContent = v; };
+    try {
+        const r = await fetch('/api/sensor', {cache: 'no-store'});
+        const d = await r.json();
+        const bar = document.getElementById('snProxBar');
+        if (!d.available) {
+            set('snPresence', d.error ? 'offline' : 'offline');
+            set('snDist', '--'); set('snVel', '--'); set('snProxVal', '0%');
+            if (bar) bar.style.width = '0%';
+            return;
+        }
+        const away = d.away_seconds ? ' (' + Math.floor(d.away_seconds / 60) + 'm)' : '';
+        set('snPresence', (d.present ? 'present' : 'empty') + away);
+        set('snDist', d.distance_cm != null ? d.distance_cm + ' cm' : '--');
+        const v = d.velocity || 0;
+        set('snVel', Math.abs(v) < 2 ? 'still'
+                     : (v < 0 ? 'approaching ' : 'moving away ') + Math.abs(v).toFixed(0) + ' cm/s');
+        const pct = Math.round((d.proximity || 0) * 100);
+        set('snProxVal', pct + '%');
+        if (bar) bar.style.width = pct + '%';
+    } catch (e) {
+        set('snPresence', 'unreachable');
+    }
+}
+setInterval(pollSensor, 1500);
+document.addEventListener('DOMContentLoaded', pollSensor);
+</script>
+

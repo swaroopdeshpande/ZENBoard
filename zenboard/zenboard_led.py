@@ -140,6 +140,23 @@ def paint(active, fn):
         pixels[i] = scale_color(r, g, b, config["brightness"])
 
 
+# The sensor writes proximity at discrete intervals, so reading it raw makes
+# every non-animated distance effect hold its value and then jump. Easing
+# toward the target here, every rendered frame, decouples visual smoothness
+# from how often the sensor happens to write - raising the frame rate alone
+# just renders the same stale number more times.
+_prox_shown = 0.0
+PROX_EASE = 0.22          # per frame at ~33Hz -> about a 0.9s glide
+
+
+def _eased_proximity(target):
+    global _prox_shown
+    _prox_shown += (target - _prox_shown) * PROX_EASE
+    if abs(target - _prox_shown) < 0.0005:
+        _prox_shown = target
+    return _prox_shown
+
+
 def run_frame():
     global frame
     if not config.get("enabled", True):
@@ -309,6 +326,93 @@ def run_frame():
             return int(r0 * lum), int(g0 * lum), int(b0 * lum)
         paint(active, f)
 
+
+    # ── distance-reactive effects ────────────────────────────────────────
+    # Driven by "proximity" in the config: 0.0 = far away / nobody there,
+    # 1.0 = right in front of the sensor. zenboard_distance_led.py writes it
+    # from the mmWave range readings; if that service is not running the key
+    # is absent and these all sit at their idle state rather than misbehaving.
+
+    elif mode.startswith("dist_"):
+        # Distance-reactive. zenboard_sensor.py publishes:
+        #   proximity  0.0 far/empty .. 1.0 right in front
+        #   velocity   cm/s, negative approaching, positive receding
+        # Absent keys mean the sensor service is not running; everything below
+        # then sits at its idle state rather than misbehaving.
+        #
+        # These all act on the WHOLE strip. Earlier attempts that lit
+        # individual pixels - bar meters, tracking comets - read as fussy on a
+        # 10-LED run behind a picture frame. Colour and intensity across the
+        # entire run are legible from anywhere in the room without inviting
+        # you to stare at the LEDs.
+        prox = _eased_proximity(max(0.0, min(1.0, float(config.get("proximity", 0.0) or 0.0))))
+        vel = float(config.get("velocity", 0.0) or 0.0)
+        br = config["brightness"]
+        r0, g0, b0 = hex_to_rgb(config["color"])
+
+        if mode == "dist_fade":
+            # The chosen colour, simply swelling and receding with distance.
+            # Unlike the other distance effects this keeps the exact colour
+            # picked in the UI and varies only its intensity, and it goes
+            # fully dark at range rather than holding an idle floor.
+            lvl = prox ** 1.6
+            set_range(*scale_color(r0, g0, b0, int(br * lvl)))
+
+        elif mode == "dist_ember":
+            # Fire seen from across the room: deep ember at range, flaring to
+            # white-hot as you arrive, with a slow flicker that grows with it.
+            flicker = 1.0 + 0.05 * prox * math.sin(frame * 0.21) \
+                          + 0.03 * prox * math.sin(frame * 0.37)
+            r = 255
+            g = int((40 + 175 * prox) * flicker)
+            b = int((0 + 120 * (prox ** 2.2)) * flicker)
+            lvl = 0.18 + 0.82 * prox
+            set_range(*scale_color(r, min(255, g), min(255, b), int(br * lvl)))
+
+        elif mode == "dist_breathe":
+            # Breathing that quickens and deepens as you approach: barely
+            # moving from across the room, urgent up close.
+            speed = 0.012 + 0.085 * prox
+            depth = 0.15 + 0.65 * prox
+            beat = (math.sin(frame * speed) + 1) / 2
+            lvl = (0.12 + 0.88 * prox) * (1.0 - depth + depth * beat)
+            set_range(*scale_color(r0, g0, b0, int(br * lvl)))
+
+        elif mode == "dist_aurora":
+            # Whole-strip colour that drifts on its own and tightens as you
+            # near: wide wandering hues far away, settling toward the chosen
+            # colour's hue when you are in front of it.
+            import colorsys as _cs
+            h0, _, _ = _cs.rgb_to_hsv(r0 / 255.0, g0 / 255.0, b0 / 255.0)
+            wander = (1.0 - prox) * 0.42
+            hue = h0 + wander * math.sin(frame * 0.018)
+            lvl = 0.15 + 0.85 * prox
+            set_range(*scale_color(*hsv(hue, 0.9, lvl), br))
+
+        elif mode == "dist_velocity":
+            # Reacts to movement rather than position: cools blue as you back
+            # away, flares warm as you close in, and rests on the configured
+            # colour when you hold still.
+            v = max(-1.0, min(1.0, -vel / 60.0))     # -1 receding .. +1 approaching
+            if v >= 0:
+                rr = int(r0 + (255 - r0) * v)
+                gg = int(g0 * (1 - 0.6 * v))
+                bb = int(b0 * (1 - 0.8 * v))
+            else:
+                k = -v
+                rr = int(r0 * (1 - 0.85 * k))
+                gg = int(g0 * (1 - 0.3 * k) + 60 * k)
+                bb = int(b0 * (1 - 0.2 * k) + 255 * k)
+            lvl = 0.2 + 0.8 * prox
+            set_range(*scale_color(max(0, rr), max(0, gg), min(255, max(0, bb)), int(br * lvl)))
+
+        else:
+            # dist_hue - the original, and still the most legible: cool blue at
+            # range, through green, to warm red on arrival.
+            hue = 0.58 * (1.0 - prox)
+            lvl = 0.15 + 0.85 * prox
+            set_range(*scale_color(*hsv(hue, 0.95, lvl), br))
+
     elif mode == "refresh_flash":
         flash_period = 20
         t = frame % flash_period
@@ -337,4 +441,4 @@ while True:
         run_frame()
     except Exception as e:
         logger.error(f"Error: {e}")
-    time.sleep(0.05)
+    time.sleep(0.03)   # ~33Hz; 20Hz made the slower effects visibly step

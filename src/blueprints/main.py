@@ -174,6 +174,37 @@ def ereader_delete():
     
     return jsonify({"success": True})
 
+@main_bp.route('/api/sensor', methods=['GET'])
+def sensor_status():
+    """Live mmWave readings for the web UI.
+
+    Reads the breadcrumb files zenboard_sensor.service writes rather than
+    touching the serial port - only one process may own the UART, and that
+    service is it.
+    """
+    import json as _json, time as _time
+    out = {"available": False}
+    try:
+        with open('/tmp/zenboard_distance.json') as f:
+            d = _json.load(f)
+        age = _time.time() - float(d.get('updated_at', 0) or 0)
+        out = {
+            "available": age < 15,      # stale file means the service is down
+            "age_seconds": round(age, 1),
+            "present": bool(d.get('present')),
+            "distance_cm": d.get('distance_cm'),
+            "proximity": d.get('proximity', 0),
+            "velocity": d.get('velocity', 0),
+            "mode": d.get('mode'),
+            "away_seconds": d.get('away_seconds', 0),
+        }
+    except FileNotFoundError:
+        out["error"] = "sensor service not running"
+    except Exception as e:
+        out["error"] = str(e)
+    return jsonify(out)
+
+
 @main_bp.route('/api/presence/changed', methods=['POST'])
 def presence_changed():
     """Posted by zenboard_presence.service when someone walks in.

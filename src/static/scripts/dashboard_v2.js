@@ -129,38 +129,15 @@ sortToggle.addEventListener('click', () => {
 // NEW: Theme Switching
 // ═══════════════════════════════════════════════════════════
 
-const THEME_LED_COLORS = {
-    light:  { color: '#FFFFFF', mode: 'static',    brightness: 255 },
-    dark:   { color: '#0000FF', mode: 'breathe',   brightness: 255 },
-    ocean:  { color: '#0077FF', mode: 'static',    brightness: 255 },
-    forest: { color: '#00FF44', mode: 'static',    brightness: 255 },
-    sunset: { color: '#FF4500', mode: 'static',    brightness: 255 },
-    nord:   { color: '#88C0D0', mode: 'static',    brightness: 255 },
-};
 
 function setTheme(theme) {
     document.documentElement.setAttribute('data-theme', theme);
     localStorage.setItem('inkypi-theme', theme);
     
-    // Sync LEDs to theme
-    const led = THEME_LED_COLORS[theme];
-    if (led) {
-        fetch('/api/led/config', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ ...led, enabled: true })
-        });
-        // Update LED panel UI if visible
-        const modeEl = document.getElementById('ledMode');
-        const colorEl = document.getElementById('ledColor');
-        const brEl = document.getElementById('ledBrightness');
-        if (modeEl) modeEl.value = led.mode;
-        if (colorEl) colorEl.value = led.color;
-        if (brEl) {
-            brEl.value = led.brightness;
-            updateBrightnessLabel(led.brightness);
-        }
-    }
+    // The web UI theme no longer touches the LEDs. It used to overwrite the
+    // strip's mode, colour and brightness on every theme change, which
+    // silently undid whatever effect was running - including the sensor
+    // driven ones.
     document.querySelectorAll('.theme-btn').forEach(btn => {
         btn.classList.toggle('active', btn.dataset.theme === theme);
     });
