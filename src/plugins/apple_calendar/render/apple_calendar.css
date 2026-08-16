@@ -73,12 +73,15 @@ html, body {
 /* Past days recede by weight, not by colour - see note above. */
 .cal-past { font-weight: 300; }
 
+/* Red is one of only three inks this panel has, so it is spent on the
+   things worth finding at a glance: today, days that have something on
+   them, and the date headings underneath. */
 .cal-today {
-    background: #000000;
+    background: #d40000;
     color: #ffffff;
     font-weight: 500;
 }
-.cal-dark .cal-today { background: #ffffff; color: #000000; }
+.cal-dark .cal-today { background: #d40000; color: #ffffff; }
 
 .cal-dots {
     position: absolute;
@@ -94,11 +97,11 @@ html, body {
     width: 4px;
     height: 4px;
     border-radius: 2px;
-    background: #000000;
+    background: #d40000;
 }
 .cal-today .cal-dot { background: #ffffff; }
-.cal-dark .cal-dot { background: #ffffff; }
-.cal-dark .cal-today .cal-dot { background: #000000; }
+.cal-dark .cal-dot { background: #d40000; }
+.cal-dark .cal-today .cal-dot { background: #ffffff; }
 
 /* ---------- divider ---------- */
 
@@ -115,9 +118,16 @@ html, body {
     flex: 1;
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 20px;
+    /* Days flow into a second row of columns to use the lower half, which
+       otherwise sat empty on a sparse calendar. auto-rows keeps each row only
+       as tall as its content, and overflow clips rather than letting a busy
+       day push the layout past the frame. */
+    grid-auto-rows: min-content;
+    column-gap: 20px;
+    row-gap: 14px;
     min-height: 0;
     overflow: hidden;
+    align-content: start;
 }
 
 .cal-col { min-width: 0; }
@@ -126,6 +136,7 @@ html, body {
     font-size: 20px;
     font-weight: 500;
     margin-bottom: 8px;
+    color: #d40000;
 }
 
 .cal-evt {
@@ -154,8 +165,6 @@ html, body {
     overflow: hidden;
 }
 
-/* All-day events get a hard-edged hatch instead of the reference design's
-   grey fill: pure black hairlines on white, so nothing dithers. */
 /* All-day events are marked with a hatched gutter down the left edge rather
    than a hatch behind the text. The reference design uses a pale grey wash,
    which has no BWR equivalent - and any hatch dense enough to read as a fill
@@ -165,7 +174,7 @@ html, body {
     background: repeating-linear-gradient(
         135deg,
         #ffffff 0px, #ffffff 3px,
-        #000000 3px, #000000 4px
+        #d40000 3px, #d40000 4px
     ) left top / 11px 100% no-repeat;
     padding: 3px 6px 3px 18px;
     border: 1px solid #000000;
@@ -174,7 +183,7 @@ html, body {
     background: repeating-linear-gradient(
         135deg,
         #000000 0px, #000000 3px,
-        #ffffff 3px, #ffffff 4px
+        #d40000 3px, #d40000 4px
     ) left top / 11px 100% no-repeat;
     border-color: #ffffff;
 }

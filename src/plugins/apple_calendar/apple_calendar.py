@@ -32,9 +32,14 @@ logger = logging.getLogger(__name__)
 
 WEEKDAY_LABELS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
 
-MAX_UPCOMING_DAYS = 3        # columns underneath the strip
-MAX_EVENTS_PER_DAY = 4       # per column, before "+N more"
-LOOKAHEAD_DAYS = 21          # how far forward to hunt for days with events
+MAX_UPCOMING_DAYS = 6        # 3 columns x 2 rows underneath the strip
+MAX_EVENTS_PER_DAY = 3       # per column, before "+N more"
+# How far forward to hunt for days that have events. Deliberately long:
+# a sparse feed (festivals, birthdays) can easily have only two or three
+# occupied days in the next fortnight, which left the lower half of the
+# frame blank. Looking further ahead fills the columns without inventing
+# filler content.
+LOOKAHEAD_DAYS = 75
 MAX_DOTS = 3                 # dots drawn under a day in the strip
 
 
@@ -86,7 +91,7 @@ class AppleCalendar(BasePlugin):
         strip = self._build_strip(strip_start, today, events_by_day)
         upcoming = self._build_upcoming(
             today, events_by_day,
-            max_days=MAX_UPCOMING_DAYS if is_landscape else 2)
+            max_days=MAX_UPCOMING_DAYS if is_landscape else 3)
 
         safe = self.get_safe_area(device_config)
         template = ("apple_calendar_landscape.html" if is_landscape
