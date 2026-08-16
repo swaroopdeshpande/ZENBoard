@@ -74,6 +74,25 @@ def _snap(img, dark_bg):
     return img
 
 
+def _autocrop(img):
+    """Trim empty margin around the artwork.
+
+    Exported logos usually sit on a large mostly-empty canvas - the ZenBoard
+    wordmark arrived as 500x500 with the mark occupying about a seventh of it.
+    Scaling that canvas to the target box would shrink the actual mark to
+    nothing, so crop to real content first: the alpha bounding box when there
+    is transparency, otherwise the non-white bounding box.
+    """
+    img = img.convert("RGBA")
+    alpha = img.split()[3]
+    if alpha.getextrema()[0] < 255:
+        box = alpha.point(lambda v: 255 if v > 20 else 0).getbbox()
+    else:
+        grey = img.convert("L").point(lambda v: 255 if v < 245 else 0)
+        box = grey.getbbox()
+    return img.crop(box) if box else img
+
+
 def _fit(img, size):
     """Scale to fit a size x size box, preserving aspect."""
     w, h = img.size
@@ -135,7 +154,7 @@ def get_logo(size, dark_bg):
 
     if path:
         try:
-            art = Image.open(path).convert("RGBA")
+            art = _autocrop(Image.open(path))
             logo = _snap(_fit(art, size), dark_bg)
         except Exception as e:
             logger.warning(f"ZenBoard mark: could not read {path} ({e}), using built-in")
