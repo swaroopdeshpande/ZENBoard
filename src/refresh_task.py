@@ -141,7 +141,8 @@ class RefreshTask:
                         if self.device_config.get_config("show_logo", default=True):
                             image = zen_logo.stamp(
                                 image,
-                                size=self.device_config.get_config("logo_size", default=40))
+                                size=self.device_config.get_config("logo_size", default=40),
+                                corner=self.device_config.get_config("logo_corner", default="auto"))
 
                         image_hash = compute_image_hash(image)
 

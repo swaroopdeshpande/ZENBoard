@@ -170,6 +170,23 @@ def get_logo(size, dark_bg):
 # Placement
 # ----------------------------------------------------------------------
 
+def _is_red_ground(image, box):
+    """True when the area under the mark is the red field.
+
+    Needed because the wordmark keeps its red Z and B - red normally reads
+    against both black and white, but on a red field those two letters
+    disappeared and the mark printed as "en oard.". A red ground is flat, so the
+    busyness test that normally triggers the outline scores far too low to catch
+    it; the ground has to be identified by hue instead.
+    """
+    region = image.crop(box).convert("RGB").resize((16, 16), Image.BILINEAR)
+    px = list(region.getdata())
+    r = sum(p[0] for p in px) / len(px)
+    g = sum(p[1] for p in px) / len(px)
+    b = sum(p[2] for p in px) / len(px)
+    return r > g + 60 and r > b + 60
+
+
 def _corner_stats(image, box):
     """(busyness, mean brightness) for a region.
 
@@ -209,8 +226,17 @@ def _with_halo(logo, halo_ink):
     return Image.alpha_composite(plate, canvas)
 
 
-def stamp(image, size=40, margin=12, mixed_threshold=0.08):
-    """Composite the mark into the emptiest corner. Returns the image."""
+def stamp(image, size=40, margin=12, mixed_threshold=0.08, corner="auto"):
+    """Composite the mark into a corner. Returns the image.
+
+    corner is "auto" to pick the emptiest, or one of tl/tr/bl/br to pin it.
+    Pinning exists because the emptiness score cannot distinguish a small
+    heading from a blank margin - on a full-bleed layout the top corners
+    measure emptiest precisely *because* their only content is a short line of
+    small type, and the mark then lands on it. Where a plugin fills the page
+    there is no empty corner to find, only a choice of what to overlap, and
+    that is a judgement the score cannot make.
+    """
     try:
         if image.mode != "RGB":
             image = image.convert("RGB")
@@ -234,9 +260,12 @@ def stamp(image, size=40, margin=12, mixed_threshold=0.08):
         # least likely place for a plugin's own heading or branding.
         TOP_PENALTY = 0.06
         order = ["br", "bl", "tr", "tl"]
-        best = min(order, key=lambda k: (
-            round(scored[k][0] + (TOP_PENALTY if k in ("tl", "tr") else 0.0), 3),
-            order.index(k)))
+        if corner in boxes:
+            best = corner
+        else:
+            best = min(order, key=lambda k: (
+                round(scored[k][0] + (TOP_PENALTY if k in ("tl", "tr") else 0.0), 3),
+                order.index(k)))
 
         bx = boxes[best]
         probe = get_logo(size, dark_bg=False)
@@ -247,11 +276,13 @@ def stamp(image, size=40, margin=12, mixed_threshold=0.08):
         # Judge the ink from the pixels the mark will actually cover, not the
         # whole corner - a bright corner with a dark strip under the logo
         # would otherwise get black on black.
-        foot_busy, foot_mean = _corner_stats(image, (int(x), int(y), int(x) + lw, int(y) + lh))
+        foot = (int(x), int(y), int(x) + lw, int(y) + lh)
+        foot_busy, foot_mean = _corner_stats(image, foot)
         dark_bg = foot_mean < 128
+        red_ground = _is_red_ground(image, foot)
 
         logo = get_logo(size, dark_bg=dark_bg)
-        if foot_busy > mixed_threshold:
+        if foot_busy > mixed_threshold or red_ground:
             # Halo is the opposite of the ink, not the same as it.
             logo = _with_halo(logo, BLACK if dark_bg else WHITE)
             x -= 3
@@ -260,7 +291,8 @@ def stamp(image, size=40, margin=12, mixed_threshold=0.08):
         image.paste(logo, (int(x), int(y)), logo)
         logger.debug(
             f"ZenBoard mark: corner={best} busy={foot_busy:.3f} mean={foot_mean:.0f} "
-            f"ink={'white' if dark_bg else 'black'} halo={foot_busy > mixed_threshold}")
+            f"ink={'white' if dark_bg else 'black'} red_ground={red_ground} "
+            f"halo={foot_busy > mixed_threshold or red_ground}")
         return image
     except Exception as e:
         # A watermark must never be the reason a refresh fails.
