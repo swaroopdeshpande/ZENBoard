@@ -10,7 +10,7 @@
       <span class="tvq-corner br"></span>
 
       {% if logo_uri %}
-      <img class="tvq-show-logo" src="{{ logo_uri }}" alt="" />
+      <img class="tvq-show-logo{% if logo_wide %} tvq-show-logo-wide{% endif %}" src="{{ logo_uri }}" alt="" />
       {% endif %}
 
       <div class="tvq-container">

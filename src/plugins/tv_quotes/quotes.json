@@ -118,5 +118,80 @@
       "You'd better find my husband's mother, 'cause one way or another, we're walkin' out of this airport with a dead woman!",
       "Howie, I love you. And as your wife, your mother is every bit my problem as she is yours."
     ]
+  },
+  "abhishek": {
+    "display_name": "Abhishek Tripathi",
+    "show": "Panchayat",
+    "portraits": [
+      "abhishek.png"
+    ],
+    "quotes": [
+      "Dost yaar keh dene se dost yaar nahi ho jaata Pradhan ji... nibhana bhi padta hai.",
+      "Aap logo ke liye office hai, par mere liye toh ghar hai.",
+      "Weekend hota hai sir, log party karte hai weekend pe aur main kya kar raha tha? Lauki cheel raha tha yahan pe..."
+    ]
+  },
+  "pradhan_ji": {
+    "display_name": "Pradhan ji",
+    "show": "Panchayat",
+    "portraits": [
+      "pradhan.png"
+    ],
+    "quotes": [
+      "Yeh jo tanki dekh rahe hai na, upar chad kar aapko gaon itna sundar lagega ki aapko gaon se pyaar ho jayega...",
+      "Aadhar card nahi beta, ek repat me sudhar card bana denge tumhara."
+    ]
+  },
+  "manju_devi": {
+    "display_name": "Manju Devi",
+    "show": "Panchayat",
+    "portraits": [
+      "manju.png"
+    ],
+    "quotes": [
+      "Road ke liye bhale hi fund lagta ho Vidhyak ji, lekin achcha insaan banne ke liye fund nahi lagta.",
+      "Kitni baar bole hai chaabi janeu me baandh ke rakhiye, par nahi humein toh fashion karna hai."
+    ]
+  },
+  "vikas": {
+    "display_name": "Vikas",
+    "show": "Panchayat",
+    "portraits": [
+      "vikas.png"
+    ],
+    "quotes": [
+      "Aatmsamman naam ka bhi koi cheez hota hai."
+    ]
+  },
+  "prahlad": {
+    "display_name": "Prahlad Cha",
+    "show": "Panchayat",
+    "portraits": [
+      "prahlad.png"
+    ],
+    "quotes": [
+      "20-30 hazaar me desh ke liye jaan dene wale aur kaahan milenge?"
+    ]
+  },
+  "rinki": {
+    "display_name": "Rinki",
+    "show": "Panchayat",
+    "portraits": [
+      "rinki.png"
+    ],
+    "quotes": [
+      "Har koi kahin na kahin naach hi raha hai, Sachiv ji."
+    ]
+  },
+  "bhushan": {
+    "display_name": "Bhushan (Banrakas)",
+    "show": "Panchayat",
+    "portraits": [
+      "bhushan.png"
+    ],
+    "quotes": [
+      "Dekh raha hai Binod, angreji bol bol ke kaise baaton ko ghumaya jata hai.",
+      "Kab tak chupoge Phulera ki aad mein, kabhi tohaaoge Fakoli baazar mein..."
+    ]
   }
 }

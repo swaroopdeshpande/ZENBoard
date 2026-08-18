@@ -22,6 +22,7 @@ LOGO_DIR = PLUGIN_DIR / "render" / "logos"
 # Show name -> logo asset. Pure BWR PNG, corner-badge sized already.
 SHOW_LOGOS = {
     "The Big Bang Theory": "tbbt_logo.png",
+    "Panchayat": "panchayat_logo.png",
 }
 
 # Persistent so the shuffle-bag survives restarts/reboots (NOT /tmp - that's
@@ -62,6 +63,17 @@ class TVQuotes(BasePlugin):
         logo_file = SHOW_LOGOS.get(character["show"])
         logo_uri = self._portrait_data_uri(LOGO_DIR / logo_file) if logo_file else None
 
+        # Wordmark logos need a much wider box than square badges do. Measured
+        # rather than hardcoded per show, so a new logo sizes itself.
+        logo_wide = False
+        if logo_file:
+            try:
+                from PIL import Image as _I
+                with _I.open(LOGO_DIR / logo_file) as _im:
+                    logo_wide = (_im.width / _im.height) > 2.2
+            except Exception:
+                pass
+
         dimensions = device_config.get_resolution()
         is_landscape = dimensions[0] > dimensions[1]
         if device_config.get_config("orientation") == "vertical":
@@ -76,6 +88,7 @@ class TVQuotes(BasePlugin):
             {
                 "quote": quote,
                 "character_name": character["display_name"],
+                "logo_wide": logo_wide,
                 "show": character["show"],
                 "portrait_uri": portrait_uri,
                 "logo_uri": logo_uri,

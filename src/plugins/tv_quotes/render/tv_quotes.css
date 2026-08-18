@@ -65,6 +65,12 @@ body {
   width: 60px;
 }
 
+/* A wordmark, not a square badge. The default 74px is set for a roughly square
+   logo; at 8.5:1 that leaves nine pixels of letter height, which the panel
+   cannot resolve. Width is driven by legibility of the smallest stroke. */
+.tvq-show-logo-wide { width: 168px; }
+.tvq-show-logo-wide.tvq-show-logo-p { width: 132px; }
+
 /* ════════════════════════════════════════════════════════════ */
 /* LANDSCAPE (800×480) */
 /* ════════════════════════════════════════════════════════════ */

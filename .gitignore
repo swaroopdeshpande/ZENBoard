@@ -48,3 +48,15 @@ books/.ereader_state.json
 
 # macOS AppleDouble resource forks, created when copying from a Mac
 ._*
+
+# Panchayat portraits and logo are derived from copyrighted TVF/Amazon material.
+# Personal use on the device only - never published. The TBBT portraits predate
+# this rule and remain tracked.
+src/plugins/tv_quotes/render/portraits/abhishek.png
+src/plugins/tv_quotes/render/portraits/pradhan.png
+src/plugins/tv_quotes/render/portraits/manju.png
+src/plugins/tv_quotes/render/portraits/vikas.png
+src/plugins/tv_quotes/render/portraits/prahlad.png
+src/plugins/tv_quotes/render/portraits/rinki.png
+src/plugins/tv_quotes/render/portraits/bhushan.png
+src/plugins/tv_quotes/render/logos/panchayat_logo.png
