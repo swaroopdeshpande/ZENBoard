@@ -29,6 +29,7 @@ import re
 import signal
 import sys
 import threading
+import urllib.request
 import time
 
 import paho.mqtt.client as mqtt
@@ -55,6 +56,14 @@ WAKE_REFRESH_ON_ENTRY = False  # unconditional refresh on entry - use the tiers 
 
 # Returning after a real absence is worth a repaint; nipping out of the room
 # is not. Two tiers, measured from when the room actually emptied.
+# Phone notification on arrival. Gated on the same absence threshold as the
+# refresh, and for the same reason: raw presence transitions are far too noisy
+# to alert on. A single overnight capture logged 99 of them, because 24GHz sees
+# through walls and picks up movement in adjoining rooms. Notifying on every
+# transition would train you to ignore the notifications.
+NOTIFY_ON_ARRIVAL = True
+NTFY_CONFIG = "/etc/zenboard/ntfy.json"
+
 REFRESH_AFTER_AWAY = 30 * 60   # away this long -> plain refresh on return
 GREET_AFTER_AWAY = 60 * 60     # away this long -> AI greeting instead
 
@@ -206,6 +215,37 @@ def proximity_for(dist_cm):
         return 0.0
     d = max(NEAR_CM, min(FAR_CM, float(dist_cm)))
     return ((FAR_CM - d) / float(FAR_CM - NEAR_CM)) ** GAMMA
+
+
+def notify(message, title=None, tags=None):
+    """Fire-and-forget phone notification. Never raises, never blocks.
+
+    Config is read fresh each call rather than cached, so the feed can be turned
+    off by editing the file without restarting the sensor - and the sensor is
+    the one service that should not be bounced casually, since it owns the
+    serial port.
+    """
+    def _send():
+        try:
+            with open(NTFY_CONFIG) as f:
+                cfg = json.load(f)
+            if not cfg.get("enabled", True) or not cfg.get("notify_presence", True):
+                return
+            url, topic = cfg.get("url"), cfg.get("topic")
+            if not url or not topic:
+                return
+            req = urllib.request.Request(
+                f"{url.rstrip('/')}/{topic}",
+                data=message.encode("utf-8"), method="POST")
+            if title:
+                req.add_header("Title", title)
+            if tags:
+                req.add_header("Tags", tags)
+            urllib.request.urlopen(req, timeout=5).read()
+        except Exception as e:
+            logger.debug(f"ntfy: {e}")
+
+    threading.Thread(target=_send, daemon=True).start()
 
 
 # ── MQTT ──────────────────────────────────────────────────────────────────
@@ -387,6 +427,9 @@ def main():
                         entered_at = now
                         poem_done = False
                         absent_since = None
+                        if NOTIFY_ON_ARRIVAL and away >= REFRESH_AFTER_AWAY:
+                            notify(f"Someone entered the room - away {away/60:.0f} min",
+                                   title="ZenBoard presence", tags="wave")
                         if away >= GREET_AFTER_AWAY:
                             threading.Thread(target=trigger_greeting,
                                              args=(away / 60.0,), daemon=True).start()

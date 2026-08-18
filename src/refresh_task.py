@@ -9,6 +9,7 @@ from datetime import datetime, timezone
 from plugins.plugin_registry import get_plugin_instance
 from utils.image_utils import compute_image_hash
 from utils import zen_logo
+from utils import notify
 from model import RefreshInfo, PlaylistManager
 from PIL import Image
 
@@ -167,6 +168,22 @@ class RefreshTask:
                             except Exception as e:
                                 logger.info(f"Partial tag failed: {e}")
                             self.display_manager.display_image(image, image_settings=plugin.config.get("image_settings", []))
+
+                            # Phone notification, after the paint rather than
+                            # before it, so it reports what actually reached the
+                            # panel. Deduped refreshes are deliberately silent -
+                            # the display did not change, so there is nothing to
+                            # report. Sent on a background thread; the alerting
+                            # must never be able to delay or break a refresh.
+                            try:
+                                if self.device_config.get_config("notify_refresh", default=True):
+                                    name = plugin.config.get("display_name", refresh_info.get("plugin_id", "?"))
+                                    notify.notify(
+                                        f"{name} - {current_dt.strftime('%H:%M')}",
+                                        title="ZenBoard refreshed",
+                                        tags="framed_picture")
+                            except Exception as e:
+                                logger.debug(f"notify failed: {e}")
                         else:
                             logger.info(f"Image already displayed, skipping refresh. | refresh_info: {refresh_info}")
 
@@ -177,6 +194,15 @@ class RefreshTask:
             except Exception as e:
                 logger.exception('Exception during refresh')
                 self.refresh_result["exception"] = e  # Capture exception
+                # A failed plugin is otherwise invisible: it leaves whatever was
+                # already on the panel and only records to the journal, which is
+                # how a broken plugin sat on the wall unnoticed once already.
+                try:
+                    notify.notify(f"{type(e).__name__}: {e}"[:180],
+                                  title="ZenBoard refresh FAILED",
+                                  tags="warning", priority=4)
+                except Exception:
+                    pass
             finally:
                 self.refresh_event.set()
 
