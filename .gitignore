@@ -44,3 +44,7 @@ books/.ereader_state.json
 
 # Editor/patch backups
 *.bak
+*.bak_*
+
+# macOS AppleDouble resource forks, created when copying from a Mac
+._*
