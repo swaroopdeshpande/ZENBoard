@@ -1,47 +1,74 @@
-<style>
-
-  /* Display margin enforcement (calibrated frame offset) */
-  .safe-content {
-    width: 781px;
-    height: 468px;
-    margin: 12px 11px 0 8px;  /* T=12 R=11 B=0 L=8 (horizontal) */
-    background: white;
-    overflow: hidden;
-  }
-
-  /* Vertical/portrait mode support */
-  @media (max-height: 500px), (orientation: portrait) {
-    .safe-content {
-      width: 468px;
-      height: 781px;
-      margin: 8px 12px 11px 0;  /* T=8 R=12 B=11 L=0 (vertical) */
-    }
-  }
-
-</style>
 {% extends "plugin.html" %}
 
 {% block content %}
-<div class="oil-frame">
-    {% if multi %}
-    <div class="oil-grid">
-        {% for card in cards %}
-        <div class="oil-card{% if not loop.last %} oil-card-divider{% endif %}">
-            <div class="oil-label">🛢️{{ card.label }}</div>
-            <div class="oil-price">${{ card.price }}</div>
-            <div class="oil-unit">USD / barrel</div>
-            <div class="oil-updated">{{ card.updated }}</div>
+<div class="oil-frame {% if theme == 'light' %}light{% endif %}">
+
+  <div class="oil-header">
+    <span class="oil-dot">•</span>
+    <span class="oil-title">ENERGY MARKETS</span>
+    <span class="oil-dot">•</span>
+    <span class="oil-range">{{ range_label }}</span>
+  </div>
+
+  <div class="oil-main">
+
+    <!-- LEFT: lead commodity, large chart -->
+    <div class="oil-lead">
+      <div class="oil-lead-head">
+        <span class="oil-lead-label">{{ lead.label }}</span>
+        <span class="oil-lead-unit">{{ lead.unit }}</span>
+      </div>
+
+      <div class="oil-lead-price">
+        <span class="oil-cur">$</span>{{ lead.price }}
+        <span class="oil-chg {% if lead.up %}up{% else %}down{% endif %}">
+          {{ lead.arrow }} {{ lead.change }} &nbsp;{{ lead.pct }}
+        </span>
+      </div>
+
+      <div class="oil-chart">{{ lead.chart|safe }}</div>
+
+      <div class="oil-band">
+        <div class="oil-band-row">
+          <span class="oil-band-lbl">52W LOW</span>
+          <span class="oil-band-val">{{ lead.lo52 }}</span>
+          <span class="oil-band-spacer"></span>
+          <span class="oil-band-val">{{ lead.hi52 }}</span>
+          <span class="oil-band-lbl">52W HIGH</span>
         </div>
-        {% endfor %}
+        <div class="oil-rule">
+          {% if lead.pos52 is not none %}
+          <div class="oil-marker" style="left: {{ lead.pos52 }}%"></div>
+          {% endif %}
+        </div>
+      </div>
     </div>
-    {% else %}
-    <div class="oil-single">
-        {% set card = cards[0] %}
-        <div class="oil-label">🛢️{{ card.label }}</div>
-        <div class="oil-price">${{ card.price }}</div>
-        <div class="oil-unit">USD / barrel</div>
-        <div class="oil-updated">Updated: {{ card.updated }}</div>
+
+    <!-- RIGHT: the other commodities -->
+    <div class="oil-side">
+      {% for q in rest %}
+      <div class="oil-card">
+        <div class="oil-card-label">{{ q.label }}</div>
+        <div class="oil-card-price"><span class="oil-cur">$</span>{{ q.price }}</div>
+        <div class="oil-card-chg {% if q.up %}up{% else %}down{% endif %}">
+          {{ q.arrow }} {{ q.change }} &nbsp; {{ q.pct }}
+        </div>
+        <div class="oil-card-chart">{{ q.chart|safe }}</div>
+        <div class="oil-card-range">
+          <span>L {{ q.period_lo }}</span>
+          <span>H {{ q.period_hi }}</span>
+        </div>
+      </div>
+      {% endfor %}
     </div>
-    {% endif %}
+
+  </div>
+
+  <div class="oil-foot">
+    <span>{{ range_label }} TREND</span>
+    <span>{{ stamp }}</span>
+    <span>YAHOO FINANCE</span>
+  </div>
+
 </div>
 {% endblock %}

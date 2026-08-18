@@ -1,21 +1,33 @@
 <div class="settings-container">
     <div class="form-group">
-        <label class="form-label">Display Mode</label>
-        <select id="displayMode" name="displayMode" class="form-input">
-            <option value="landscape">Landscape</option>
-            <option value="portrait">Portrait</option>
+        <label class="form-label">Trend period</label>
+        <select id="range" name="range" class="form-input">
+            <option value="5d">5 days (hourly)</option>
+            <option value="1mo">30 days</option>
+            <option value="3mo">3 months</option>
+            <option value="6mo">6 months</option>
+            <option value="1y">1 year (weekly)</option>
         </select>
     </div>
     <div class="form-group">
-        <label class="form-label">Cache Duration (seconds)</label>
-        <input type="number" id="cacheTtl" name="cacheTtl" min="60" max="86400" value="300" class="form-input">
+        <label class="form-label">Theme</label>
+        <select id="theme" name="theme" class="form-input">
+            <option value="dark">Dark</option>
+            <option value="light">Light</option>
+        </select>
     </div>
+    <p style="font-size:12px;opacity:.8;line-height:1.5;">
+        Brent crude, WTI crude and natural gas from Yahoo Finance &mdash; keyless,
+        no account needed. The Oil Price API key this plugin used to require is no
+        longer used: that API returns only the latest price, with no history to
+        chart.
+    </p>
 </div>
 <script>
 document.addEventListener('DOMContentLoaded', () => {
     if (typeof pluginSettings !== 'undefined' && pluginSettings) {
-        if (pluginSettings.displayMode) document.getElementById('displayMode').value = pluginSettings.displayMode || 'landscape';
-        if (pluginSettings.cacheTtl)    document.getElementById('cacheTtl').value = pluginSettings.cacheTtl || '300';
+        if (pluginSettings.range) document.getElementById('range').value = pluginSettings.range;
+        if (pluginSettings.theme) document.getElementById('theme').value = pluginSettings.theme;
     }
 });
 </script>

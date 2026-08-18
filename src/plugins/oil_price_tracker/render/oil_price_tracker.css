@@ -1,115 +1,250 @@
-* {
-    box-sizing: border-box;
+/* Energy markets board.
+
+   Visual idiom borrowed from space_overview: black field, monospace, ruled
+   panels, uppercase letterspaced labels, big values with small units.
+
+   One deliberate departure. space_overview draws its rules in #333, which is
+   invisible against its own black background once stem_darken() snaps
+   everything below 200 to pure black. Here the rules are white (or black on
+   the light theme) so they actually print, and every colour is one of
+   #000 / #fff / #d40000 - the only three the panel can render. */
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+/* The base template puts padding and margins on the body as an inline style,
+   which a plain rule cannot override - hence !important. The background and
+   text colour are deliberately NOT set here: those come from the inline style
+   so the theme controls the full 800x480 body, not just the inset frame. */
+html, body {
+    padding: 0 !important;
+    margin: 0 !important;
+    width: 800px;
+    height: 480px;
+    font-family: 'Courier New', Courier, monospace;
+    overflow: hidden;
 }
 
+.container { display: block; }
+
+/* Calibrated frame offset: T=0 R=10 B=10 L=10 */
 .oil-frame {
-    width: 100%;
-    height: 100%;
-    background-color: #ffffff;
-    border: 6px solid #000000;
-    outline: 3px solid #ff0000;
-    outline-offset: -14px;
-    font-family: 'PTSans', sans-serif;
-}
-
-/* ---------- Single oil type layout ---------- */
-
-.oil-single {
-    width: 100%;
-    height: 100%;
+    width: 780px;
+    height: 470px;
+    margin: 0 10px 10px 10px;
     display: flex;
     flex-direction: column;
+    overflow: hidden;
+}
+
+/* ---------- header ---------- */
+
+.oil-header {
+    display: flex;
     align-items: center;
     justify-content: center;
-    text-align: center;
+    gap: 14px;
+    padding: 7px 0 8px;
+    border-bottom: 2px solid currentColor;
+    position: relative;
 }
 
-.oil-single .oil-label {
-    font-size: 48px;
-    font-weight: bold;
-    color: #000000;
+.oil-title {
+    font-size: 19px;
+    font-weight: 900;
+    letter-spacing: 6px;
+}
+
+.oil-dot { font-size: 13px; }
+
+.oil-range {
+    position: absolute;
+    right: 2px;
+    bottom: 10px;
+    font-size: 11px;
+    font-weight: 700;
     letter-spacing: 2px;
-    text-transform: uppercase;
-    margin-bottom: 20px;
-    border-bottom: 4px solid #ff0000;
-    padding-bottom: 12px;
 }
 
-.oil-single .oil-price {
-    font-size: 140px;
-    font-weight: bold;
-    color: #ff0000;
-    line-height: 1;
-    margin-top: 20px;
+/* ---------- main split ---------- */
+
+.oil-main {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 1fr 246px;
+    min-height: 0;
 }
 
-.oil-single .oil-unit {
-    font-size: 32px;
-    color: #000000;
-    margin-top: 10px;
-}
+/* ---------- lead commodity ---------- */
 
-.oil-single .oil-updated {
-    font-size: 22px;
-    color: #000000;
-    margin-top: 40px;
-    opacity: 0.75;
-}
-
-/* ---------- Side-by-side triple layout ---------- */
-
-.oil-grid {
-    width: 100%;
-    height: 100%;
+.oil-lead {
     display: flex;
-    flex-direction: row;
-    align-items: stretch;
-    justify-content: center;
+    flex-direction: column;
+    padding: 9px 14px 4px 2px;
+    border-right: 2px solid currentColor;
+    min-width: 0;
+}
+
+.oil-lead-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+}
+
+.oil-lead-label {
+    font-size: 16px;
+    font-weight: 900;
+    letter-spacing: 3px;
+}
+
+.oil-lead-unit {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1.6px;
+}
+
+.oil-lead-price {
+    font-size: 52px;
+    font-weight: 900;
+    letter-spacing: -1px;
+    line-height: 1.1;
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+}
+
+.oil-cur { font-size: 0.55em; font-weight: 700; padding-right: 2px; }
+
+/* Direction is carried by the arrow glyph and by weight, not by hue alone:
+   there is no green available, and red-vs-white would read as "red = bad"
+   only by convention. The arrow is unambiguous either way. */
+.oil-chg {
+    font-size: 15px;
+    font-weight: 900;
+    letter-spacing: 1px;
+}
+/* Red is a dark ink. Against the black field small red type has almost no
+   contrast and turned to mud, so on the dark theme the change is plain white
+   and the arrow glyph alone carries direction. On the light field red reads
+   strongly, so it is used there. */
+.oil-chg.up, .oil-chg.down { color: inherit; }
+
+.oil-chart {
+    flex: 1;
+    min-height: 0;
+    padding: 4px 0 2px;
+}
+.oil-chart svg { display: block; width: 100%; height: 100%; }
+
+/* ---------- 52 week band ---------- */
+
+.oil-band { padding-bottom: 4px; }
+
+.oil-band-row {
+    display: flex;
+    align-items: baseline;
+    gap: 7px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1.4px;
+    padding-bottom: 3px;
+}
+
+.oil-band-spacer { flex: 1; }
+.oil-band-val { font-size: 12px; font-weight: 900; }
+
+/* The marker's position on this rule is the whole point - it places today
+   inside the 52-week range without needing a second chart. */
+.oil-rule {
+    position: relative;
+    height: 9px;
+    border: 2px solid currentColor;
+}
+
+.oil-marker {
+    position: absolute;
+    top: -3px;
+    width: 5px;
+    height: 11px;
+    background: #d40000;
+    transform: translateX(-2px);
+}
+
+/* ---------- side cards ---------- */
+
+.oil-side {
+    display: flex;
+    flex-direction: column;
 }
 
 .oil-card {
-    flex: 1 1 0;
+    flex: 1;
+    padding: 8px 2px 6px 12px;
     display: flex;
     flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    padding: 20px 10px;
+    min-height: 0;
 }
 
-.oil-card-divider {
-    border-right: 4px solid #000000;
+.oil-card + .oil-card { border-top: 2px solid currentColor; }
+
+.oil-card-label {
+    font-size: 13px;
+    font-weight: 900;
+    letter-spacing: 2.4px;
 }
 
-.oil-card .oil-label {
-    font-size: 26px;
-    font-weight: bold;
-    color: #000000;
+.oil-card-price {
+    font-size: 30px;
+    font-weight: 900;
+    line-height: 1.15;
+}
+
+.oil-card-chg {
+    font-size: 12px;
+    font-weight: 900;
     letter-spacing: 1px;
-    text-transform: uppercase;
-    margin-bottom: 16px;
-    min-height: 64px;
+}
+.oil-card-chg.up, .oil-card-chg.down { color: inherit; }
+
+.oil-card-chart {
+    flex: 1;
+    min-height: 0;
+    padding: 3px 0 2px;
+}
+.oil-card-chart svg { display: block; width: 100%; height: 100%; }
+
+.oil-card-range {
     display: flex;
-    align-items: center;
+    justify-content: space-between;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1.2px;
 }
 
-.oil-card .oil-price {
-    font-size: 58px;
-    font-weight: bold;
-    color: #ff0000;
-    line-height: 1;
+/* ---------- footer ---------- */
+
+/* The left 132px are kept clear: refresh_task stamps the ZenBoard wordmark
+   into the bottom-left corner and it is wide and short, so it lands inside this
+   band. Without the gutter it printed straight through the footer text. */
+.oil-foot {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1.8px;
+    border-top: 2px solid currentColor;
+    padding: 5px 0 0 132px;
+    height: 26px;
 }
 
-.oil-card .oil-unit {
-    font-size: 18px;
+/* ---------- light theme ---------- */
+
+body.light { background: #ffffff; color: #000000; }
+
+.oil-frame.light {
+    background: #ffffff;
     color: #000000;
-    margin-top: 10px;
 }
 
-.oil-card .oil-updated {
-    font-size: 14px;
-    color: #000000;
-    margin-top: 24px;
-    opacity: 0.7;
-    padding: 0 8px;
-}
+.oil-frame.light .oil-chg.up,
+.oil-frame.light .oil-card-chg.up { color: #d40000; }
