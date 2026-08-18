@@ -1,0 +1,189 @@
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body { padding: 0 !important; margin: 0 !important; width: 100%; height: 100%; }
+
+/* Calibrated frame offset: T=0 R=10 B=10 L=10 */
+.fp {
+    margin: 0 10px 10px 10px;
+    font-family: 'Jost', sans-serif;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    padding: 8px 18px 4px 18px;
+}
+
+/* ---------- fields (light / dark / red) ----------
+   Three fields, each a flat fill. The panel is BWR, so these are the only
+   backgrounds physically available - there is no dark grey to soften a dark
+   mode with, and any attempt at one dithers into visible noise. */
+
+.fp-white { background: #ffffff; color: #000000; }   /* light mode */
+.fp-black { background: #000000; color: #ffffff; }   /* dark mode  */
+.fp-red   { background: #d40000; color: #ffffff; }
+
+/* The aircraft art is black strokes on a transparent background, so the field
+   shows through it. On the two dark fields the strokes are inverted to white;
+   without this the aircraft would be black-on-black and invisible. */
+.fp-black .fp-art img,
+.fp-red   .fp-art img { filter: invert(1); }
+
+/* Light text on a dark field needs both more weight AND more size than the same
+   text dark-on-white.
+
+   stem_darken() snaps every pixel below 200 to black to stop e-ink losing thin
+   strokes. That is correct for dark-on-light, but on a dark field it eats the
+   anti-aliased edges of *light* glyphs instead of reinforcing them, and small
+   light text disappears outright - the footer, the type/registration after the
+   airline name, and the m/km units all vanished at their light-mode sizes.
+   Weight alone was not enough; the glyph core has to be wide enough to survive
+   losing a pixel off each edge, which means size too. */
+.fp-black .fp-meta, .fp-red .fp-meta { font-weight: 700; font-size: 15px;
+                                       letter-spacing: 1px; }
+.fp-black .fp-unit, .fp-red .fp-unit { font-weight: 700; font-size: 13px; }
+.fp-black .fp-num,  .fp-red .fp-num  { font-weight: 700; font-size: 19px; }
+.fp-black .fp-foot, .fp-red .fp-foot { font-weight: 700; font-size: 13px;
+                                       letter-spacing: 1.4px; }
+.fp-black .fp-sub,  .fp-red .fp-sub  { font-weight: 700; font-size: 13px; }
+.fp-black .fp-op,   .fp-red .fp-op   { font-weight: 700; }
+
+/* The rules are hairlines too, and a 1px light rule on a dark field is exactly
+   what stem_darken erases. */
+.fp-black .fp-cap, .fp-red .fp-cap { border-top-width: 2px; }
+
+/* Rules and dividers follow the field colour, hence currentColor throughout
+   rather than a hardcoded black. */
+
+/* ---------- header ---------- */
+
+.fp-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    border-bottom: 2px solid currentColor;
+    padding-bottom: 5px;
+    margin-bottom: 2px;
+}
+
+.fp-sub {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 2.6px;
+}
+
+/* ---------- aircraft rows ---------- */
+
+/* Pinned, not flexed. The frame gives 470px, less 12px of padding, so the
+   content box is 458. The ruled header and footer take 47 of that on the dark
+   fields, where the type is a size larger to survive stem_darken - which left
+   411 for the body against the 412 two rows needed, and row two's caption slid
+   under the footer by a single pixel.
+
+   408 became 400 to give the footer band the height the ZenBoard wordmark needs
+   to sit beside the footer text instead of on top of it. Both layouts total
+   exactly 400: 2 x (176 art + 24 caption), or 3 x (116 + 17). */
+.fp-body {
+    flex: none;
+    height: 400px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    overflow: hidden;
+}
+
+.fp-row { display: flex; flex-direction: column; }
+
+.fp-art {
+    display: flex;
+    justify-content: center;
+}
+
+/* Native size, never scaled. The library is generated at exactly 600x176 and
+   resampling 1-bit line art fringes every stroke into grey, which this panel
+   then dithers into noise.
+
+   The size is a ceiling, not a preference: two rows plus captions, a ruled
+   header and a footer have to fit 480px, which caps art height near 176, and
+   the drawings' 3.4:1 aspect then fixes the width at 600. This replaced three
+   116px rows, which left the aircraft small and the page half empty. */
+.fp-2 .fp-art img { width: 600px; height: 176px; }
+.fp-3 .fp-art img { width: 396px; height: 116px; }
+.fp-art img { image-rendering: pixelated; }
+
+/* Fixed height, not content height: the row total has to be predictable to
+   guarantee two rows fit, and a 25px name on an auto-height line box was
+   overflowing the body by just enough to slide under the footer. */
+.fp-cap {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    padding: 3px 4px 0 4px;
+    border-top: 1px solid currentColor;
+    overflow: hidden;
+}
+
+.fp-2 .fp-cap { height: 24px; }
+
+/* Three rows leaves 60px less per row, so the caption and the name shrink with
+   the art rather than overflowing the body. */
+.fp-3 .fp-cap { height: 17px; padding-top: 1px; }
+.fp-3 .fp-op   { font-size: 15px; }
+.fp-3 .fp-meta { font-size: 11px; }
+.fp-3.fp-black .fp-meta, .fp-3.fp-red .fp-meta { font-size: 13px; }
+.fp-3 .fp-num  { font-size: 13px; }
+
+/* Airline name carries the row. Hierarchy here is size and weight only: no
+   greys are available to demote the secondary text with. */
+.fp-op {
+    font-size: 25px;
+    font-weight: 600;
+    letter-spacing: 0.2px;
+    line-height: 1;
+}
+
+.fp-meta {
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 1.4px;
+}
+
+/* Altitude and distance pushed to the right, so the eye finds them in the same
+   place on both rows. */
+.fp-num {
+    font-size: 17px;
+    font-weight: 600;
+    letter-spacing: 0.6px;
+}
+.fp-num:nth-of-type(3) { margin-left: auto; }
+
+.fp-unit {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 1px;
+    padding-left: 2px;
+}
+
+/* ---------- footer ---------- */
+
+/* The left 132px are kept clear: refresh_task stamps the ZenBoard wordmark into
+   the bottom-left corner, and it is a wide, short mark - roughly 110x20 - so it
+   lands inside this band rather than below it. Without the reserved gutter the
+   mark printed straight through the footer text and both became unreadable. */
+.fp-foot {
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 1.8px;
+    text-align: center;
+    border-top: 2px solid currentColor;
+    padding: 4px 0 0 132px;
+    height: 30px;
+}
+
+.fp-empty {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 26px;
+    font-weight: 600;
+    letter-spacing: 4px;
+}

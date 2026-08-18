@@ -1,0 +1,38 @@
+{% extends "plugin.html" %}
+
+
+
+{% block content %}
+<div class="fp fp-{{ field }} fp-{{ rows|length }}" style="width: {{ usable_width }}px; height: {{ usable_height }}px;">
+
+  {# No wordmark here. refresh_task stamps the real ZenBoard logo into whichever
+     corner is emptiest, on every plugin; a second lettered wordmark in the
+     header competed with it. The header keeps only the reading. #}
+  <div class="fp-head">
+    <span class="fp-sub">OVERHEAD</span>
+    <span class="fp-sub">{{ radius }} KM RADIUS</span>
+  </div>
+
+  {% if rows %}
+  <div class="fp-body">
+    {% for r in rows %}
+    <div class="fp-row">
+      <div class="fp-art"><img src="{{ r.art }}" alt=""></div>
+      <div class="fp-cap">
+        <span class="fp-op">{{ r.airline or r.callsign }}</span>
+        <span class="fp-meta">{{ r.type }}{% if r.reg %} · {{ r.reg }}{% endif %}</span>
+        <span class="fp-num">{{ r.alt_m }}<span class="fp-unit">m</span></span>
+        <span class="fp-num">{{ r.km }}<span class="fp-unit">km</span></span>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="fp-empty">NO AIRCRAFT OVERHEAD</div>
+  {% endif %}
+
+  <div class="fp-foot">
+    {{ count }} AIRCRAFT TRACKED &nbsp;·&nbsp; {{ stamp }} &nbsp;·&nbsp; ADS-B
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,35 @@
+<div class="settings-container">
+    <div class="form-group">
+        <label class="form-label">Latitude</label>
+        <input type="text" name="latitude" class="form-input" value="12.97" />
+    </div>
+    <div class="form-group">
+        <label class="form-label">Longitude</label>
+        <input type="text" name="longitude" class="form-input" value="77.59" />
+    </div>
+    <div class="form-group">
+        <label class="form-label">Radius (km)</label>
+        <input type="number" name="radius" class="form-input" value="150" min="10" max="250" />
+    </div>
+    <div class="form-group">
+        <label class="form-label">Background</label>
+        <select name="field" class="form-input">
+            <option value="white">White</option>
+            <option value="black">Black</option>
+            <option value="red">Red</option>
+        </select>
+    </div>
+    <div class="form-group">
+        <label class="form-label">Aircraft shown</label>
+        <select name="rows" class="form-input">
+            <option value="2">2 &mdash; larger drawings</option>
+            <option value="3">3 &mdash; smaller drawings</option>
+        </select>
+    </div>
+    <p style="font-size:12px;opacity:.8;line-height:1.5;">
+        Live ADS-B from adsb.lol (free, no key), closest aircraft first. Aircraft
+        are drawn by type, not by airline &mdash; a three-colour panel cannot
+        reproduce liveries. Types with no drawing available are skipped, though
+        they still count towards the total shown in the footer.
+    </p>
+</div>
