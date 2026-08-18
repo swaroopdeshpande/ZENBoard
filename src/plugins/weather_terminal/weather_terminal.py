@@ -39,6 +39,28 @@ CURRENT_URL = "https://api.openweathermap.org/data/2.5/weather"
 FORECAST_URL = "https://api.openweathermap.org/data/2.5/forecast"
 GEOCODE_URL = "https://api.openweathermap.org/geo/1.0/direct"
 
+# Air quality comes from Open-Meteo's CAMS-backed endpoint: keyless, no account,
+# and it carries the pollutants OpenWeatherMap's free tier does not expose in a
+# usable form. Note carbon_dioxide here is *modelled outdoor ambient*, roughly
+# 420-450 ppm globally - it is not room air. Indoor CO2, the number that
+# actually tracks ventilation and gets into the hundreds-to-thousands, needs a
+# real sensor (SCD41 on the free I2C bus).
+AIR_URL = "https://air-quality-api.open-meteo.com/v1/air-quality"
+
+AIR_FIELDS = ("us_aqi,european_aqi,pm2_5,pm10,carbon_dioxide,"
+              "carbon_monoxide,nitrogen_dioxide,ozone,sulphur_dioxide,uv_index")
+
+# US AQI bands. The scale is non-linear by design, so the position marker is
+# computed per band rather than as a flat percentage of 0-500.
+AQI_BANDS = [
+    (0, 50, "GOOD"),
+    (51, 100, "MODERATE"),
+    (101, 150, "POOR"),
+    (151, 200, "UNHEALTHY"),
+    (201, 300, "SEVERE"),
+    (301, 500, "HAZARDOUS"),
+]
+
 HTTP_TIMEOUT = 10
 
 # Curated Karnataka cities - the primary/default pick list per the request.
@@ -95,6 +117,14 @@ class WeatherTerminal(BasePlugin):
 
         data = self._fetch(api_key, float(lat), float(lon), units, dark)
 
+        # Air quality is additive: if it fails the weather still renders. A
+        # second network dependency must not be able to blank the panel.
+        try:
+            air = self._fetch_air(float(lat), float(lon))
+        except Exception as e:
+            logger.warning("Weather: air quality unavailable: %s", e)
+            air = None
+
         tz_name = device_config.get_config("timezone") or "UTC"
         try:
             tz = pytz.timezone(tz_name)
@@ -126,6 +156,7 @@ class WeatherTerminal(BasePlugin):
                 "date_str": now.strftime("%A").upper() + " · " + now.strftime("%b %d").upper(),
                 "updated_str": now.strftime("%I:%M %p").lstrip("0"),
                 "current": data["current"],
+                "air": air,
                 "hourly": data["hourly"][:6],
                 "graph_svg": graph,
                 "unit_label": "F" if units == "imperial" else "C",
@@ -205,6 +236,58 @@ class WeatherTerminal(BasePlugin):
 
         return {"current": current, "hourly": hourly}
 
+    def _fetch_air(self, lat, lon):
+        resp = requests.get(
+            AIR_URL,
+            params={"latitude": lat, "longitude": lon,
+                    "current": AIR_FIELDS, "timezone": "auto"},
+            timeout=HTTP_TIMEOUT,
+        )
+        resp.raise_for_status()
+        cur = resp.json().get("current") or {}
+
+        def num(key, dp=0):
+            v = cur.get(key)
+            if v is None:
+                return None
+            return f"{v:,.{dp}f}"
+
+        aqi = cur.get("us_aqi")
+        band, pos = self._aqi_band(aqi)
+
+        return {
+            "aqi": int(aqi) if aqi is not None else None,
+            "band": band,
+            "pos": pos,
+            "eu_aqi": int(cur["european_aqi"]) if cur.get("european_aqi") is not None else None,
+            "pm25": num("pm2_5", 1),
+            "pm10": num("pm10", 1),
+            "co2": num("carbon_dioxide"),
+            "co": num("carbon_monoxide"),
+            "no2": num("nitrogen_dioxide", 1),
+            "o3": num("ozone"),
+            "so2": num("sulphur_dioxide", 1),
+            "uv": num("uv_index", 1),
+        }
+
+    @staticmethod
+    def _aqi_band(aqi):
+        """Band name plus 0-100 position for the scale marker.
+
+        Each band gets an equal share of the bar rather than its true numeric
+        width. The AQI scale is non-linear - GOOD spans 50 points and HAZARDOUS
+        spans 200 - so a linear marker would sit almost hard left for every
+        reading a person in Bengaluru actually sees.
+        """
+        if aqi is None:
+            return "--", None
+        n = len(AQI_BANDS)
+        for i, (lo, hi, name) in enumerate(AQI_BANDS):
+            if aqi <= hi:
+                within = (aqi - lo) / float(hi - lo) if hi > lo else 0
+                return name, round((i + max(0.0, min(1.0, within))) / n * 100, 1)
+        return AQI_BANDS[-1][2], 100.0
+
     @staticmethod
     def _icon_key(owm_icon):
         return OWM_ICON_MAP.get(owm_icon[:2], "cloudy")
@@ -277,6 +360,19 @@ class WeatherTerminal(BasePlugin):
 
     @staticmethod
     def _build_graph(hourly, units, width, height, dark=True):
+        """Temperature bars for the coming hours.
+
+        Bars rather than a line: on a 1-bit panel a solid block survives the
+        display's quantisation intact, whereas a 2px stroke is the first thing
+        to break up into dashes.
+
+        The scale is zoomed to the data, not zeroed. An overnight spread is
+        typically 6-7 degrees, so bars measured from 0 would all be within a few
+        percent of each other and the shape of the night would vanish. One
+        degree of headroom is added below the low so the coolest hour still
+        shows a visible stub instead of nothing, and the HIGH/LOW callouts carry
+        the absolute numbers.
+        """
         if not hourly or len(hourly) < 2:
             return ""
 
@@ -285,93 +381,75 @@ class WeatherTerminal(BasePlugin):
 
         temps = [h["temp"] for h in hourly]
         lo, hi = min(temps), max(temps)
-        span = (hi - lo) or 1
         lo_idx, hi_idx = temps.index(lo), temps.index(hi)
 
-        pad_x, pad_top, pad_bottom = 6, 30, 20
+        base = lo - 1                      # headroom, see docstring
+        span = (hi - base) or 1
+
+        pad_x, pad_top, pad_bottom = 6, 26, 17
         n = len(hourly)
-        step = (width - 2 * pad_x) / (n - 1)
         plot_h = height - pad_top - pad_bottom
-
-        pts = []
-        for i, t in enumerate(temps):
-            x = pad_x + i * step
-            y = pad_top + plot_h * (1 - (t - lo) / span)
-            pts.append((x, y))
-
-        line_pts = " ".join(f"{x:.1f},{y:.1f}" for x, y in pts)
-
-        # Now-marker at the first point (index 0 = current/nearest slot)
-        now_x, now_y = pts[0]
+        slot = (width - 2 * pad_x) / n
+        bar_w = max(6.0, slot * 0.66)
+        baseline = height - pad_bottom
 
         parts = [
             f'<svg viewBox="0 0 {width} {height}" width="{width}" height="{height}" '
             f'xmlns="http://www.w3.org/2000/svg">'
         ]
 
-        # dashed "now" vertical line - red accent
+        bar_top = {}
+        for i, t in enumerate(temps):
+            cx = pad_x + slot * (i + 0.5)
+            bh = max(2.0, plot_h * (t - base) / span)
+            x = cx - bar_w / 2
+            y = baseline - bh
+            bar_top[i] = (cx, y)
+            # The current hour is the red bar - it is the one reading a glance
+            # is looking for, and it needs no legend to be understood.
+            fill = accent if i == 0 else fg
+            parts.append(
+                f'<rect x="{x:.1f}" y="{y:.1f}" width="{bar_w:.1f}" '
+                f'height="{bh:.1f}" fill="{fill}"/>'
+            )
+            parts.append(
+                f'<text x="{cx:.1f}" y="{y - 4:.1f}" fill="{fg}" font-size="11" '
+                f'font-weight="700" text-anchor="middle">{t}&#176;</text>'
+            )
+
+        # Baseline, so the bars sit on something rather than floating.
         parts.append(
-            f'<line x1="{now_x:.1f}" y1="{pad_top - 14:.1f}" x2="{now_x:.1f}" '
-            f'y2="{height - pad_bottom + 6:.1f}" stroke="{accent}" stroke-width="1.5" '
-            f'stroke-dasharray="3,4" opacity="0.9" />'
-        )
-        parts.append(
-            f'<text x="{max(now_x, 18):.1f}" y="{pad_top - 20:.1f}" fill="{accent}" '
-            f'font-size="12" font-weight="700" text-anchor="middle" '
-            f'letter-spacing="1.5">NOW</text>'
+            f'<rect x="{pad_x:.1f}" y="{baseline:.1f}" '
+            f'width="{width - 2 * pad_x:.1f}" height="2" fill="{fg}"/>'
         )
 
-        # trend line + points
+        # Only NOW is labelled. The hourly strip immediately below this graph
+        # already carries the times, and printing them twice, four pixels apart,
+        # just made both harder to read.
         parts.append(
-            f'<polyline points="{line_pts}" fill="none" stroke="{fg}" '
-            f'stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round" />'
-        )
-        for x, y in pts:
-            parts.append(f'<circle cx="{x:.1f}" cy="{y:.1f}" r="2.4" fill="{fg}" />')
-
-        # High label - red accent
-        hx, hy = pts[hi_idx]
-        anchor = "start" if hi_idx < n - 1 else "end"
-        dx = 6 if hi_idx < n - 1 else -6
-        parts.append(
-            f'<text x="{hx+dx:.1f}" y="{hy-22:.1f}" fill="{accent}" font-size="12" '
-            f'font-weight="700" text-anchor="{anchor}" letter-spacing="1">HIGH</text>'
-        )
-        parts.append(
-            f'<text x="{hx+dx:.1f}" y="{hy-6:.1f}" fill="{accent}" font-size="20" '
-            f'font-weight="800" text-anchor="{anchor}">{hi}&#176;</text>'
-        )
-        parts.append(
-            f'<text x="{hx+dx:.1f}" y="{hy+12:.1f}" fill="{fg}" font-size="11" '
-            f'font-weight="600" text-anchor="{anchor}">{hourly[hi_idx]["time_label"]}</text>'
+            f'<text x="{pad_x + slot * 0.5:.1f}" y="{baseline + 13:.1f}" '
+            f'fill="{accent}" font-size="10" font-weight="700" '
+            f'text-anchor="middle" letter-spacing="0.6">NOW</text>'
         )
 
-        # Low label - flip above the point if there isn't enough room below
-        # to fit LOW/value/time without clipping past the SVG's bottom edge.
-        lx, ly = pts[lo_idx]
-        anchor2 = "start" if lo_idx < n - 1 else "end"
-        dx2 = 6 if lo_idx < n - 1 else -6
-        if height - ly < 62:
+        # HIGH / LOW callouts sit directly above the bar they describe, above
+        # that bar's own value label. Pinning them to a fixed height near the
+        # top left the word stranded in empty space with nothing under it,
+        # which is what happened to LOW - its bar is short, so the label was
+        # floating half the graph away from the thing it labelled.
+        for idx, word, colour in ((hi_idx, "HIGH", accent), (lo_idx, "LOW", fg)):
+            if idx == 0:
+                continue          # the NOW bar is already the loudest thing here
+            cx, top = bar_top[idx]
+            anchor = "middle"
+            if idx == 0:
+                anchor = "start"
+            elif idx == n - 1:
+                anchor = "end"
             parts.append(
-                f'<text x="{lx+dx2:.1f}" y="{ly-24:.1f}" fill="{fg}" font-size="12" '
-                f'font-weight="700" text-anchor="{anchor2}" letter-spacing="1">LOW</text>'
-            )
-            parts.append(
-                f'<text x="{lx+dx2:.1f}" y="{ly-8:.1f}" fill="{fg}" font-size="20" '
-                f'font-weight="800" text-anchor="{anchor2}">{lo}&#176;</text>'
-            )
-        else:
-            parts.append(
-                f'<text x="{lx+dx2:.1f}" y="{ly+22:.1f}" fill="{fg}" font-size="12" '
-                f'font-weight="700" text-anchor="{anchor2}" letter-spacing="1">LOW</text>'
-            )
-            parts.append(
-                f'<text x="{lx+dx2:.1f}" y="{ly+40:.1f}" fill="{fg}" font-size="20" '
-                f'font-weight="800" text-anchor="{anchor2}">{lo}&#176;</text>'
-            )
-            parts.append(
-                f'<text x="{lx+dx2:.1f}" y="{ly+56:.1f}" fill="{fg}" font-size="11" '
-                f'font-weight="600" text-anchor="{anchor2}">{hourly[lo_idx]["time_label"]}</text>'
+                f'<text x="{cx:.1f}" y="{max(10.0, top - 17):.1f}" fill="{colour}" '
+                f'font-size="11" font-weight="700" text-anchor="{anchor}" '
+                f'letter-spacing="1.2">{word}</text>'
             )
 
         parts.append("</svg>")

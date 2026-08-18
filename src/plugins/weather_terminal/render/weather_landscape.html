@@ -3,67 +3,70 @@
 {% block content %}
 <div class="wx-frame {% if not dark %}wx-light{% endif %}" style="width: {{ frame_w }}px; height: {{ frame_h }}px;">
 
-  <!-- TOP -->
-  <div class="wx-top">
-    <span class="wx-date">{{ date_str }}</span>
-    <span class="wx-updated-lbl">UPDATED</span>
-  </div>
-  <div class="wx-top2">
+  <!-- HEADER -->
+  <div class="wx-head">
     <div class="wx-location">
-      <svg class="wx-home-icon" width="22" height="22" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+      <svg class="wx-home-icon" width="20" height="20" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
         <path d="M3.5 11.5L12 4l8.5 7.5M6 10.5V20h12v-9.5" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
       </svg>
       <span class="wx-location-name">{{ location_name }}</span>
     </div>
-    <span class="wx-updated-time">{{ updated_str }}</span>
+    <span class="wx-head-meta">{{ date_str }} &nbsp;·&nbsp; {{ updated_str }}</span>
   </div>
 
-  <div class="wx-rule"></div>
+  <!-- MID: current | air quality -->
+  <div class="wx-mid">
+
+    <div class="wx-current">
+      <div class="wx-current-icon">{{ current.icon_svg|safe }}</div>
+      <div class="wx-current-block">
+        <div class="wx-current-temp">{{ current.temp }}<span class="wx-unit">&#176;{{ unit_label }}</span></div>
+        <div class="wx-current-cond">{{ current.condition|upper }}</div>
+      </div>
+      <div class="wx-stats">
+        <div class="wx-stat"><span class="wx-stat-lbl">FEELS</span><span class="wx-stat-val">{{ current.feels_like }}&#176;</span></div>
+        <div class="wx-stat"><span class="wx-stat-lbl">HUMIDITY</span><span class="wx-stat-val">{{ current.humidity }}%</span></div>
+        <div class="wx-stat"><span class="wx-stat-lbl">WIND</span><span class="wx-stat-val">{{ current.wind_speed }}<span class="wx-sm"> {{ current.wind_unit }}</span></span></div>
+        <div class="wx-stat"><span class="wx-stat-lbl">RAIN</span><span class="wx-stat-val">{{ current.rain_chance }}%</span></div>
+      </div>
+    </div>
+
+    {% if air %}
+    <div class="wx-air">
+      <div class="wx-air-head">
+        <span class="wx-air-title">AIR QUALITY</span>
+        <span class="wx-air-band">{{ air.band }}</span>
+      </div>
+
+      <div class="wx-aqi-row">
+        <span class="wx-aqi-val">{{ air.aqi if air.aqi is not none else '--' }}</span>
+        <span class="wx-aqi-lbl">US AQI</span>
+        {% if air.eu_aqi is not none %}<span class="wx-aqi-eu">EU {{ air.eu_aqi }}</span>{% endif %}
+      </div>
+
+      <div class="wx-scale">
+        {% for i in range(6) %}<div class="wx-scale-seg"></div>{% endfor %}
+        {% if air.pos is not none %}<div class="wx-scale-mark" style="left: {{ air.pos }}%"></div>{% endif %}
+      </div>
+
+      <div class="wx-poll">
+        <div class="wx-p"><span class="wx-p-lbl">PM2.5</span><span class="wx-p-val">{{ air.pm25 or '--' }}</span></div>
+        <div class="wx-p"><span class="wx-p-lbl">PM10</span><span class="wx-p-val">{{ air.pm10 or '--' }}</span></div>
+        <div class="wx-p"><span class="wx-p-lbl">CO&#8322;</span><span class="wx-p-val">{{ air.co2 or '--' }}<span class="wx-sm"> ppm</span></span></div>
+        <div class="wx-p"><span class="wx-p-lbl">OZONE</span><span class="wx-p-val">{{ air.o3 or '--' }}</span></div>
+        <div class="wx-p"><span class="wx-p-lbl">NO&#8322;</span><span class="wx-p-val">{{ air.no2 or '--' }}</span></div>
+        <div class="wx-p"><span class="wx-p-lbl">UV</span><span class="wx-p-val">{{ air.uv or '--' }}</span></div>
+      </div>
+      <div class="wx-air-foot">PARTICULATES IN &#181;g/m&#179; &nbsp;·&nbsp; OPEN-METEO CAMS</div>
+    </div>
+    {% endif %}
+
+  </div>
 
   <!-- GRAPH -->
   <div class="wx-graph">{{ graph_svg|safe }}</div>
 
-  <!-- CURRENT + STATS -->
-  <div class="wx-mid">
-    <div class="wx-current">
-      <div class="wx-current-icon">{{ current.icon_svg|safe }}</div>
-      <div class="wx-current-temp">{{ current.temp }}<span class="wx-unit">&#176;{{ unit_label }}</span></div>
-      <div class="wx-current-cond">{{ current.condition|upper }}</div>
-    </div>
-
-    <div class="wx-stats">
-      <div class="wx-stat-box">
-        <div class="wx-stat-lbl">
-          <svg width="14" height="14" viewBox="0 0 24 24"><path d="M12 3a4 4 0 0 0-4 4v6.3a5 5 0 1 0 8 0V7a4 4 0 0 0-4-4z" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          FEELS LIKE
-        </div>
-        <div class="wx-stat-val">{{ current.feels_like }}{{ unit_label }}</div>
-      </div>
-      <div class="wx-stat-box">
-        <div class="wx-stat-lbl">
-          <svg width="14" height="14" viewBox="0 0 24 24"><path d="M12 3l5 8a5 5 0 1 1-10 0z" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          RAIN CHANCE
-        </div>
-        <div class="wx-stat-val">{{ current.rain_chance }}%</div>
-      </div>
-      <div class="wx-stat-box">
-        <div class="wx-stat-lbl">
-          <svg width="14" height="14" viewBox="0 0 24 24"><circle cx="12" cy="12" r="6" stroke="currentColor" stroke-width="1.6" fill="none"/></svg>
-          HUMIDITY
-        </div>
-        <div class="wx-stat-val">{{ current.humidity }}%</div>
-      </div>
-      <div class="wx-stat-box">
-        <div class="wx-stat-lbl">
-          <svg width="14" height="14" viewBox="0 0 24 24"><path d="M3 8h13a3 3 0 1 0-3-3M3 16h16a3 3 0 1 1-3 3M3 12h9" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round"/></svg>
-          WIND
-        </div>
-        <div class="wx-stat-val">{{ current.wind_speed }} {{ current.wind_unit }}</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- HOURLY STRIP -->
+  <!-- HOURLY -->
   <div class="wx-hourly">
     {% for h in hourly %}
     <div class="wx-hour {% if not loop.last %}wx-hour-sep{% endif %}">
@@ -73,6 +76,11 @@
       <div class="wx-hour-rain">RAIN {{ h.rain_chance }}%</div>
     </div>
     {% endfor %}
+  </div>
+
+  <div class="wx-foot">
+    <span>{{ current.description|upper }}</span>
+    <span>OPENWEATHERMAP &nbsp;·&nbsp; OPEN-METEO</span>
   </div>
 
 </div>

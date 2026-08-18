@@ -242,3 +242,154 @@ body {
 .wx-current-cond {
   color: #d40000 !important;
 }
+
+/* ==================================================================
+   Landscape rebuild: header, current | air-quality split, graph, hourly.
+
+   Only #000 / #fff / #d40000 are used from here down. The older rules above
+   use greys such as #555 and #262626 for rules and separators; stem_darken()
+   snaps anything below 200 to pure black later in the pipeline, so on the dark
+   theme those were being erased and on the light theme they printed solid
+   black anyway. currentColor is used instead so both themes stay correct.
+   ================================================================== */
+
+.wx-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  border-bottom: 2px solid currentColor;
+  padding: 0 4px 5px 4px;
+  flex: 0 0 auto;
+}
+
+.wx-location { display: flex; align-items: center; gap: 7px; }
+.wx-location-name { font-size: 25px; font-weight: 700; color: inherit; }
+.wx-head-meta { font-size: 12px; font-weight: 700; letter-spacing: 1.6px; }
+
+/* ---- mid split ---- */
+
+.wx-mid {
+  display: flex;
+  gap: 14px;
+  flex: 1 1 auto;
+  min-height: 0;
+  padding: 7px 0 4px 0;
+  align-items: stretch;
+}
+
+.wx-current {
+  flex: 0 0 300px;
+  display: grid;
+  grid-template-columns: 96px 1fr;
+  grid-template-rows: auto 1fr;
+  gap: 2px 10px;
+  align-items: center;
+  border-right: 2px solid currentColor;
+  padding-right: 12px;
+  min-height: 0;
+}
+
+.wx-current-icon { grid-row: 1; grid-column: 1; }
+.wx-current-icon svg { display: block; }
+.wx-current-block { grid-row: 1; grid-column: 2; }
+
+.wx-current-temp { font-size: 58px; font-weight: 700; line-height: 1; }
+.wx-unit { font-size: 22px; font-weight: 700; vertical-align: super; }
+.wx-current-cond { font-size: 13px; font-weight: 700; letter-spacing: 2px; padding-top: 2px; }
+
+.wx-stats {
+  grid-row: 2;
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px 18px;
+  align-content: center;
+}
+
+/* Label stacked over value, both left-aligned on the same edge.
+
+   These were previously a label and a value pushed apart with
+   space-between inside each cell. That right-aligned the left column's value
+   hard against the right column's label, so "29°" and "HUMIDITY" collided into
+   one lump and neither column had a readable alignment edge. Stacking gives
+   every figure the same left edge and matches the pollutant grid opposite. */
+.wx-stat { display: flex; flex-direction: column; align-items: flex-start; }
+.wx-stat-lbl { font-size: 10px; font-weight: 700; letter-spacing: 1.4px; }
+.wx-stat-val { font-size: 20px; font-weight: 700; line-height: 1.1; }
+.wx-sm { font-size: 11px; font-weight: 700; }
+
+/* ---- air quality ---- */
+
+.wx-air { flex: 1 1 auto; display: flex; flex-direction: column; min-width: 0; }
+
+.wx-air-head { display: flex; align-items: baseline; justify-content: space-between; }
+.wx-air-title { font-size: 13px; font-weight: 700; letter-spacing: 2.6px; }
+
+/* The band word is the summary - it is what a glance should land on, so it
+   gets the accent. Red reads on white and on black alike. */
+.wx-air-band { font-size: 17px; font-weight: 700; letter-spacing: 1.6px; color: #d40000; }
+
+.wx-aqi-row { display: flex; align-items: baseline; gap: 9px; padding-top: 1px; }
+.wx-aqi-val { font-size: 46px; font-weight: 700; line-height: 1; }
+.wx-aqi-lbl { font-size: 12px; font-weight: 700; letter-spacing: 1.8px; }
+.wx-aqi-eu { font-size: 12px; font-weight: 700; letter-spacing: 1.4px; margin-left: auto; }
+
+/* Six equal segments, one per AQI band, with a marker for the reading. */
+.wx-scale {
+  position: relative;
+  display: flex;
+  gap: 3px;
+  height: 11px;
+  margin: 5px 0 7px 0;
+}
+
+.wx-scale-seg { flex: 1; border: 2px solid currentColor; }
+
+.wx-scale-mark {
+  position: absolute;
+  top: -3px;
+  width: 5px;
+  height: 17px;
+  background: #d40000;
+  transform: translateX(-2px);
+}
+
+.wx-poll {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 3px 12px;
+  flex: 1 1 auto;
+  align-content: center;
+  min-height: 0;
+}
+
+.wx-p { display: flex; flex-direction: column; }
+.wx-p-lbl { font-size: 10px; font-weight: 700; letter-spacing: 1.4px; }
+.wx-p-val { font-size: 19px; font-weight: 700; line-height: 1.1; }
+
+.wx-air-foot { font-size: 9px; font-weight: 700; letter-spacing: 1.2px; padding-top: 2px; }
+
+/* ---- graph + hourly ---- */
+
+.wx-frame .wx-graph { flex: 0 0 auto; padding: 0; }
+.wx-frame .wx-graph svg { display: block; width: 100%; height: auto; }
+
+.wx-frame .wx-hourly { border-top: 2px solid currentColor; padding-top: 3px; flex: 0 0 auto; }
+
+/* Footer exists to hold the bottom-left corner open. refresh_task stamps the
+   ZenBoard wordmark there on every plugin and it was printing straight through
+   the first hourly column. The 132px gutter is the mark's width plus margin. */
+.wx-foot {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 1.4px;
+  border-top: 2px solid currentColor;
+  padding: 4px 2px 0 132px;
+  height: 24px;
+  flex: 0 0 auto;
+}
+.wx-frame .wx-hour-sep { border-right: 2px solid currentColor; }
+.wx-frame .wx-hour-rain { opacity: 1; }
