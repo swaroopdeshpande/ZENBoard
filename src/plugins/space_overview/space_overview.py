@@ -163,11 +163,18 @@ class SpaceOverview(BasePlugin):
         try:
             now = datetime.utcnow()
             moon = ephem.Moon(now)
-            phase_pct = round(moon.phase * 100, 1)
+            # ephem's moon.phase is ALREADY a percentage of the disc
+            # illuminated, 0..100 - not a 0..1 fraction. Multiplying by 100
+            # printed 4461.5% on the panel.
+            phase_pct = round(moon.phase, 1)
             
             # Calculate age from new moon
             new_moon = ephem.previous_new_moon(now)
-            age = (ephem.Date(now) - ephem.Date(new_moon)) * 29.53
+            # Subtracting two ephem.Dates already yields days. Scaling by the
+            # synodic month turned a 6.8 day age into 201, which overshot every
+            # threshold below and so always fell through to WANING CRESCENT -
+            # the phase name was wrong year round, not just the percentage.
+            age = float(ephem.Date(now) - ephem.Date(new_moon))
 
             # Determine phase name
             if age < 1.85:
