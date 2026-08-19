@@ -51,6 +51,27 @@ _tube_level = 1.0
 # trigger the instant it comes up.
 _last_strike = None
 
+# Neon: a bar sign fails in patches, not all at once - a section of tube goes
+# dark and stutters back. Tubelight's whole-strip failure is a different thing.
+_neon_out_at = -1
+_neon_out_len = 0
+_neon_frames = 0
+
+# Filament: thermal mass. An incandescent bulb has no instant state; it warms
+# up and cools down, which is the entire character. Held between frames.
+_fil_temp = 0.0
+_fil_sag = 0
+
+# Projector: film runs at 24fps against this 33Hz loop, so the shutter is
+# tracked in its own accumulator rather than by frame parity.
+_proj_phase = 0.0
+_proj_weave = 0
+
+# CRT: a television holds a scene then cuts. Level is held for a random run of
+# frames, which is what separates it from any smooth breathing effect.
+_crt_level = 0.5
+_crt_hold = 0
+
 # auto_write=False + a single show() per frame. The per-pixel effects below
 # touch every LED individually, and with auto_write on that was one full
 # strip write per pixel - visible tearing and needless work on a Pi Zero.
@@ -502,6 +523,111 @@ def run_frame():
         br = int(config["brightness"] * lvl)
         rr, gg, bb = scale_color(r, g, b, br)
         set_range(rr, gg, bb)
+
+    elif mode == "neon":
+        # Steady sign with a faint mains buzz, punctuated by one section going
+        # dark and stuttering back. The dropout is spatial - that is what makes
+        # it read as neon rather than as the tubelight effect.
+        global _neon_out_at, _neon_out_len, _neon_frames
+        r, g, b = hex_to_rgb(config["color"])
+        hum = 1.0 - 0.05 * (0.5 + 0.5 * math.sin(frame * 2.3))
+        base = int(config["brightness"] * hum)
+        rr, gg, bb = scale_color(r, g, b, base)
+
+        if _neon_frames <= 0:
+            if _neon_out_at >= 0:
+                _neon_out_at, _neon_frames = -1, random.randint(60, 400)
+            elif random.random() < 0.03:
+                _neon_out_len = random.randint(2, max(2, LED_COUNT // 3))
+                _neon_out_at = random.randint(0, max(0, LED_COUNT - _neon_out_len))
+                _neon_frames = random.randint(4, 16)
+            else:
+                _neon_frames = 8
+        _neon_frames -= 1
+
+        set_range(rr, gg, bb)
+        if _neon_out_at >= 0:
+            # the failing section gutters rather than switching cleanly off
+            for i in range(_neon_out_at, min(LED_COUNT, _neon_out_at + _neon_out_len)):
+                if i in get_active_range():
+                    pixels[i] = (0, 0, 0) if random.random() < 0.75 else (rr // 3, gg // 3, bb // 3)
+
+    elif mode == "filament":
+        # Thermal lag both ways: it glows up rather than switching on, and the
+        # colour runs deep orange while cold, reaching the chosen colour only at
+        # full temperature. Occasional voltage sag dips it and it recovers
+        # slowly, because a hot filament cannot dim quickly.
+        global _fil_temp, _fil_sag
+        r, g, b = hex_to_rgb(config["color"])
+
+        target = 1.0
+        if _fil_sag > 0:
+            _fil_sag -= 1
+            target = 0.45
+        elif random.random() < 0.002:
+            _fil_sag = random.randint(8, 30)
+
+        _fil_temp += (target - _fil_temp) * 0.035
+        t = max(0.0, min(1.0, _fil_temp))
+
+        # cold filament is redder: pull green and blue down harder than red
+        cr = r
+        cg = int(g * (0.25 + 0.75 * t))
+        cb = int(b * (0.05 + 0.95 * (t ** 2)))
+        ripple = 1.0 - 0.02 * (0.5 + 0.5 * math.sin(frame * 3.1))
+        rr, gg, bb = scale_color(cr, cg, cb, int(config["brightness"] * t * ripple))
+        set_range(rr, gg, bb)
+
+    elif mode == "projector":
+        # 24fps shutter against a 33Hz render loop, tracked in its own phase
+        # accumulator so the flicker rate stays filmic instead of aliasing with
+        # the frame rate. Exposure varies slightly per frame, and every so often
+        # the gate weaves and the whole image jumps.
+        global _proj_phase, _proj_weave
+        r, g, b = hex_to_rgb(config["color"])
+        _proj_phase += 24.0 / 33.0
+        shutter = 0.30 if (_proj_phase % 1.0) < 0.22 else 1.0
+
+        exposure = 1.0 + random.uniform(-0.07, 0.07)
+        if _proj_weave > 0:
+            _proj_weave -= 1
+            exposure *= 1.25
+        elif random.random() < 0.01:
+            _proj_weave = random.randint(2, 5)
+
+        lvl = max(0.0, min(1.0, shutter * exposure))
+        rr, gg, bb = scale_color(r, g, b, int(config["brightness"] * lvl))
+        set_range(rr, gg, bb)
+        if _proj_weave > 0:
+            # the frame slips in the gate: darken one end so the light shifts
+            act = sorted(get_active_range())
+            for i in act[:max(1, len(act) // 6)]:
+                pixels[i] = (0, 0, 0)
+
+    elif mode == "crt":
+        # A television in a dark room. Brightness is held for a run of frames
+        # and then cuts to a new level - scene changes, not a smooth curve -
+        # with the cool cast of a screen rather than the chosen colour.
+        global _crt_level, _crt_hold
+        if _crt_hold <= 0:
+            _crt_hold = random.randint(4, 40)
+            # mostly mid levels, occasionally a bright cut
+            _crt_level = random.uniform(0.25, 0.75) if random.random() < 0.85 \
+                else random.uniform(0.85, 1.0)
+        _crt_hold -= 1
+
+        jitter = 1.0 + random.uniform(-0.04, 0.04)
+        lvl = max(0.0, min(1.0, _crt_level * jitter))
+        bright = int(config["brightness"] * lvl)
+        # screen light is blue-white; the identity of this effect is its cast,
+        # so it is not taken from the configured colour
+        rr, gg, bb = scale_color(190, 215, 255, bright)
+        set_range(rr, gg, bb)
+        # a screen is not uniform - vary a couple of pixels each frame
+        for i in get_active_range():
+            if random.random() < 0.15:
+                f = random.uniform(0.75, 1.0)
+                pixels[i] = (int(rr * f), int(gg * f), int(bb * f))
 
     elif mode == "refresh_flash":
         # A real strobe, run as one blocking burst rather than as a pattern
