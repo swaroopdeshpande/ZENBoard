@@ -46,6 +46,11 @@ _tube_state = "steady"
 _tube_frames = 0
 _tube_level = 1.0
 
+# Strike-on-entry, triggered by the sensor. Seeded from the first config seen
+# rather than from zero, so restarting the service does not replay a stale
+# trigger the instant it comes up.
+_last_strike = None
+
 # auto_write=False + a single show() per frame. The per-pixel effects below
 # touch every LED individually, and with auto_write on that was one full
 # strip write per pixel - visible tearing and needless work on a Pi Zero.
@@ -185,6 +190,33 @@ def run_frame():
 
     mode = config.get("mode", "warm_glow")
     active = get_active_range()
+
+    # Entry strike. The sensor publishes a timestamp, never a mode - writing
+    # the mode from there is what previously hijacked the user's choice within
+    # 50ms. Playing it here leaves the selected mode untouched.
+    global _last_strike
+    strike = config.get("strike", 0)
+    if _last_strike is None:
+        _last_strike = strike
+    elif strike != _last_strike:
+        _last_strike = strike
+        if mode == "tubelight":
+            r0, g0, b0 = hex_to_rgb(config["color"])
+            r0, g0, b0 = scale_color(r0, g0, b0, config["brightness"])
+            # A tube starting: several failed strikes with uneven pauses, then
+            # it catches. The unevenness is the whole character - regular
+            # flashes read as a strobe, which is a different effect entirely.
+            for on_t, off_t in ((0.04, 0.18), (0.03, 0.09), (0.06, 0.22),
+                                (0.03, 0.05), (0.05, 0.14), (0.10, 0.04)):
+                set_range(r0, g0, b0)
+                pixels.show()
+                time.sleep(on_t)
+                pixels.fill((0, 0, 0))
+                pixels.show()
+                time.sleep(off_t)
+            set_range(r0, g0, b0)
+            pixels.show()
+            time.sleep(0.35)
 
     if mode == "off":
         pixels.fill((0, 0, 0))

@@ -62,6 +62,14 @@ WAKE_REFRESH_ON_ENTRY = False  # unconditional refresh on entry - use the tiers 
 # through walls and picks up movement in adjoining rooms. Notifying on every
 # transition would train you to ignore the notifications.
 NOTIFY_ON_ARRIVAL = True
+
+# Fluorescent-strike on entry. Gated on a short absence rather than fired on
+# every presence transition: 24GHz sees through walls and one overnight capture
+# logged 99 transitions, so an ungated strike would be flickering at the room
+# more or less continuously. A minute is long enough to mean "went away and
+# came back" and short enough that walking in still feels immediate.
+STRIKE_ON_ENTRY = True
+STRIKE_AFTER_AWAY = 60
 NTFY_CONFIG = "/etc/zenboard/ntfy.json"
 
 REFRESH_AFTER_AWAY = 30 * 60   # away this long -> plain refresh on return
@@ -376,6 +384,8 @@ def main():
     prev_dist_t = 0.0
     last_written_prox = None
     last_written_mode = None
+    pending_strike = 0.0
+    last_written_strike = 0.0
     last_status = 0.0
     absent_since = time.time()   # assume empty at startup until proven otherwise
     base = load_persisted_led()
@@ -427,6 +437,14 @@ def main():
                         entered_at = now
                         poem_done = False
                         absent_since = None
+                        if STRIKE_ON_ENTRY and away >= STRIKE_AFTER_AWAY:
+                            # A timestamp, not a mode. Writing the mode from
+                            # here is what previously hijacked whatever the user
+                            # had chosen in the web UI, within 50ms. The LED
+                            # renderer watches this value change and plays the
+                            # strike itself, so the selected mode is untouched.
+                            pending_strike = now
+
                         if NOTIFY_ON_ARRIVAL and away >= REFRESH_AFTER_AWAY:
                             notify(f"Someone entered the room - away {away/60:.0f} min",
                                    title="ZenBoard presence", tags="wave")
@@ -500,10 +518,14 @@ def main():
                 if (last_written_prox is None
                         or abs(cfg["proximity"] - last_written_prox) >= PROX_WRITE_EPS
                         or cfg.get("mode") != last_written_mode
-                        or abs(velocity) > 1.0):
+                        or abs(velocity) > 1.0
+                        or pending_strike != last_written_strike):
+                    if pending_strike:
+                        cfg["strike"] = pending_strike
                     _atomic_write(RUNTIME_LED, cfg)
                     last_written_prox = cfg["proximity"]
                     last_written_mode = cfg.get("mode")
+                    last_written_strike = pending_strike
 
             shown = round(smoothed) if (present and smoothed) else None
             if now - last_status >= 1.0 / STATUS_HZ:
