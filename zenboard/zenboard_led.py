@@ -72,6 +72,19 @@ _proj_weave = 0
 _crt_level = 0.5
 _crt_hold = 0
 
+# Storm: most of the time this effect does nothing, which is the point - the
+# flashes only land because they interrupt a long dark stretch. State carries
+# the queued flash sequence so a strike is several flashes, not one blink.
+_storm_wait = 0
+_storm_seq = []
+_storm_near = False
+
+# Ember bed: a per-pixel heat array that persists between frames. Coals are
+# spatial and slow - heat wanders, spreads to neighbours and decays - which is
+# what separates this from the existing candle effect, a single flickering
+# flame with no position.
+_ember_heat = None
+
 # auto_write=False + a single show() per frame. The per-pixel effects below
 # touch every LED individually, and with auto_write on that was one full
 # strip write per pixel - visible tearing and needless work on a Pi Zero.
@@ -628,6 +641,87 @@ def run_frame():
             if random.random() < 0.15:
                 f = random.uniform(0.75, 1.0)
                 pixels[i] = (int(rr * f), int(gg * f), int(bb * f))
+
+    elif mode == "storm":
+        # Distant lightning. Long dark, then a burst of two to five flashes at
+        # varying intensity and spacing, then dark again. A faint base glow
+        # remains so the strip reads as a dim room rather than switched off.
+        global _storm_wait, _storm_seq, _storm_near
+        base_r, base_g, base_b = scale_color(60, 70, 110, max(6, config["brightness"] // 12))
+
+        if not _storm_seq and _storm_wait <= 0:
+            # near strikes are rare, brighter, and re-strike more often
+            _storm_near = random.random() < 0.3
+            flashes = random.randint(2, 5) if _storm_near else random.randint(1, 3)
+            _storm_seq = []
+            for _ in range(flashes):
+                peak = random.uniform(0.75, 1.0) if _storm_near else random.uniform(0.25, 0.55)
+                _storm_seq.append(("on", random.randint(1, 3), peak))
+                _storm_seq.append(("off", random.randint(2, 12), 0.0))
+            _storm_wait = random.randint(120, 700)   # 4-21s of quiet after
+
+        if _storm_seq:
+            kind, frames, peak = _storm_seq[0]
+            if kind == "on":
+                lvl = int(config["brightness"] * peak)
+                rr, gg, bb = scale_color(210, 225, 255, lvl)
+                set_range(rr, gg, bb)
+                if not _storm_near:
+                    # a distant strike lights one horizon, not the whole sky
+                    act = sorted(get_active_range())
+                    for i in act[len(act) // 2:]:
+                        pixels[i] = (base_r, base_g, base_b)
+            else:
+                set_range(base_r, base_g, base_b)
+            frames -= 1
+            if frames <= 0:
+                _storm_seq.pop(0)
+            else:
+                _storm_seq[0] = (kind, frames, peak)
+        else:
+            _storm_wait -= 1
+            set_range(base_r, base_g, base_b)
+
+    elif mode == "ember":
+        # A bed of coals rather than a flame. Heat is held per pixel, decays,
+        # spreads to neighbours, and is topped up at random points, so hot spots
+        # wander along the strip instead of the whole strip pulsing together.
+        global _ember_heat
+        if _ember_heat is None or len(_ember_heat) != LED_COUNT:
+            _ember_heat = [random.uniform(0.2, 0.7) for _ in range(LED_COUNT)]
+
+        # cool everything a little
+        for i in range(LED_COUNT):
+            _ember_heat[i] = max(0.0, _ember_heat[i] - random.uniform(0.004, 0.02))
+
+        # spread sideways: coals share heat with their neighbours
+        spread = list(_ember_heat)
+        for i in range(LED_COUNT):
+            lo = _ember_heat[i - 1] if i > 0 else _ember_heat[i]
+            hi = _ember_heat[i + 1] if i < LED_COUNT - 1 else _ember_heat[i]
+            spread[i] = _ember_heat[i] * 0.72 + (lo + hi) * 0.14
+        _ember_heat = spread
+
+        # new hot spots, and the occasional flare when a coal catches
+        if random.random() < 0.35:
+            _ember_heat[random.randrange(LED_COUNT)] += random.uniform(0.10, 0.35)
+        if random.random() < 0.015:
+            i = random.randrange(LED_COUNT)
+            for j in range(max(0, i - 1), min(LED_COUNT, i + 2)):
+                _ember_heat[j] = min(1.0, _ember_heat[j] + random.uniform(0.4, 0.7))
+
+        active = get_active_range()
+        for i in range(LED_COUNT):
+            if i not in active:
+                pixels[i] = (0, 0, 0)
+                continue
+            h = max(0.0, min(1.0, _ember_heat[i]))
+            # black -> deep red -> orange -> pale yellow at the hottest
+            r = int(255 * min(1.0, h * 1.8))
+            g = int(255 * max(0.0, (h - 0.35)) * 1.1)
+            b = int(255 * max(0.0, (h - 0.78)) * 2.2)
+            rr, gg, bb = scale_color(r, min(255, g), min(255, b), config["brightness"])
+            pixels[i] = (rr, gg, bb)
 
     elif mode == "refresh_flash":
         # A real strobe, run as one blocking burst rather than as a pattern
