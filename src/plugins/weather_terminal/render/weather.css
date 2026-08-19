@@ -30,8 +30,11 @@
 
 body {
   padding: 0 !important;
-  background: #000;
-  color: #fff;
+  /* Paper, not black. A dark body reaches the panel edge and fills the area
+     under the wooden mount; the dark field belongs to .wx-frame, which sits
+     inside the calibrated margins. */
+  background: #ffffff;
+  color: #000000;
   font-family: 'Baloo 2', 'DejaVu Sans', sans-serif;
   font-weight: 600;
   -webkit-font-smoothing: none;
@@ -43,6 +46,13 @@ body {
   /* Gutter inside the calibrated area. Text that ends exactly on the boundary
      loses its final glyph to the clip; a few pixels of air prevents it. */
   padding: 0 8px;
+  /* The field lives here, not on the body. Painted on the body it reached the
+     panel edge and filled the area under the wooden mount - the same fault
+     space_overview and oil_price_tracker both had. */
+  background: #000000;
+  color: #ffffff;
+  width: var(--safe-width);
+  height: var(--safe-height);
   background: #000;
   color: #fff;
   display: flex;
@@ -396,3 +406,28 @@ body {
 }
 .wx-frame .wx-hour-sep { border-right: 2px solid currentColor; }
 .wx-frame .wx-hour-rain { opacity: 1; }
+
+
+/* Portrait air-quality block. The portrait layout previously ended after the
+   hourly strip and left the lower third of a 788px frame empty, which on a
+   tall panel reads as unfinished rather than spacious. */
+.wx-air-p {
+  border-top: 2px solid currentColor;
+  padding: 8px 4px 0 4px;
+  margin-top: 8px;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+/* Three columns, not two: six pollutants in two columns need three rows, and
+   at these sizes the last row met the footnote. Three columns is two rows. */
+.wx-air-p .wx-poll {
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px 10px;
+  flex: 0 0 auto;
+  padding-bottom: 4px;
+}
+.wx-air-p .wx-aqi-val { font-size: 44px; }
+.wx-air-p .wx-p-val { font-size: 18px; }
+.wx-air-p .wx-p-lbl { font-size: 10px; }
+.wx-air-p .wx-air-foot { padding-top: 4px; }

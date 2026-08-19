@@ -59,5 +59,32 @@
     {% endfor %}
   </div>
 
+  {% if air %}
+  <div class="wx-air wx-air-p">
+    <div class="wx-air-head">
+      <span class="wx-air-title">AIR QUALITY</span>
+      <span class="wx-air-band">{{ air.band }}</span>
+    </div>
+    <div class="wx-aqi-row">
+      <span class="wx-aqi-val">{{ air.aqi if air.aqi is not none else '--' }}</span>
+      <span class="wx-aqi-lbl">US AQI</span>
+      {% if air.eu_aqi is not none %}<span class="wx-aqi-eu">EU {{ air.eu_aqi }}</span>{% endif %}
+    </div>
+    <div class="wx-scale">
+      {% for i in range(6) %}<div class="wx-scale-seg"></div>{% endfor %}
+      {% if air.pos is not none %}<div class="wx-scale-mark" style="left: {{ air.pos }}%"></div>{% endif %}
+    </div>
+    <div class="wx-poll">
+      <div class="wx-p"><span class="wx-p-lbl">PM2.5</span><span class="wx-p-val">{{ air.pm25 or '--' }}</span></div>
+      <div class="wx-p"><span class="wx-p-lbl">PM10</span><span class="wx-p-val">{{ air.pm10 or '--' }}</span></div>
+      <div class="wx-p"><span class="wx-p-lbl">CO&#8322;</span><span class="wx-p-val">{{ air.co2 or '--' }}<span class="wx-sm"> ppm</span></span></div>
+      <div class="wx-p"><span class="wx-p-lbl">OZONE</span><span class="wx-p-val">{{ air.o3 or '--' }}</span></div>
+      <div class="wx-p"><span class="wx-p-lbl">NO&#8322;</span><span class="wx-p-val">{{ air.no2 or '--' }}</span></div>
+      <div class="wx-p"><span class="wx-p-lbl">UV</span><span class="wx-p-val">{{ air.uv or '--' }}</span></div>
+    </div>
+    <div class="wx-air-foot">PARTICULATES IN &#181;g/m&#179; &nbsp;·&nbsp; OPEN-METEO CAMS</div>
+  </div>
+  {% endif %}
+
 </div>
 {% endblock %}

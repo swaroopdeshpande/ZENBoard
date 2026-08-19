@@ -48,6 +48,11 @@ class SpaceOverview(BasePlugin):
         data = self._get_space_data(n2yo_key, lat, lng, alt, cache_ttl)
 
         dimensions = device_config.get_resolution()
+        # Portrait means a physically rotated frame, so the canvas rotates
+        # with it. Without this the plugin lays out for 800x480 and is then
+        # squeezed into a 480x800 panel.
+        if device_config.get_config("orientation") == "vertical":
+            dimensions = dimensions[::-1]
         is_landscape = dimensions[0] > dimensions[1]
 
         theme = settings.get("theme", "dark")

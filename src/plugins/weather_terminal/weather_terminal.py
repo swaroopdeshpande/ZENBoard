@@ -133,6 +133,11 @@ class WeatherTerminal(BasePlugin):
         now = datetime.now(tz)
 
         dimensions = device_config.get_resolution()
+        # Portrait means a physically rotated frame, so the canvas rotates
+        # with it. Without this the plugin lays out for 800x480 and is then
+        # squeezed into a 480x800 panel.
+        if device_config.get_config("orientation") == "vertical":
+            dimensions = dimensions[::-1]
         is_landscape = dimensions[0] > dimensions[1]
         if device_config.get_config("orientation") == "vertical":
             is_landscape = False
@@ -168,8 +173,6 @@ class WeatherTerminal(BasePlugin):
                     "bottomMargin": safe.get("bottom", 0),
                     "leftMargin": safe.get("left", 8),
                     "rightMargin": safe.get("right", 11),
-                    "backgroundOption": "color",
-                    "backgroundColor": "#000000" if dark else "#ffffff",
                     "textColor": "#ffffff" if dark else "#000000",
                     "selectedFrame": "None",
                 },

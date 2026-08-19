@@ -18,8 +18,8 @@
 html, body {
     padding: 0 !important;
     margin: 0 !important;
-    width: 800px;
-    height: 480px;
+    width: 100%;
+    height: 100%;
     font-family: 'Courier New', Courier, monospace;
     overflow: hidden;
 }
@@ -29,8 +29,12 @@ html, body {
 /* Frame offset comes from the calibrated safe area via .container -
    see plugin.css. Do not hardcode margins here. */
 .oil-frame {
-    width: 100%;
-    height: 100%;
+    /* Sized from the injected safe-area variables rather than 100%. The shared
+       .container centres its child, so a percentage height collapses to the
+       content height - the field stopped partway down the panel and the rest of
+       the layout fell outside it. */
+    width: var(--safe-width);
+    height: var(--safe-height);
     /* The field belongs to the frame, not the body. Painting the body meant
        the colour reached the panel edge and filled the area under the wooden
        mount - the same fault space_overview had. */
@@ -253,3 +257,66 @@ body.light { background: #ffffff; color: #000000; }
 
 .oil-frame.light .oil-chg.up,
 .oil-frame.light .oil-card-chg.up { color: #d40000; }
+
+/* ==================================================================
+   PORTRAIT (480x800, usable 456x788)
+
+   Not the landscape layout rotated. A tall frame wants a stack: the lead
+   commodity keeps a large chart, and the other two become full-width strips.
+   Three narrow side-by-side columns would leave every chart too cramped to
+   read a trend from.
+   ================================================================== */
+
+.oil-p {
+    display: flex;
+    flex-direction: column;
+    padding: 8px 10px 4px 10px;
+}
+
+.oil-p .oil-title { font-size: 17px; letter-spacing: 5px; }
+.oil-p .oil-range { position: static; margin-left: auto; }
+.oil-p .oil-header { gap: 10px; }
+
+.oil-p-lead {
+    display: flex;
+    flex-direction: column;
+    flex: 0 0 auto;
+    padding: 8px 2px 6px 2px;
+    border-bottom: 2px solid currentColor;
+}
+
+.oil-p .oil-lead-price { font-size: 46px; }
+.oil-p .oil-chg { font-size: 14px; }
+
+/* Charts are sized in px, not percentages: the SVG is generated at a fixed
+   size and stretched to its box, so the box has to be deterministic or the
+   line weight changes between plugins. */
+.oil-p-chart { height: 190px; }
+.oil-p-chart svg { width: 100%; height: 100%; }
+
+.oil-p-row {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    padding: 8px 2px 4px 2px;
+}
+
+.oil-p-row + .oil-p-row { border-top: 2px solid currentColor; }
+
+.oil-p-row-head {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+}
+
+.oil-p .oil-card-label { font-size: 13px; letter-spacing: 2px; }
+.oil-p .oil-card-price { font-size: 26px; }
+.oil-p .oil-card-chg { font-size: 12px; margin-left: auto; }
+
+.oil-p-row-chart { flex: 1 1 auto; min-height: 0; }
+.oil-p-row-chart svg { width: 100%; height: 100%; }
+
+/* The wordmark is stamped bottom-left here too, so the footer keeps the same
+   gutter as the landscape layout. */
+.oil-p .oil-foot { padding: 5px 0 0 132px; height: 26px; }

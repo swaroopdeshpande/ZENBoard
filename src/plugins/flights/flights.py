@@ -111,6 +111,13 @@ class Flights(BasePlugin):
             max_rows = DEFAULT_ROWS
         size = ROW_ART.get(max_rows, ROW_ART[DEFAULT_ROWS])
 
+        # Portrait always uses the 396px art: the 600px library is wider than
+        # the 456px portrait frame, and scaling 1-bit line art fringes every
+        # stroke. The taller frame fits five aircraft instead of two.
+        is_landscape = dimensions[0] >= dimensions[1]
+        if not is_landscape:
+            size, max_rows = "small", 4
+
         rows = []
         for a in aircraft:
             row = self._row(a, lat, lon, size)
@@ -120,7 +127,9 @@ class Flights(BasePlugin):
                 break
 
         image = self.render_image(
-            dimensions, "flights.html", "flights.css",
+            dimensions,
+            "flights.html" if is_landscape else "flights_portrait.html",
+            "flights.css",
             {
                 "rows": rows,
                 "row_size": size,

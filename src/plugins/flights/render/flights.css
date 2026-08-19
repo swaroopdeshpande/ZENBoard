@@ -187,3 +187,53 @@ html, body { padding: 0 !important; margin: 0 !important; width: 100%; height: 1
     font-weight: 600;
     letter-spacing: 4px;
 }
+
+/* ==================================================================
+   PORTRAIT (480x800, usable 456x788)
+
+   A tall frame fits five aircraft rather than two, so portrait uses the 396px
+   art library - the 600px one is wider than the frame and cannot be scaled
+   without fringing the 1-bit line work.
+
+   The caption splits over two lines here. Landscape puts the airline, type,
+   altitude and distance on one row, which at 456px would either wrap
+   unpredictably or need type small enough to lose on the panel.
+   ================================================================== */
+
+.fp-portrait {
+    width: var(--safe-width);
+    height: var(--safe-height);
+    padding: 6px 10px 4px 10px;
+}
+
+.fp-portrait .fp-art img { width: 396px; height: 116px; }
+
+/* Four rows, not five. Five fitted arithmetically but left no slack, so the
+   last row's altitude line collided with the footer rule. Four gives each
+   aircraft room and reads better on a tall frame. */
+.fp-portrait .fp-body { height: 720px; }
+.fp-portrait .fp-row  { height: 180px; }
+
+.fp-portrait .fp-cap {
+    height: 18px;
+    border-top: 1px solid currentColor;
+    padding-top: 2px;
+    gap: 8px;
+}
+
+.fp-portrait .fp-cap2 {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    height: 13px;
+    padding: 0 4px;
+}
+
+.fp-portrait .fp-op   { font-size: 17px; }
+.fp-portrait .fp-meta { font-size: 11px; }
+.fp-portrait .fp-num  { font-size: 13px; }
+.fp-portrait .fp-unit { font-size: 9px; }
+
+.fp-portrait .fp-head { padding-bottom: 4px; }
+.fp-portrait .fp-foot { padding: 4px 0 0 132px; height: 26px; font-size: 9px; }
+.fp-portrait .fp-empty { font-size: 20px; line-height: 1.6; text-align: center; }

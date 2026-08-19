@@ -1,0 +1,67 @@
+{% extends "plugin.html" %}
+
+{% block content %}
+<div class="oil-frame oil-p {% if theme == 'light' %}light{% endif %}">
+
+  <div class="oil-header">
+    <span class="oil-dot">•</span>
+    <span class="oil-title">ENERGY</span>
+    <span class="oil-dot">•</span>
+    <span class="oil-range">{{ range_label }}</span>
+  </div>
+
+  {# Portrait stacks rather than splitting left/right. The lead commodity keeps
+     a large chart; the others become full-width strips, which reads better in a
+     tall frame than three narrow columns would. #}
+  <div class="oil-p-lead">
+    <div class="oil-lead-head">
+      <span class="oil-lead-label">{{ lead.label }}</span>
+      <span class="oil-lead-unit">{{ lead.unit }}</span>
+    </div>
+    <div class="oil-lead-price">
+      <span class="oil-cur">$</span>{{ lead.price }}
+      <span class="oil-chg {% if lead.up %}up{% else %}down{% endif %}">
+        {{ lead.arrow }} {{ lead.change }} &nbsp;{{ lead.pct }}
+      </span>
+    </div>
+    <div class="oil-chart oil-p-chart">{{ lead.chart|safe }}</div>
+    <div class="oil-band">
+      <div class="oil-band-row">
+        <span class="oil-band-lbl">52W LOW</span>
+        <span class="oil-band-val">{{ lead.lo52 }}</span>
+        <span class="oil-band-spacer"></span>
+        <span class="oil-band-val">{{ lead.hi52 }}</span>
+        <span class="oil-band-lbl">52W HIGH</span>
+      </div>
+      <div class="oil-rule">
+        {% if lead.pos52 is not none %}
+        <div class="oil-marker" style="left: {{ lead.pos52 }}%"></div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  {% for q in rest %}
+  <div class="oil-p-row">
+    <div class="oil-p-row-head">
+      <span class="oil-card-label">{{ q.label }}</span>
+      <span class="oil-card-price"><span class="oil-cur">$</span>{{ q.price }}</span>
+      <span class="oil-card-chg {% if q.up %}up{% else %}down{% endif %}">
+        {{ q.arrow }} {{ q.change }} &nbsp;{{ q.pct }}
+      </span>
+    </div>
+    <div class="oil-card-chart oil-p-row-chart">{{ q.chart|safe }}</div>
+    <div class="oil-card-range">
+      <span>L {{ q.period_lo }}</span>
+      <span>H {{ q.period_hi }}</span>
+    </div>
+  </div>
+  {% endfor %}
+
+  <div class="oil-foot">
+    <span>{{ range_label }}</span>
+    <span>{{ stamp }}</span>
+  </div>
+
+</div>
+{% endblock %}

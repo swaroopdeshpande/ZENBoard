@@ -84,11 +84,20 @@ class OilPriceTracker(BasePlugin):
                 dimensions = dimensions[::-1]
         except Exception:
             pass
+        # Portrait gets its own stacked layout rather than the landscape one
+        # squeezed sideways - three narrow columns leave every chart unreadable.
+        is_landscape = dimensions[0] >= dimensions[1]
+        template = "oil_price_tracker.html" if is_landscape else "oil_portrait.html"
 
         lead, rest = quotes[0], quotes[1:]
-        lead["chart"] = self._sparkline(lead["closes"], 430, 150, lead["up"])
-        for q in rest:
-            q["chart"] = self._sparkline(q["closes"], 210, 52, q["up"])
+        if is_landscape:
+            lead["chart"] = self._sparkline(lead["closes"], 430, 150, lead["up"])
+            for q in rest:
+                q["chart"] = self._sparkline(q["closes"], 210, 52, q["up"])
+        else:
+            lead["chart"] = self._sparkline(lead["closes"], 430, 190, lead["up"])
+            for q in rest:
+                q["chart"] = self._sparkline(q["closes"], 430, 120, q["up"])
 
         template_params = {
             "lead": lead,
@@ -107,8 +116,7 @@ class OilPriceTracker(BasePlugin):
         }
 
         image = self.render_image(
-            dimensions, "oil_price_tracker.html", "oil_price_tracker.css",
-            template_params,
+            dimensions, template, "oil_price_tracker.css", template_params,
         )
         if not image:
             raise RuntimeError("Failed to render oil price image.")
