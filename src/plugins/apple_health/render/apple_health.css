@@ -14,9 +14,9 @@ html, body {
     height: 100%;
 }
 
-/* Calibrated frame offset: T=0 R=10 B=10 L=10 */
+/* Frame offset comes from the calibrated safe area via .container -
+   see plugin.css. Do not hardcode margins here. */
 .health {
-    margin: 0 10px 10px 10px;
     background: #ffffff;
     font-family: 'Jost', sans-serif;
     color: #000000;

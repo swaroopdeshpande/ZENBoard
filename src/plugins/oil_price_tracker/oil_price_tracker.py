@@ -99,12 +99,10 @@ class OilPriceTracker(BasePlugin):
             # body is 800x480 while the frame is inset to the calibrated 780x470.
             # Without this the 10px margin stayed black on the light theme and
             # printed as a black border round the page.
-            "plugin_settings": {
-                **settings,
-                "backgroundOption": "color",
-                "backgroundColor": "#ffffff" if theme == "light" else "#000000",
-                "textColor": "#000000" if theme == "light" else "#ffffff",
-            },
+            # No body background: the frame paints the field, inside the
+            # calibrated safe area. Setting it on the body pushed the colour
+            # under the wooden mount.
+            "plugin_settings": dict(settings),
             "stamp": datetime.now().strftime("%H:%M  %d %b %Y").upper(),
         }
 

@@ -3,17 +3,23 @@
 body {
     width: 800px;
     height: 480px;
-    background: #000000;
+    /* Paper, not black. The body used to paint black edge to edge, so the dead
+       zone under the wooden frame was black while every other plugin left it
+       white - which is the border that was leaking past the mount. The dark
+       field now belongs to .space-frame, inside the calibrated margins. */
+    background: #ffffff;
     font-family: 'Courier New', Courier, monospace;
     color: #ffffff;
     overflow: hidden;
 }
 
 .space-frame {
-    width: 800px;
-    height: 480px;
+    /* Was a full-bleed 800x480 with its own border, which is why the black
+       field and that border showed past the wooden frame while every other
+       plugin inset itself. Now honours the measured safe area. */
+    width: 100%;
+    height: 100%;
     background: #000000;
-    border: 1.5px solid #333333;
     display: flex;
     flex-direction: column;
 }

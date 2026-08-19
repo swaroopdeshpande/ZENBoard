@@ -4,6 +4,16 @@
         <link rel="stylesheet" href="{{style}}">
     {% endfor %}
     <style>
+        /* Calibrated frame margins, injected per render from device.json.
+           Plugins should use these rather than hardcoding pixel offsets. */
+        :root {
+            --safe-top: {{ safe_top|default(0) }}px;
+            --safe-right: {{ safe_right|default(0) }}px;
+            --safe-bottom: {{ safe_bottom|default(0) }}px;
+            --safe-left: {{ safe_left|default(0) }}px;
+            --safe-width: {{ safe_width|default(800) }}px;
+            --safe-height: {{ safe_height|default(480) }}px;
+        }
         {% for font in font_faces %}
         @font-face {
             font-family: "{{font.font_family}}";

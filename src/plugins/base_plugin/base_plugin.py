@@ -13,6 +13,7 @@ logger = logging.getLogger(__name__)
 STATIC_DIR = resolve_path("static")
 PLUGINS_DIR = resolve_path("plugins")
 BASE_PLUGIN_DIR =  os.path.join(PLUGINS_DIR, "base_plugin")
+CONFIG_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "config")
 BASE_PLUGIN_RENDER_DIR = os.path.join(BASE_PLUGIN_DIR, "render")
 
 FRAME_STYLES = [
@@ -114,6 +115,31 @@ class BasePlugin:
         safe_area['orientation'] = orientation
         return safe_area
 
+    @staticmethod
+    def _safe_area_css(dimensions):
+        """Margins for the current orientation, as CSS custom properties.
+
+        Read from device.json rather than passed in, because render_image has
+        no device_config and every caller would otherwise have to remember to
+        forward it - which is exactly the kind of per-plugin duty that let the
+        old hardcoded margins drift apart.
+        """
+        import json as _json
+        try:
+            with open(os.path.join(CONFIG_DIR, "device.json")) as fh:
+                m = _json.load(fh).get("display_margins", {})
+        except Exception:
+            m = {}
+        key = "horizontal" if dimensions[0] >= dimensions[1] else "vertical"
+        a = m.get(key) or {}
+        t, r, b, l = (a.get("top", 0), a.get("right", 0),
+                      a.get("bottom", 0), a.get("left", 0))
+        return {
+            "safe_top": t, "safe_right": r, "safe_bottom": b, "safe_left": l,
+            "safe_width": a.get("usable_width", dimensions[0] - l - r),
+            "safe_height": a.get("usable_height", dimensions[1] - t - b),
+        }
+
     def render_image(self, dimensions, html_file, css_file=None, template_params={}):
         # load the base plugin and current plugin css files
         css_files = [os.path.join(BASE_PLUGIN_RENDER_DIR, "plugin.css")]
@@ -126,6 +152,8 @@ class BasePlugin:
         template_params["height"] = dimensions[1]
         template_params["font_faces"] = get_fonts()
         template_params["static_dir"] = STATIC_DIR
+        # Never let a plugin override these - they are device state, not style.
+        template_params.update(self._safe_area_css(dimensions))
 
         # load and render the given html template
         template = self.env.get_template(html_file)

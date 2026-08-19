@@ -16,11 +16,11 @@ html, body {
     height: 100%;
 }
 
-/* Calibrated frame offset: T=0 R=10 B=10 L=10 (landscape) */
+/* Frame offset comes from the calibrated safe area via .container -
+   see plugin.css. Do not hardcode margins here. */
 .manuscript {
-    width: 780px;
-    height: 470px;
-    margin: 0 10px 10px 10px;
+    width: 100%;
+    height: 100%;
     background-color: #ffffff;
     position: relative;
     border: 6px solid #000000;
@@ -40,7 +40,6 @@ html, body {
     .manuscript {
         width: 458px;
         height: 771px;
-        margin: 0 10px 10px 10px;
     }
 }
 
