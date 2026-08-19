@@ -26,7 +26,7 @@ DEFAULT_CONFIG = {
     "enabled": True,
 }
 
-LED_COUNT = 22
+LED_COUNT = 10
 
 # auto_write=False + a single show() per frame. The per-pixel effects below
 # touch every LED individually, and with auto_write on that was one full
