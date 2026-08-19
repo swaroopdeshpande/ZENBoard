@@ -40,6 +40,9 @@ body {
 .container { display: block !important; }
 
 .wx-frame, .wx-frame-p {
+  /* Gutter inside the calibrated area. Text that ends exactly on the boundary
+     loses its final glyph to the clip; a few pixels of air prevents it. */
+  padding: 0 8px;
   background: #000;
   color: #fff;
   display: flex;

@@ -29,7 +29,7 @@
         {% if plugin_settings.selectedFrame == 'Corner' %}corner-frame{% endif %}
         {% if plugin_settings.selectedFrame == 'Top and Bottom' %}top-bottom-frame{% endif %}
         {% if plugin_settings.selectedFrame == 'Rectangle' %}rectangle-frame{% endif %}"
-        style="padding: 1.5vw;
+        style="padding: 0; margin: 0;
         {% if plugin_settings.backgroundOption == 'color' %}
             background-color: {{ plugin_settings.backgroundColor }};
         {% elif plugin_settings.backgroundOption == 'image' %}
@@ -38,11 +38,6 @@
             background-position: center;
         {% endif %}
         color: {{ plugin_settings.textColor }};
-
-        margin-top: {{ plugin_settings.topMargin or plugin_settings.margin or 5 }}px;
-        margin-bottom: {{ plugin_settings.bottomMargin or plugin_settings.margin or 5 }}px;
-        margin-left: {{ plugin_settings.leftMargin or plugin_settings.margin or 5 }}px;
-        margin-right: {{ plugin_settings.rightMargin or plugin_settings.margin or 5 }}px;
     ">
         <div class="container">
             {% block content %}
