@@ -54,11 +54,33 @@ class WifiQr(BasePlugin):
         except Exception:
             font_title = font_sub = font_mono = font_small = ImageFont.load_default()
 
-        def center_text(text, y, font, fill):
-            bbox = draw.textbbox((0, 0), text, font=font)
-            w = bbox[2] - bbox[0]
-            draw.text(((frame_w - w) // 2, y), text, font=font, fill=fill)
-            return bbox[3] - bbox[1]
+        def center_text(text, y, font, fill, max_w=None):
+            """Centre a line, wrapping it if it will not fit.
+
+            The frame is 456px wide in portrait against 788 in landscape, so a
+            line sized for landscape ran off both edges. Wrapping on words keeps
+            it inside whatever frame it is given.
+            """
+            limit = max_w or int(frame_w * 0.92)
+            words, lines, cur = text.split(), [], ""
+            for word in words:
+                trial = f"{cur} {word}".strip()
+                bb = draw.textbbox((0, 0), trial, font=font)
+                if bb[2] - bb[0] <= limit or not cur:
+                    cur = trial
+                else:
+                    lines.append(cur)
+                    cur = word
+            if cur:
+                lines.append(cur)
+
+            total = 0
+            for line in lines:
+                bbox = draw.textbbox((0, 0), line, font=font)
+                w = bbox[2] - bbox[0]
+                draw.text(((frame_w - w) // 2, y + total), line, font=font, fill=fill)
+                total += (bbox[3] - bbox[1]) + 4
+            return max(0, total - 4)
 
         # ── TOP: welcome banner ──
         y = 10
@@ -111,6 +133,12 @@ class WifiQr(BasePlugin):
         center_text(f"IP: {ap_ip}", y, font_sub, BLACK)
 
         # ── apply calibrated safe area ──
-        background = Image.new("RGB", device_config.get_resolution(), color="white")
+        # Rotate the canvas for a vertically mounted frame. This plugin builds
+        # its image with PIL rather than a template, so it never went through
+        # the usual dimension swap and always produced a landscape canvas.
+        _res = device_config.get_resolution()
+        if device_config.get_config("orientation") == "vertical":
+            _res = _res[::-1]
+        background = Image.new("RGB", _res, color="white")
         background.paste(img, (safe.get("start_x", 0), safe.get("start_y", 0)))
         return background

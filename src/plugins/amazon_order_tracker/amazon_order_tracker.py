@@ -160,13 +160,19 @@ class AmazonOrderTracker(BasePlugin):
 
         logger.info(f"Filtered to {len(filtered_orders)} for mode '{display_mode}'")
 
-        # Rows are compact (~90px) now, so landscape/portrait fit more than 3.
+        # Row count is capped by how many actually fit, not by a single number
+        # for both orientations. A row measures ~125px including its rule;
+        # portrait has 788px of usable height against landscape's 456, so five
+        # rows overflowed landscape and cut the last order in half.
+        # Read the orientation directly: dimensions is not assigned until
+        # later in this method.
+        is_portrait = device_config.get_config("orientation") == "vertical"
         if display_mode == "detailed":
             display_orders = filtered_orders[:1]
         elif display_mode == "todays_deliveries":
             display_orders = filtered_orders[:3]
         else:
-            display_orders = filtered_orders[:5]
+            display_orders = filtered_orders[:5 if is_portrait else 4]
 
         # Only fetch photos for the handful actually shown - not all 39
         # orders. Keeps this light enough for a Pi Zero 2W.

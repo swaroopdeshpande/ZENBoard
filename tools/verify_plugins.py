@@ -23,7 +23,7 @@ from PIL import Image
 from config import Config
 from utils.image_utils import stem_darken
 
-OUT = "/tmp/verify"
+OUT = "/home/zenith/verify"
 CFG = "/usr/local/inkypi/src/config/device.json"
 PLUGIN_DIR = "/usr/local/inkypi/src/plugins"
 
@@ -87,7 +87,9 @@ def main():
                 cls = getattr(mod, info["class"])
                 img = cls({"id": pid}).generate_image(st2, dev_cfg)
                 if img.size != dims:
-                    img = img.resize(dims)
+                    print(f'{pid:24s} {orient:9s} {"-":>7s} {"-":>7s} {"-":>7s}  '
+                          f'WRONG CANVAS {img.size} expected {dims}')
+                    continue
                 bleed, edge, ink = analyse(img, m)
                 verdict = "OK"
                 if bleed > 0.5:

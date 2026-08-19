@@ -340,3 +340,154 @@ body.light {
 .light .moon-phase { color: #000000; font-size: 14px; }
 .light .moon-detail { color: #333333; font-size: 12px; }
 .light .moon-icon { font-size: 32px; filter: sepia(1) saturate(10) hue-rotate(330deg); }
+
+/* ==================================================================
+   PORTRAIT (480x800, usable 456x788)
+
+   The portrait template already had this structure; none of its classes had
+   any CSS, so it rendered as unstyled text under the map. These give it the
+   same boxed idiom as landscape: ruled panels, uppercase letterspaced labels,
+   large values with small units.
+
+   Rules are currentColor, not a fixed grey. space.css elsewhere uses #333,
+   which stem_darken() promotes to pure black and which therefore vanishes on
+   this plugin's own dark field.
+   ================================================================== */
+
+.space-map-portrait {
+    width: 100%;
+    height: 236px;
+    object-fit: cover;
+    display: block;
+    border-bottom: 2px solid currentColor;
+}
+
+/* --- ISS stats, three across --- */
+
+.iss-stats-row {
+    display: flex;
+    align-items: stretch;
+    border-bottom: 2px solid currentColor;
+    padding: 8px 4px;
+    gap: 6px;
+}
+
+.iss-stat-p { flex: 1 1 0; min-width: 0; text-align: center; }
+.iss-divider-v { width: 2px; background: currentColor; flex: 0 0 auto; }
+
+.iss-stat-p .stat-lbl {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1.6px;
+}
+
+.stat-val-p {
+    font-size: 21px;
+    font-weight: 900;
+    line-height: 1.2;
+    white-space: nowrap;
+}
+
+.stat-val-p .stat-unit { font-size: 10px; font-weight: 700; letter-spacing: 1px; }
+
+/* --- next pass --- */
+
+.pass-box-p {
+    border: 2px solid currentColor;
+    margin: 10px 4px 0 4px;
+    padding: 7px 10px 9px 10px;
+}
+
+.pass-box-p .pass-header {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    padding-bottom: 3px;
+}
+
+.pass-row-p {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.pass-box-p .pass-countdown {
+    font-size: 30px;
+    font-weight: 900;
+    letter-spacing: 1px;
+    line-height: 1.1;
+}
+
+.pass-box-p .pass-badge {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1.4px;
+    border: 2px solid currentColor;
+    padding: 2px 7px;
+    white-space: nowrap;
+}
+
+.pass-box-p .pass-time { font-size: 11px; font-weight: 700; padding-top: 2px; }
+
+/* --- launches --- */
+
+.launches-box-p {
+    border: 2px solid currentColor;
+    margin: 10px 4px 0 4px;
+    padding: 8px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.launch-row {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+}
+
+.launch-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    border: 2px solid currentColor;
+    flex: 0 0 auto;
+}
+
+.launch-dot.dot-active { background: #d40000; border-color: #d40000; }
+
+.launch-countdown {
+    font-size: 14px;
+    font-weight: 900;
+    letter-spacing: 0.8px;
+    flex: 0 0 62px;
+}
+
+.launch-name {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+/* --- moon --- */
+
+.moon-box-p {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border: 2px solid currentColor;
+    margin: 10px 4px 0 4px;
+    padding: 8px 10px;
+}
+
+.moon-box-p .moon-icon { font-size: 30px; flex: 0 0 auto; }
+.moon-box-p .moon-phase { font-size: 14px; font-weight: 900; letter-spacing: 1.4px; }
+.moon-box-p .moon-detail { font-size: 11px; font-weight: 700; }
