@@ -4,6 +4,7 @@ import json
 import logging
 import math
 import os
+import random
 import time
 import signal
 import sys
@@ -33,6 +34,17 @@ LED_COUNT = 10
 # of the eye and short enough not to become annoying on every refresh.
 STROBE_HALF_PERIOD = 0.01
 STROBE_SECONDS = 0.30
+
+# Tubelight. Mostly a steady lamp, interrupted by the stutter of a fluorescent
+# tube whose starter is going. Probabilities are per frame at ~33Hz, so
+# TUBE_FAULT_CHANCE of 0.004 works out to a fault roughly every 8 seconds -
+# frequent enough to notice, rare enough that the lamp still reads as "on"
+# rather than "broken".
+TUBE_FAULT_CHANCE = 0.004
+TUBE_HUM_DEPTH = 0.04        # mains ripple on a steady tube, barely visible
+_tube_state = "steady"
+_tube_frames = 0
+_tube_level = 1.0
 
 # auto_write=False + a single show() per frame. The per-pixel effects below
 # touch every LED individually, and with auto_write on that was one full
@@ -418,6 +430,46 @@ def run_frame():
             hue = 0.58 * (1.0 - prox)
             lvl = 0.15 + 0.85 * prox
             set_range(*scale_color(*hsv(hue, 0.95, lvl), br))
+
+    elif mode == "tubelight":
+        # A fluorescent tube does not fade, it snaps. So brightness is chosen
+        # per frame from discrete levels rather than interpolated - anything
+        # smooth here immediately reads as "breathing", which is a different
+        # effect entirely.
+        global _tube_state, _tube_frames, _tube_level
+        r, g, b = hex_to_rgb(config["color"])
+
+        if _tube_frames <= 0:
+            if _tube_state == "steady":
+                # Two failure modes, because a real tube has both: a brief
+                # stutter, and a full restrike where it drops out and has to
+                # strike again.
+                if random.random() < 0.35:
+                    _tube_state, _tube_frames = "restrike", random.randint(6, 14)
+                else:
+                    _tube_state, _tube_frames = "stutter", random.randint(3, 9)
+            else:
+                _tube_state = "steady"
+                # Long steady stretches are what sells it. Without them the
+                # strip just looks like it is malfunctioning constantly.
+                _tube_frames = random.randint(40, 400)
+
+        if _tube_state == "steady":
+            # Mains hum: a shallow ripple so a "steady" tube is not perfectly
+            # flat, which reads as LED rather than fluorescent.
+            _tube_level = 1.0 - TUBE_HUM_DEPTH * (0.5 + 0.5 * math.sin(frame * 1.7))
+            if random.random() < TUBE_FAULT_CHANCE:
+                _tube_frames = 0
+        elif _tube_state == "stutter":
+            _tube_level = random.choice([0.0, 0.0, 0.15, 1.0, 1.0, 0.6])
+        else:  # restrike - dark, then a couple of failed strikes, then back
+            _tube_level = 0.0 if _tube_frames > 4 else random.choice([0.0, 1.0, 0.3])
+
+        _tube_frames -= 1
+        lvl = max(0.0, min(1.0, _tube_level))
+        br = int(config["brightness"] * lvl)
+        rr, gg, bb = scale_color(r, g, b, br)
+        set_range(rr, gg, bb)
 
     elif mode == "refresh_flash":
         # A real strobe, run as one blocking burst rather than as a pattern
