@@ -60,7 +60,7 @@ class DisplayManager:
         try:
             import requests as _req
             _req.post("http://127.0.0.1/api/led/flash",
-                      json={"duration": 3.5}, timeout=1)
+                      json={"duration": 0.45}, timeout=1)
         except Exception as e:
             pass
         

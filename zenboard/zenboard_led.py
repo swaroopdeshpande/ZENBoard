@@ -28,6 +28,12 @@ DEFAULT_CONFIG = {
 
 LED_COUNT = 10
 
+# Refresh strobe. 0.01s half-period gives a 50Hz on/off cycle, which reads as a
+# strobe rather than a blink; 0.3s is long enough to register out of the corner
+# of the eye and short enough not to become annoying on every refresh.
+STROBE_HALF_PERIOD = 0.01
+STROBE_SECONDS = 0.30
+
 # auto_write=False + a single show() per frame. The per-pixel effects below
 # touch every LED individually, and with auto_write on that was one full
 # strip write per pixel - visible tearing and needless work on a Pi Zero.
@@ -414,12 +420,33 @@ def run_frame():
             set_range(*scale_color(*hsv(hue, 0.95, lvl), br))
 
     elif mode == "refresh_flash":
-        flash_period = 20
-        t = frame % flash_period
-        if t < flash_period // 2:
-            set_range(255, 255, 255)
-        else:
+        # A real strobe, run as one blocking burst rather than as a pattern
+        # spread across the 33Hz render loop.
+        #
+        # The old version alternated every 10 frames, which at 0.03s a frame is
+        # a 1.7Hz blink - it read as slow winking, not a strobe. The loop rate
+        # caps frame-based flashing at 16Hz even at its theoretical fastest, so
+        # the burst runs its own tight timing instead and reaches ~50Hz.
+        #
+        # Blocking for STROBE_SECONDS is deliberate and safe: it is shorter than
+        # a single frame budget matters for, and nothing else may drive the
+        # strip concurrently anyway.
+        r, g, b = hex_to_rgb(config["color"])
+        r, g, b = scale_color(r, g, b, config["brightness"])
+        # A colour set to near-black would make the strobe invisible, so fall
+        # back to white - the point of the flash is that it is noticed.
+        if r + g + b < 40:
+            r = g = b = 255
+
+        half = STROBE_HALF_PERIOD
+        cycles = max(1, int(STROBE_SECONDS / (half * 2)))
+        for _ in range(cycles):
+            set_range(r, g, b)
+            pixels.show()
+            time.sleep(half)
             pixels.fill((0, 0, 0))
+            pixels.show()
+            time.sleep(half)
     else:
         pixels.fill((0, 0, 0))
 

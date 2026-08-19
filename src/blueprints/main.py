@@ -279,7 +279,7 @@ def led_flash():
     """Trigger refresh flash effect temporarily."""
     import json, threading
     data = request.get_json() or {}
-    duration = float(data.get('duration', 3.0))
+    duration = float(data.get('duration', 0.45))
 
     cfg = _load_led_config()
     if not cfg.get('refresh_flash', True):
