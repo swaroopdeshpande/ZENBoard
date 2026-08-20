@@ -203,24 +203,12 @@ def paint(active, fn):
 # from how often the sensor happens to write - raising the frame rate alone
 # just renders the same stale number more times.
 _prox_shown = 0.0
-# Asymmetric envelope: fast attack, slow release.
-#
-# A single symmetric ease has to choose between responding when you walk in and
-# not flickering when the sensor twitches. Splitting it gets both - the strip
-# rises in about 0.2s, which reads as immediate, and falls over about a second,
-# which hides the sensor's noise and looks deliberate rather than nervous.
-#
-# This is the standard envelope for anything reacting to a person; symmetric
-# easing is what made the response feel sluggish.
-PROX_ATTACK = 0.30        # ~0.20s to 90% at 33Hz
-PROX_RELEASE = 0.07       # ~0.96s to 90%
-PROX_EASE = PROX_ATTACK   # retained for anything still referencing it
+PROX_EASE = 0.22          # per frame at ~33Hz -> about a 0.9s glide
 
 
 def _eased_proximity(target):
     global _prox_shown
-    _prox_shown += (target - _prox_shown) * (
-        PROX_ATTACK if target > _prox_shown else PROX_RELEASE)
+    _prox_shown += (target - _prox_shown) * PROX_EASE
     if abs(target - _prox_shown) < 0.0005:
         _prox_shown = target
     return _prox_shown
