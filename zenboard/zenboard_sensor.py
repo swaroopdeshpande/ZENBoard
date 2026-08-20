@@ -158,6 +158,32 @@ LOST_TIMEOUT = 3.0      # no reading for this long -> treat as absent
 VARIANCE_WINDOW = 30     # ~3s of readings at 9.5Hz
 VARIANCE_MIN_CM = 4.0
 
+# Variance alone is NOT enough, and treating it as such was wrong: a person
+# standing still latches the module onto *them*, producing the same zero spread
+# as an empty room. That read as absent, which is worse than the original bug.
+#
+# What separates the two is the value it latches to. An empty room settles on
+# the static background reflection - 197cm here, identical for doorway,
+# corridor and empty. A still person settles on their own distance. So:
+#
+#   moving                    -> present
+#   frozen at the background  -> empty
+#   frozen anywhere else      -> present, standing still
+#
+# Someone standing perfectly still at exactly the background distance is the
+# one ambiguous case; PRESENCE_HOLD covers it, since they had to move to get
+# there.
+BACKGROUND_CM = 197      # measured: the value it latches to with nobody present
+BACKGROUND_TOL = 12
+
+# The empty condition must persist before it is believed. Someone standing
+# perfectly still at roughly the background distance looks identical to an
+# empty room for as long as they hold that pose, and dropping presence on them
+# within a second is the failure this whole change was meant to remove.
+# Fifteen seconds costs nothing - the LEDs fade over a second anyway, and
+# refresh decisions are gated in minutes.
+EMPTY_CONFIRM_SECONDS = 15.0
+
 CONFIRM_READS_ON = 2
 CONFIRM_READS_OFF = 6
 CONFIRM_READS = CONFIRM_READS_ON
@@ -416,6 +442,7 @@ def main():
     pending_strike = 0.0
     last_written_strike = 0.0
     recent = collections.deque(maxlen=VARIANCE_WINDOW)
+    empty_since = None
     last_status = 0.0
     absent_since = time.time()   # assume empty at startup until proven otherwise
     base = load_persisted_led()
@@ -460,8 +487,18 @@ def main():
             # inside the transition branch below it could never fire, because
             # that branch only runs once presence has already changed.
             if len(recent) >= VARIANCE_WINDOW:
-                if (max(recent) - min(recent)) < VARIANCE_MIN_CM:
-                    wanted = False
+                moving = (max(recent) - min(recent)) >= VARIANCE_MIN_CM
+                mid = sorted(recent)[len(recent) // 2]
+                at_background = abs(mid - BACKGROUND_CM) <= BACKGROUND_TOL
+                # only a frozen reading sitting on the background means empty,
+                # and only once it has held that way long enough to be believed
+                if not moving and at_background:
+                    if empty_since is None:
+                        empty_since = now
+                    elif (now - empty_since) >= EMPTY_CONFIRM_SECONDS:
+                        wanted = False
+                else:
+                    empty_since = None
 
             # debounce presence transitions
             if wanted == present:
