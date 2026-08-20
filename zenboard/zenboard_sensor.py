@@ -22,6 +22,7 @@ Responsibilities
   - poem trigger on a genuine dwell, and a refresh wake on arrival
 """
 
+import collections
 import json
 import logging
 import os
@@ -113,7 +114,11 @@ DIST_DISCOVERY = "homeassistant/sensor/zenboard_distance/config"
 
 # Distance mapping, in centimetres. Tuned from a real walk-in capture where
 # readings spanned ~9 to ~454 and tracked smoothly from 220 down to 105.
-NEAR_CM, FAR_CM = 100, 400   # full effect at ~1m, idle beyond ~4m
+# Measured in this room with calibrate_presence.py, not assumed:
+#   at the frame 47cm, desk 165, mid-room 248, far wall 354.
+# The previous 400cm far point was beyond the room, so proximity never reached
+# zero and the distance effects never fully idled.
+NEAR_CM, FAR_CM = 60, 360
 GAMMA = 2.0
 DEFAULT_MODE = "dist_glow"
 
@@ -131,7 +136,31 @@ LOST_TIMEOUT = 3.0      # no reading for this long -> treat as absent
 
 # The sensor emits ON/OFF continuously; require a few consistent readings
 # before believing a change, so a single dropped line cannot flap presence.
-CONFIRM_READS = 4
+# Asymmetric confirmation, for the same reason as the LED envelope: arriving
+# should register quickly, leaving should not be believed too readily.
+#
+# Presence lines arrive at about 9.5Hz, so four consecutive reads cost roughly
+# 0.4s before the strip is even told you are there - on top of the module's own
+# 1-3s internal estimate update, which is hardware and cannot be reduced. Two
+# reads halve the part that is ours to control while still rejecting a single
+# spurious line. Clearing stays slow, and PRESENCE_HOLD still governs it.
+# Occupancy from variance, not from the ON/OFF line.
+#
+# Calibration showed the module reports presence ON in every position tested,
+# including an empty room, so that line carries no information. What does carry
+# information is movement in the reading: a person produces 13-70cm of spread
+# even standing still, while an empty room freezes on its last value with a
+# spread of exactly zero - 197cm in this room, identical for doorway, corridor
+# and empty.
+#
+# So occupancy is measured as the spread of recent readings. 4cm sits well
+# clear of both: zero when latched, thirteen at the tightest real position.
+VARIANCE_WINDOW = 30     # ~3s of readings at 9.5Hz
+VARIANCE_MIN_CM = 4.0
+
+CONFIRM_READS_ON = 2
+CONFIRM_READS_OFF = 6
+CONFIRM_READS = CONFIRM_READS_ON
 
 REPORT_HEAD, REPORT_TAIL = b"\xf4\xf3\xf2\xf1", b"\xf8\xf7\xf6\xf5"
 ASCII_RANGE = re.compile(rb"Range\s+(\d+)", re.I)
@@ -386,6 +415,7 @@ def main():
     last_written_mode = None
     pending_strike = 0.0
     last_written_strike = 0.0
+    recent = collections.deque(maxlen=VARIANCE_WINDOW)
     last_status = 0.0
     absent_since = time.time()   # assume empty at startup until proven otherwise
     base = load_persisted_led()
@@ -398,6 +428,7 @@ def main():
                 buf.extend(chunk)
                 dist, pres = parse(buf)
                 if dist is not None and 0 < dist < 10000:
+                    recent.append(dist)
                     smoothed = (dist if smoothed is None
                                 else EMA_ALPHA * dist + (1 - EMA_ALPHA) * smoothed)
                     tnow = time.time()
@@ -419,6 +450,19 @@ def main():
             # falling quiet for PRESENCE_HOLD counts as having left.
             wanted = (now - last_positive) < PRESENCE_HOLD
 
+            # A latched reading means nothing is being tracked, whatever the
+            # ON line claims - and calibration showed that line reads ON in an
+            # empty room, so it carries no information on its own. A person
+            # produces 13-70cm of spread even standing still; an empty room
+            # freezes on its last value with a spread of zero.
+            #
+            # This has to gate `wanted` here, at the point it is decided. Placed
+            # inside the transition branch below it could never fire, because
+            # that branch only runs once presence has already changed.
+            if len(recent) >= VARIANCE_WINDOW:
+                if (max(recent) - min(recent)) < VARIANCE_MIN_CM:
+                    wanted = False
+
             # debounce presence transitions
             if wanted == present:
                 candidate, candidate_n = None, 0
@@ -427,7 +471,8 @@ def main():
                     candidate_n += 1
                 else:
                     candidate, candidate_n = wanted, 1
-                if candidate_n >= CONFIRM_READS:
+                needed = CONFIRM_READS_ON if wanted else CONFIRM_READS_OFF
+                if candidate_n >= needed:
                     present = wanted
                     candidate, candidate_n = None, 0
                     last_seen = now
