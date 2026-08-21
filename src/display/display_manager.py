@@ -78,9 +78,10 @@ class DisplayManager:
         if not hasattr(self, "display"):
             raise ValueError("No valid display instance initialized.")
         
-        # Save partial flag before PIL processing destroys it
+        # Save partial flags before PIL processing destroys them
         use_partial = getattr(image, '_partial', False)
-        logger.info(f"Partial refresh flag: {use_partial}")
+        use_regions = getattr(image, '_partial_regions', False)
+        logger.info(f"Partial refresh flag: {use_partial}, region flag: {use_regions}")
 
         # Save the image
         logger.info(f"Saving image to {self.device_config.current_image_file}")
@@ -91,6 +92,13 @@ class DisplayManager:
         image = resize_image(image, self.device_config.get_resolution(), image_settings)
         if self.device_config.get_config("inverted_image"): image = image.rotate(180)
         image = apply_image_enhancement(image, self.device_config.get_config("image_settings"))
+
+        # Region partial: refresh only the boxes that changed, leaving the rest
+        # of the frame - including its red - untouched.
+        if use_regions and hasattr(self.display, 'display_image_regions'):
+            logger.info("Using region partial refresh")
+            self.display.display_image_regions(image)
+            return
 
         # Use partial refresh if image was flagged
         if use_partial and hasattr(self.display, 'display_image_partial'):

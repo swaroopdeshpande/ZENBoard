@@ -22,6 +22,16 @@ PRESENCE_STATE_FILE = "/tmp/zenboard_presence.json"
 PRESENCE_STALE_SECONDS = 300
 
 class RefreshTask:
+
+    # Plugins whose refreshes may update in place rather than repainting the
+    # whole panel. Only worth it where the layout holds still and a few values
+    # change - and only safe where those values are black-on-white, since a
+    # partial refresh has no red plane. The display layer re-checks every
+    # window for red and falls back to a full refresh on its own.
+    REGION_PARTIAL_PLUGINS = {"weather_terminal"}
+
+    _last_displayed_plugin = None
+
     """Handles the logic for refreshing the display using a background thread."""
 
     def __init__(self, device_config, display_manager):
@@ -167,9 +177,25 @@ class RefreshTask:
                                         p_settings.get("partialRefresh", "true") == "true"):
                                     image._partial = True
                                     logger.info(f"Tagged image for partial refresh")
+                                # Region partial refresh, for plugins that update values in
+                                # place on a frame that is already on the glass.
+                                #
+                                # The guard is that the *previous* frame came from the same
+                                # plugin. Weather shares its playlists with three or four
+                                # others, so without this a value update could be driven into
+                                # whatever plugin happens to be showing, corrupting it. When
+                                # weather first comes up it is a full refresh; only the
+                                # updates that follow, while it is still on screen, take the
+                                # region path.
+                                pid = refresh_action.get_plugin_id()
+                                if (pid in self.REGION_PARTIAL_PLUGINS and
+                                        pid == self._last_displayed_plugin):
+                                    image._partial_regions = True
+                                    logger.info("Tagged image for region partial refresh")
                             except Exception as e:
                                 logger.info(f"Partial tag failed: {e}")
                             self.display_manager.display_image(image, image_settings=plugin.config.get("image_settings", []))
+                            self._last_displayed_plugin = refresh_action.get_plugin_id()
 
                             # Phone notification, after the paint rather than
                             # before it, so it reports what actually reached the
