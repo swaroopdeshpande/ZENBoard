@@ -1,6 +1,7 @@
 import inspect
 import importlib
 import logging
+import threading
 from .waveshare_epd import epdconfig
 import sys
 
@@ -104,24 +105,73 @@ class WaveshareDisplay(AbstractDisplay):
     # Waveshare's manual: "you cannot refresh them with the partial refresh
     # mode all the time. After refreshing partially several times, you need to
     # fully refresh EPD once. Otherwise, the display effect will be abnormal."
-    # Their FAQ puts a number on it - clear the screen after 5 rounds of
-    # partial refreshing - so every 5th turn goes through a full refresh.
-    # Waveshare's FAQ says clear the screen after 5 rounds of partial
-    # refreshing. Held at 3, which is inside their limit and matches what
-    # actually looks clean on this panel.
+    # Their FAQ puts a number on it - clear the screen after 5 rounds. Held at
+    # 3, inside that limit.
     PARTIAL_BEFORE_FULL = 3
 
     # A partial refresh drives pixels with a short waveform. That is what makes
-    # it fast, and also why it leaves faint residue where a lot of ink moved -
-    # the pixels do not get driven long enough to fully settle. The residue is
-    # proportional to how much of the frame changed, so rather than counting
-    # refreshes alone, measure the change: a small edit (ticking a note, one new
-    # row) stays on the fast path, while a wholesale repaint takes a full
-    # refresh, which is what it would have needed to look clean anyway.
+    # it fast, and also why it leaves residue where a lot of ink moved. The
+    # residue scales with how much changed, so a small edit stays on the fast
+    # path while a wholesale repaint takes the full refresh it needed anyway.
     PARTIAL_MAX_DELTA = 0.18
+
+    # Seconds of quiet after a partial refresh before the panel settles itself
+    # with a full one.
+    #
+    # Partial refresh runs in KW mode, which uses 7 of the panel's 10 waveform
+    # groups; the three it drops are the ones that drive the red pigment. On
+    # this three-pigment BWR panel that pigment is never pushed back, so every
+    # partial frame renders black as maroon. That is not tunable - it is what
+    # KW mode is.
+    #
+    # So partial refresh is treated as what it actually is: a fast preview. The
+    # page turn lands in ~1.4s and stays maroon only while you are still
+    # turning; once you stop, one full refresh puts the page you actually sit
+    # and read into true black. Any new update cancels a pending settle, so a
+    # run of page turns costs exactly one settle at the end, not one each.
+    SETTLE_SECONDS = 6.0
+
+    # One display, one SPI bus. The settle runs on a timer thread, so panel
+    # access has to be serialised against the refresh loop. Reentrant because
+    # the settle path calls display_image() while already holding it.
+    _panel_lock = threading.RLock()
+    _settle_timer = None
+    _settle_image = None
 
     _partial_count = 0
     _last_buf = None
+
+    def _cancel_settle(self):
+        """Drop any pending settle. Safe to call when none is armed."""
+        t = self._settle_timer
+        self._settle_timer = None
+        self._settle_image = None
+        if t is not None:
+            t.cancel()
+
+    def _schedule_settle(self, image):
+        """Arm a full refresh for SETTLE_SECONDS from now, replacing any pending one."""
+        self._cancel_settle()
+        self._settle_image = image
+        t = threading.Timer(self.SETTLE_SECONDS, self._settle)
+        t.daemon = True          # never hold up shutdown
+        self._settle_timer = t
+        t.start()
+
+    def _settle(self):
+        """Repaint the last frame properly, in true black."""
+        with self._panel_lock:
+            image = self._settle_image
+            self._settle_timer = None
+            self._settle_image = None
+            if image is None:
+                return
+            try:
+                logger.info("Settling: full refresh to restore true black after partial.")
+                self._partial_count = 0
+                self._display_image_locked(image)
+            except Exception as e:
+                logger.error(f"Settle refresh failed: {e}")
 
     @staticmethod
     def _frame_delta(prev_buf, new_buf):
@@ -191,11 +241,16 @@ class WaveshareDisplay(AbstractDisplay):
         epd.ReadBusy()
 
     def display_image_partial(self, image):
+        with self._panel_lock:
+            self._cancel_settle()
+            self._display_image_partial_locked(image)
+
+    def _display_image_partial_locked(self, image):
         if not image:
             raise ValueError("No image provided.")
         if not self.bi_color_display or not hasattr(self.epd_display, "display_Partial"):
             logger.info("Partial refresh unavailable on this panel; full refresh.")
-            self.display_image(image)
+            self._display_image_locked(image)
             return
 
         # Partial refresh cannot carry red - not a library limitation, a
@@ -213,7 +268,7 @@ class WaveshareDisplay(AbstractDisplay):
             logger.info("Image contains red; partial refresh is black/white only "
                         "(UC8179 KW mode). Full refresh.")
             self._partial_count = 0
-            self.display_image(image)
+            self._display_image_locked(image)
             return
 
         w, h = self.epd_display.width, self.epd_display.height
@@ -250,6 +305,11 @@ class WaveshareDisplay(AbstractDisplay):
         self.epd_display.sleep()
         self._last_buf = new_buf
 
+        # The frame on the glass is maroon until this fires. Any further update
+        # cancels and re-arms it, so a burst of page turns settles once, at the
+        # end, rather than after every turn.
+        self._schedule_settle(image)
+
     def display_image(self, image, image_settings=[]):
         
         """
@@ -266,9 +326,16 @@ class WaveshareDisplay(AbstractDisplay):
             ValueError: If no image is provided.
         """
 
+        with self._panel_lock:
+            self._display_image_locked(image, image_settings)
+
+    def _display_image_locked(self, image, image_settings=[]):
         logger.info("Displaying image to Waveshare display.")
         if not image:
             raise ValueError(f"No image provided.")
+
+        # This frame is true black already; nothing left to settle to.
+        self._cancel_settle()
 
         # Assume device was in sleep mode.
         self.epd_display_init()
