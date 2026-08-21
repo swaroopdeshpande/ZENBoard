@@ -414,7 +414,10 @@ class WaveshareDisplay(AbstractDisplay):
         except Exception:
             self._last_buf = None
 
-        # Reference frame for any region partial that follows.
+        # Reference frame for any region partial that follows. The budget
+        # resets too: a full refresh has cleared whatever the partials left, and
+        # this is also how a plugin change starts the next plugin from scratch.
+        self._region_count = 0
         try:
             self._last_image = image.copy()
         except Exception:
