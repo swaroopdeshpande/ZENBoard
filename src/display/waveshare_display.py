@@ -192,7 +192,7 @@ class WaveshareDisplay(AbstractDisplay):
 
     # Beyond this many windows the per-window overhead stops being worth it and
     # a full refresh is simpler and cleaner.
-    REGION_MAX_WINDOWS = 6
+    REGION_MAX_WINDOWS = 10
 
     # If this much of the panel changed, the frame is not a value update - it is
     # a different screen. Take a full refresh.
@@ -220,7 +220,7 @@ class WaveshareDisplay(AbstractDisplay):
         return runs
 
     @classmethod
-    def _changed_boxes(cls, prev_img, new_img, w, h):
+    def _changed_boxes(cls, prev_img, new_img, w, h, red_mask=None):
         """Bounding boxes of what changed between two frames, byte-aligned.
 
         Rows are grouped into bands first, then columns within each band, which
@@ -228,6 +228,14 @@ class WaveshareDisplay(AbstractDisplay):
         X is snapped outwards to multiples of 8 because R90H addresses
         horizontal channel *banks* - HRST[9:3] - so a window cannot start or end
         mid-byte.
+
+        Nearby boxes are merged, but never across red. A merge spans the gap
+        between two boxes, and that gap may hold red the update never touched -
+        the graph's NOW bar sits between two sets of changing digits exactly like
+        this. Merging over it produced a window containing red, which then forced
+        a full refresh every time, so nothing ever updated in place. Red is
+        static far more often than it changes, so the merge has to route around
+        it rather than the caller rejecting the result afterwards.
         """
         a = np.array(prev_img.convert("1"), dtype=bool)
         b = np.array(new_img.convert("1"), dtype=bool)
@@ -241,7 +249,13 @@ class WaveshareDisplay(AbstractDisplay):
             for x0, x1 in cls._runs(band.any(axis=0)):
                 boxes.append([x0, y0, x1, y1])
 
-        # merge boxes that are near each other, repeatedly until stable
+        def spans_red(bx, ob):
+            if red_mask is None:
+                return False
+            x0, y0 = min(bx[0], ob[0]), min(bx[1], ob[1])
+            x1, y1 = max(bx[2], ob[2]), max(bx[3], ob[3])
+            return bool(red_mask[y0:y1, x0:x1].any())
+
         merged = True
         while merged and len(boxes) > 1:
             merged = False
@@ -251,7 +265,8 @@ class WaveshareDisplay(AbstractDisplay):
                     if (bx[0] < ob[2] + cls.REGION_MERGE_GAP and
                             ob[0] < bx[2] + cls.REGION_MERGE_GAP and
                             bx[1] < ob[3] + cls.REGION_MERGE_GAP and
-                            ob[1] < bx[3] + cls.REGION_MERGE_GAP):
+                            ob[1] < bx[3] + cls.REGION_MERGE_GAP and
+                            not spans_red(bx, ob)):
                         ob[0], ob[1] = min(ob[0], bx[0]), min(ob[1], bx[1])
                         ob[2], ob[3] = max(ob[2], bx[2]), max(ob[3], bx[3])
                         merged = True
@@ -303,25 +318,50 @@ class WaveshareDisplay(AbstractDisplay):
         elif self._region_count > self.REGION_PARTIAL_BEFORE_FULL:
             reason = "partial budget spent (%d)" % self.REGION_PARTIAL_BEFORE_FULL
         else:
-            boxes = self._changed_boxes(prev, image, w, h)
+            old_rgb = np.array(prev.convert("RGB"), dtype=np.int16)
+            new_rgb = np.array(image.convert("RGB"), dtype=np.int16)
+            red_mask = (((old_rgb[:, :, 0] - np.maximum(old_rgb[:, :, 1], old_rgb[:, :, 2])) > 60) |
+                        ((new_rgb[:, :, 0] - np.maximum(new_rgb[:, :, 1], new_rgb[:, :, 2])) > 60))
+            boxes = self._changed_boxes(prev, image, w, h, red_mask)
+
+            # Drop boxes touching red first. Some changes genuinely sit on red -
+            # the graph's bars butt against the red NOW bar, so almost any
+            # temperature change puts a changed pixel on it. Failing the update
+            # for that meant every tick fell back to a full refresh and nothing
+            # ever updated in place.
+            #
+            # Those areas are simply not driven; they keep showing the previous
+            # content until the next full refresh, which the budget guarantees
+            # within five ticks. The values this exists for - temperature, air
+            # quality - sit clear of red and refresh normally.
+            #
+            # This runs before the count and area limits, so regions that are
+            # never going to be driven cannot push the update over them.
+            if boxes:
+                kept = [bx for bx in boxes
+                        if not red_mask[bx[1]:bx[3], bx[0]:bx[2]].any()]
+                if len(kept) != len(boxes):
+                    logger.info("Skipping %d region(s) touching red; they wait for "
+                                "the next full refresh.", len(boxes) - len(kept))
+                boxes = kept
+
             if not boxes:
-                reason = "nothing changed"
+                reason = "nothing to update"
             elif len(boxes) > self.REGION_MAX_WINDOWS:
                 reason = "%d changed regions, too scattered" % len(boxes)
             else:
                 area = sum((x1 - x0) * (y1 - y0) for x0, y0, x1, y1 in boxes)
                 if area > self.REGION_MAX_AREA * w * h:
                     reason = "%.0f%% of the panel changed" % (area * 100.0 / (w * h))
-                else:
-                    # Red anywhere in a window would be driven in KW mode and
-                    # destroyed. Check both frames: red could be arriving or
-                    # leaving.
-                    old_rgb = np.array(prev.convert("RGB"), dtype=np.int16)
-                    new_rgb = np.array(image.convert("RGB"), dtype=np.int16)
-                    for bx in boxes:
-                        if self._box_has_red(old_rgb, bx) or self._box_has_red(new_rgb, bx):
-                            reason = "a changed region contains red"
-                            break
+
+        # Nothing drivable is not a failure - do not spend a 42s full refresh on
+        # it. This is the normal outcome when the only thing that moved was the
+        # graph butting against the red NOW bar. Give the budget back too, since
+        # the panel was never touched.
+        if reason == "nothing to update":
+            logger.info("Region partial: nothing to drive this tick.")
+            self._region_count -= 1
+            return
 
         if reason:
             logger.info("Full refresh: %s.", reason)
@@ -366,7 +406,14 @@ class WaveshareDisplay(AbstractDisplay):
             epd.ReadBusy()
         epd.sleep()
 
-        self._last_image = image.copy()
+        # The reference must be what is actually on the glass, which is the
+        # previous frame with only the driven boxes replaced. Storing the whole
+        # rendered frame would claim regions were updated that were never
+        # driven, and the next diff would then skip them for good.
+        glass = prev.copy()
+        for x0, y0, x1, y1 in boxes:
+            glass.paste(image.crop((x0, y0, x1, y1)), (x0, y0))
+        self._last_image = glass
 
     def display_image(self, image, image_settings=[]):
         
