@@ -51,15 +51,10 @@ _CACHE = {}               # (size, dark_bg, mtime) -> RGBA
 # Colour handling
 # ----------------------------------------------------------------------
 
-def _snap(img, dark_bg, mono=False):
+def _snap(img, dark_bg):
     """Pure colours, binary alpha.
 
-    Reddish pixels stay red - it survives on either ground - unless mono is
-    set, which folds them into the ink too. Partial refresh drives the panel
-    in the controller's KW mode, where there is no red plane at all, so a red
-    mark on a partially refreshed frame would print black anyway and then
-    snap back to red at the next full refresh. Better to commit to black.
-    Everything else
+    Reddish pixels stay red - it survives on either ground. Everything else
     resolves to a single ink: white on a dark corner, black on a light one.
     Resizing reintroduces greys every time, so this runs after any resize.
     """
@@ -72,7 +67,7 @@ def _snap(img, dark_bg, mono=False):
             r, g, b, a = px[x, y]
             if a < 110:
                 px[x, y] = (0, 0, 0, 0)
-            elif r > g + 40 and r > b + 40 and not mono:
+            elif r > g + 40 and r > b + 40:
                 px[x, y] = RED + (255,)
             else:
                 px[x, y] = ink + (255,)
@@ -112,7 +107,7 @@ def _fit(img, size):
 # Artwork
 # ----------------------------------------------------------------------
 
-def _fallback_enso(size, dark_bg, mono=False):
+def _fallback_enso(size, dark_bg):
     """Built-in mark: an ensō left open, with the accent where the brush
     touched down."""
     s = size * SS
@@ -141,32 +136,31 @@ def _fallback_enso(size, dark_bg, mono=False):
 
     gx, gy = at(START)
     dot = stroke * 0.78
-    d.ellipse((gx - dot, gy - dot, gx + dot, gy + dot),
-              fill=(ink if mono else RED) + (255,))
+    d.ellipse((gx - dot, gy - dot, gx + dot, gy + dot), fill=RED + (255,))
 
-    return _snap(img.resize((size, size), Image.LANCZOS), dark_bg, mono)
+    return _snap(img.resize((size, size), Image.LANCZOS), dark_bg)
 
 
-def get_logo(size, dark_bg, mono=False):
+def get_logo(size, dark_bg):
     path = LOGO_PATH_LIGHT if (dark_bg and os.path.exists(LOGO_PATH_LIGHT)) else LOGO_PATH
     try:
         mtime = os.path.getmtime(path)
     except OSError:
         path, mtime = None, 0
 
-    key = (size, dark_bg, mono, path, mtime)
+    key = (size, dark_bg, path, mtime)
     if key in _CACHE:
         return _CACHE[key]
 
     if path:
         try:
             art = _autocrop(Image.open(path))
-            logo = _snap(_fit(art, size), dark_bg, mono)
+            logo = _snap(_fit(art, size), dark_bg)
         except Exception as e:
             logger.warning(f"ZenBoard mark: could not read {path} ({e}), using built-in")
-            logo = _fallback_enso(size, dark_bg, mono)
+            logo = _fallback_enso(size, dark_bg)
     else:
-        logo = _fallback_enso(size, dark_bg, mono)
+        logo = _fallback_enso(size, dark_bg)
 
     _CACHE[key] = logo
     return logo
@@ -232,12 +226,8 @@ def _with_halo(logo, halo_ink):
     return Image.alpha_composite(plate, canvas)
 
 
-def stamp(image, size=40, margin=12, mixed_threshold=0.08, corner="auto",
-          mono=False):
+def stamp(image, size=40, margin=12, mixed_threshold=0.08, corner="auto"):
     """Composite the mark into a corner. Returns the image.
-
-    mono drops the red accent and draws the whole mark in the single ink, for
-    frames headed for a partial refresh, which has no red plane.
 
     corner is "auto" to pick the emptiest, or one of tl/tr/bl/br to pin it.
     Pinning exists because the emptiness score cannot distinguish a small
@@ -278,7 +268,7 @@ def stamp(image, size=40, margin=12, mixed_threshold=0.08, corner="auto",
                 order.index(k)))
 
         bx = boxes[best]
-        probe = get_logo(size, dark_bg=False, mono=mono)
+        probe = get_logo(size, dark_bg=False)
         lw, lh = probe.size
         x = bx[0] + margin if best in ("tl", "bl") else bx[2] - margin - lw
         y = bx[1] + margin if best in ("tl", "tr") else bx[3] - margin - lh
@@ -291,7 +281,7 @@ def stamp(image, size=40, margin=12, mixed_threshold=0.08, corner="auto",
         dark_bg = foot_mean < 128
         red_ground = _is_red_ground(image, foot)
 
-        logo = get_logo(size, dark_bg=dark_bg, mono=mono)
+        logo = get_logo(size, dark_bg=dark_bg)
         if foot_busy > mixed_threshold or red_ground:
             # Halo is the opposite of the ink, not the same as it.
             logo = _with_halo(logo, BLACK if dark_bg else WHITE)

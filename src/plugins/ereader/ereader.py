@@ -45,21 +45,6 @@ TEXT_COLOR = {
 
 class Ereader(BasePlugin):
 
-    # Pages are black text on a light ground; nothing here is ever red.
-    SUPPORTS_PARTIAL_REFRESH = True
-
-    def wants_partial_refresh(self, settings):
-        """Page turns only.
-
-        A font, size or orientation change repaginates the whole book and the
-        new frame has nothing in common with the old one, so there is no
-        differential worth taking - and a full refresh clears whatever ghosting
-        the previous run of partials left behind.
-        """
-        return (settings.get("action") in ("next", "prev") and
-                settings.get("partialRefresh", "true") == "true")
-
-
     def generate_settings_template(self):
         template_params = super().generate_settings_template()
         template_params["style_settings"] = False

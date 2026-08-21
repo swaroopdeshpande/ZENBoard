@@ -37,25 +37,6 @@ FRAME_STYLES = [
 
 class BasePlugin:
     """Base class for all plugins."""
-
-    # Partial refresh drives the panel in the UC8179's KW mode, which has no
-    # red plane at all - R00H bit 4 swaps the second SRAM plane from RED to
-    # NEW, so the third colour and the previous-frame history are the same
-    # memory. A plugin opts in only if its layout is genuinely black and white.
-    # The display layer re-checks the rendered frame for red and falls back to
-    # a full refresh regardless, so this flag is a declaration of intent, not
-    # the safety mechanism.
-    SUPPORTS_PARTIAL_REFRESH = False
-
-    def wants_partial_refresh(self, settings):
-        """Should this particular render take the partial path?
-
-        Default is the class flag. Plugins whose frames are only sometimes
-        partial-worthy override this - the ereader wants it for page turns but
-        not for a font change, where a clean full refresh is the right call.
-        """
-        return self.SUPPORTS_PARTIAL_REFRESH
-
     def __init__(self, config, **dependencies):
         self.config = config
 

@@ -28,23 +28,6 @@ MAX_ROWS_PORTRAIT = 13
 
 class FamilyNotes(BasePlugin):
 
-    # Partial refresh is OFF, and this is a hardware limit, not a preference.
-    #
-    # Partial refresh runs the panel in the UC8179's KW mode. R22H is shared:
-    # it is the red waveform (LUTR) in KWR mode and the black-to-white waveform
-    # (LUTKW) in KW mode, and the datasheet is explicit that KW mode uses only
-    # 7 of the 10 waveform groups. The three dropped states are the ones that
-    # drive the red pigment. On a three-pigment BWR panel that pigment is then
-    # never pushed back, so "black" renders as maroon and old content ghosts.
-    #
-    # It is genuinely ~15x faster, but this board is on a wall and read at a
-    # glance all day. Correct black beats a fast repaint here. The layout below
-    # is still deliberately black and white - that change stands on its own,
-    # since the colour emoji it replaced dithered badly - so flipping this back
-    # to True is all that is needed to trade colour for speed.
-    SUPPORTS_PARTIAL_REFRESH = False
-
-
     def generate_settings_template(self):
         template_params = super().generate_settings_template()
         template_params["style_settings"] = False

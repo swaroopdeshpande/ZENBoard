@@ -1,21 +1,9 @@
 /* ═══════════════════════════════════════════════════════════════
    Family Notes - ZENBoard
-   Row-segregated layout: each pinned note is its own row. Explicit pixel
-   sizing from get_safe_area(). Solid black and white only - no anti-aliased
-   grays, and deliberately no red.
-
-   The red is gone so this plugin can take the partial-refresh path. Partial
-   refresh runs the panel in the UC8179's KW mode, where R00H bit 4 swaps the
-   second SRAM plane from RED to NEW - the third colour and the previous-frame
-   history are the same memory, so red and a ~1.4s refresh are mutually
-   exclusive. Notes arrive one at a time from a phone, so the refresh speed
-   matters far more here than a colour accent does.
-
-   What the red was carrying is carried by inversion instead: white-on-black
-   chips for the things that need to jump off the page. Inverted text needs
-   more weight AND more size than the same text black-on-white, because
-   stem_darken() snaps every pixel below 200 to black - reinforcing dark
-   glyphs, but eating the anti-aliased edges of light ones.
+   Row-segregated layout: each pinned note is its own row. Full refresh
+   only (tri-color partial refresh confirmed unsupported on this panel -
+   see docs/ZENBOARD.md). Explicit pixel sizing from get_safe_area().
+   Solid black/white/red only - no anti-aliased grays.
    ═══════════════════════════════════════════════════════════════ */
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -50,52 +38,7 @@ body {
   gap: 10px;
 }
 
-/* The pin, drawn rather than typed. U+1F4CC renders through the colour emoji
-   font as a red pushpin - the one thing that kept this plugin off the
-   partial-refresh path, and shaded artwork that dithers badly on a two-colour
-   panel besides.
-
-   A domed head over a needle noticeably longer than the head is wide. Earlier
-   attempts made the box square, which left the needle a stub hidden under the
-   head and the whole thing read as a balloon, then as a map marker - so the
-   box is deliberately taller than it is wide. Sizing comes off --pin alone,
-   so the header and empty-state instances share one construction. */
-.fn-pin {
-  --pin: 16px;
-  position: relative;
-  display: inline-block;
-  width: var(--pin);
-  height: calc(var(--pin) * 1.45);
-  flex: 0 0 auto;
-  transform: rotate(-18deg);
-}
-
-/* head */
-.fn-pin::before {
-  content: "";
-  position: absolute;
-  left: calc(var(--pin) * 0.14);
-  top: 0;
-  width: calc(var(--pin) * 0.72);
-  height: calc(var(--pin) * 0.72);
-  background: #000;
-  border-radius: 50%;
-}
-
-/* needle - a tapered triangle, so it comes to a point. Built from borders:
-   the two transparent sides give the taper. Starts just inside the head and
-   runs well past it. */
-.fn-pin::after {
-  content: "";
-  position: absolute;
-  left: calc(50% - var(--pin) * 0.10);
-  top: calc(var(--pin) * 0.60);
-  width: 0;
-  height: 0;
-  border-left: calc(var(--pin) * 0.10) solid transparent;
-  border-right: calc(var(--pin) * 0.10) solid transparent;
-  border-top: calc(var(--pin) * 0.85) solid #000;
-}
+.fn-pin { font-size: 20px; transform: rotate(-15deg); display: inline-block; }
 
 .fn-title {
   font-size: 18px;
@@ -104,25 +47,14 @@ body {
   color: #000;
 }
 
-/* Inverted chip rather than red text. inline-block matters: in portrait this
-   is a block-level div, and a block would paint its background clear across
-   the frame as a full-width bar instead of hugging the word. */
 .fn-url {
   margin-left: auto;
-  display: inline-block;
-  width: auto;
-  align-self: flex-start;
-  font-size: 15px;
-  font-weight: 900;
-  color: #fff;
-  background: #000;
-  padding: 3px 9px;
-  letter-spacing: 0.5px;
+  font-size: 13px;
+  font-weight: 800;
+  color: #d40000;
 }
 
-/* Portrait puts the chip on its own line under the title, left-aligned - the
-   landscape margin-left:auto would otherwise push it to the right edge. */
-.fn-url-p { margin: 4px 0 8px 0; font-size: 13px; margin-left: 0; }
+.fn-url-p { margin: 2px 0 8px 0; font-size: 12px; }
 
 /* ── rows ── */
 
@@ -148,11 +80,8 @@ body {
 
 .fn-row:first-child { border-top: none; }
 
-/* The newest note. A black bar rather than a red one; widened from 5px so it
-   still reads as a deliberate marker now that it is the same colour as the
-   row rules above it. */
 .fn-row-latest {
-  border-left: 8px solid #000;
+  border-left: 5px solid #d40000;
   padding-left: 12px;
   background: #fff;
 }
@@ -166,15 +95,10 @@ body {
   overflow: hidden;
 }
 
-/* Was red to separate it from the message. With one ink the separation has to
-   come from letterform instead: caps, tighter size, wide tracking against the
-   larger mixed-case message beside it. */
 .fn-row-from {
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 900;
-  color: #000;
-  text-transform: uppercase;
-  letter-spacing: 1.2px;
+  color: #d40000;
   flex: 0 0 auto;
   white-space: nowrap;
 }
@@ -210,7 +134,7 @@ body {
   text-align: center;
 }
 
-.fn-empty .fn-pin { --pin: 38px; margin-bottom: 16px; }
+.fn-empty .fn-pin { font-size: 48px; margin-bottom: 8px; }
 
 .fn-empty-title {
   font-size: 26px;
@@ -225,14 +149,11 @@ body {
 }
 
 .fn-empty-url {
-  font-size: 24px;
+  font-size: 22px;
   font-weight: 900;
-  color: #fff;
-  background: #000;
-  padding: 5px 14px;
+  color: #d40000;
   letter-spacing: 1px;
-  margin-top: 10px;
-  display: inline-block;
+  margin-top: 4px;
 }
 
 .fn-row-check { font-size: 15px; color: #000; flex: 0 0 auto; }
