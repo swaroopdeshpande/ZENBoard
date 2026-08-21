@@ -25,24 +25,35 @@ class RefreshTask:
     """Handles the logic for refreshing the display using a background thread."""
 
     @staticmethod
-    def _partial_eligible(refresh_action):
-        """Is this frame a page turn that partial refresh can serve?
+    def _partial_eligible(refresh_action, plugin):
+        """Can partial refresh serve this frame?
 
-        Read once per refresh, before the logo is stamped, because the answer
-        changes how the logo is drawn. Orientation is not part of it: the
-        partial window is the whole panel either way, and the buffer is built
-        from the rendered image after orientation has been applied.
+        The plugin decides. This used to test the ereader's own settings keys
+        here, which meant every other plugin was locked out of partial refresh
+        no matter how black and white its layout was. Now a plugin declares
+        SUPPORTS_PARTIAL_REFRESH and may narrow it further per render via
+        wants_partial_refresh().
+
+        Read once per refresh, and before the logo is stamped, because the
+        answer changes how the logo is drawn - the mark's accent is red, and
+        partial refresh has no red plane.
+
+        Orientation is not part of it: the partial window is the whole panel
+        either way, and the buffer is built from the rendered image after
+        orientation has been applied.
         """
         try:
+            if not getattr(plugin, "SUPPORTS_PARTIAL_REFRESH", False):
+                return False
             if hasattr(refresh_action, "plugin_instance"):
                 p_settings = refresh_action.plugin_instance.settings
             elif hasattr(refresh_action, "plugin_settings"):
                 p_settings = refresh_action.plugin_settings
             else:
-                return False
-            return (p_settings.get("action") in ("next", "prev") and
-                    p_settings.get("partialRefresh", "true") == "true")
-        except Exception:
+                p_settings = {}
+            return bool(plugin.wants_partial_refresh(p_settings or {}))
+        except Exception as e:
+            logger.warning(f"Partial-eligibility check failed, using full refresh: {e}")
             return False
 
     def __init__(self, device_config, display_manager):
@@ -165,7 +176,7 @@ class RefreshTask:
                         # carries a red accent, and partial refresh runs the
                         # panel in KW mode where no red plane exists. Stamped in
                         # red, the mark alone would disqualify every page turn.
-                        will_partial = self._partial_eligible(refresh_action)
+                        will_partial = self._partial_eligible(refresh_action, plugin)
 
                         if self.device_config.get_config("show_logo", default=True):
                             image = zen_logo.stamp(

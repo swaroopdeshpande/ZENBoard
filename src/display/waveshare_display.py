@@ -106,9 +106,39 @@ class WaveshareDisplay(AbstractDisplay):
     # fully refresh EPD once. Otherwise, the display effect will be abnormal."
     # Their FAQ puts a number on it - clear the screen after 5 rounds of
     # partial refreshing - so every 5th turn goes through a full refresh.
-    PARTIAL_BEFORE_FULL = 5
+    # Waveshare's FAQ says clear the screen after 5 rounds of partial
+    # refreshing. Held at 3, which is inside their limit and matches what
+    # actually looks clean on this panel.
+    PARTIAL_BEFORE_FULL = 3
+
+    # A partial refresh drives pixels with a short waveform. That is what makes
+    # it fast, and also why it leaves faint residue where a lot of ink moved -
+    # the pixels do not get driven long enough to fully settle. The residue is
+    # proportional to how much of the frame changed, so rather than counting
+    # refreshes alone, measure the change: a small edit (ticking a note, one new
+    # row) stays on the fast path, while a wholesale repaint takes a full
+    # refresh, which is what it would have needed to look clean anyway.
+    PARTIAL_MAX_DELTA = 0.18
+
     _partial_count = 0
     _last_buf = None
+
+    @staticmethod
+    def _frame_delta(prev_buf, new_buf):
+        """Fraction of pixels that differ between two 1-bit frames.
+
+        XOR the packed buffers and count set bits. Both are 1 bit per pixel, so
+        a set bit is a changed pixel. Done as one big integer, which pushes the
+        work into CPython's C path - under 10ms for a 800x480 frame.
+        """
+        if prev_buf is None or new_buf is None or len(prev_buf) != len(new_buf):
+            return 1.0
+        n = len(prev_buf) * 8
+        if not n:
+            return 1.0
+        a = int.from_bytes(prev_buf, "big")
+        b = int.from_bytes(new_buf, "big")
+        return (a ^ b).bit_count() / n
 
     @staticmethod
     def _has_red(image, threshold=60):
@@ -192,18 +222,29 @@ class WaveshareDisplay(AbstractDisplay):
         new_buf = image.convert("1").tobytes()
 
         self._partial_count += 1
+        delta = self._frame_delta(self._last_buf, new_buf)
+
         # A differential refresh is only as good as its reference. Without one -
         # after a restart, or once the budget is spent - take a full refresh,
         # which both clears accumulated ghosting and re-establishes the frame.
-        if self._last_buf is None or self._partial_count > self.PARTIAL_BEFORE_FULL:
-            logger.info("Full refresh: %s.",
-                        "no known previous frame" if self._last_buf is None
-                        else "partial budget spent (%d)" % self.PARTIAL_BEFORE_FULL)
+        # A frame that changed too much gets one for the same reason.
+        reason = None
+        if self._last_buf is None:
+            reason = "no known previous frame"
+        elif self._partial_count > self.PARTIAL_BEFORE_FULL:
+            reason = "partial budget spent (%d)" % self.PARTIAL_BEFORE_FULL
+        elif delta > self.PARTIAL_MAX_DELTA:
+            reason = "frame changed too much (%.1f%% > %.0f%%)" % (
+                delta * 100, self.PARTIAL_MAX_DELTA * 100)
+
+        if reason:
+            logger.info("Full refresh: %s.", reason)
             self._partial_count = 0
             self.display_image(image)
             return
 
-        logger.info("Partial refresh %d/%d", self._partial_count, self.PARTIAL_BEFORE_FULL)
+        logger.info("Partial refresh %d/%d (%.1f%% of frame changed)",
+                    self._partial_count, self.PARTIAL_BEFORE_FULL, delta * 100)
         self.epd_display.init_part()
         self._partial_frame(self._last_buf, new_buf, w, h)
         self.epd_display.sleep()
