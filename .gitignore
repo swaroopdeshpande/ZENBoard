@@ -60,3 +60,9 @@ src/plugins/tv_quotes/render/portraits/prahlad.png
 src/plugins/tv_quotes/render/portraits/rinki.png
 src/plugins/tv_quotes/render/portraits/bhushan.png
 src/plugins/tv_quotes/render/logos/panchayat_logo.png
+
+# Mac design workstation (see .claude/skills/zenboard-display)
+.venv-mac/
+.bin/
+.fonts-from-pi/
+renders/
