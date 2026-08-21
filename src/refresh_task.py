@@ -24,6 +24,27 @@ PRESENCE_STALE_SECONDS = 300
 class RefreshTask:
     """Handles the logic for refreshing the display using a background thread."""
 
+    @staticmethod
+    def _partial_eligible(refresh_action):
+        """Is this frame a page turn that partial refresh can serve?
+
+        Read once per refresh, before the logo is stamped, because the answer
+        changes how the logo is drawn. Orientation is not part of it: the
+        partial window is the whole panel either way, and the buffer is built
+        from the rendered image after orientation has been applied.
+        """
+        try:
+            if hasattr(refresh_action, "plugin_instance"):
+                p_settings = refresh_action.plugin_instance.settings
+            elif hasattr(refresh_action, "plugin_settings"):
+                p_settings = refresh_action.plugin_settings
+            else:
+                return False
+            return (p_settings.get("action") in ("next", "prev") and
+                    p_settings.get("partialRefresh", "true") == "true")
+        except Exception:
+            return False
+
     def __init__(self, device_config, display_manager):
         self.device_config = device_config
         self.display_manager = display_manager
@@ -139,11 +160,19 @@ class RefreshTask:
                         # it also covers the ones that return a PIL image
                         # directly and never render a template. Before the
                         # hash, so an unchanged frame still dedupes correctly.
+                        # Whether this frame is partial-eligible has to be
+                        # settled before the mark goes on, not after: the mark
+                        # carries a red accent, and partial refresh runs the
+                        # panel in KW mode where no red plane exists. Stamped in
+                        # red, the mark alone would disqualify every page turn.
+                        will_partial = self._partial_eligible(refresh_action)
+
                         if self.device_config.get_config("show_logo", default=True):
                             image = zen_logo.stamp(
                                 image,
                                 size=self.device_config.get_config("logo_size", default=40),
-                                corner=self.device_config.get_config("logo_corner", default="auto"))
+                                corner=self.device_config.get_config("logo_corner", default="auto"),
+                                mono=will_partial)
 
                         image_hash = compute_image_hash(image)
 
@@ -154,19 +183,9 @@ class RefreshTask:
                             logger.info(f"Updating display. | refresh_info: {refresh_info}")
                             # Tag for partial refresh if ereader page turn
                             try:
-                                if hasattr(refresh_action, 'plugin_instance'):
-                                    p_settings = refresh_action.plugin_instance.settings
-                                elif hasattr(refresh_action, 'plugin_settings'):
-                                    p_settings = refresh_action.plugin_settings
-                                else:
-                                    p_settings = {}
-                                # Orientation no longer matters: the partial
-                                # window is the whole panel either way, and the
-                                # buffer is built from the rendered image.
-                                if (p_settings.get("action") in ("next", "prev") and
-                                        p_settings.get("partialRefresh", "true") == "true"):
+                                if will_partial:
                                     image._partial = True
-                                    logger.info(f"Tagged image for partial refresh")
+                                    logger.info("Tagged image for partial refresh")
                             except Exception as e:
                                 logger.info(f"Partial tag failed: {e}")
                             self.display_manager.display_image(image, image_settings=plugin.config.get("image_settings", []))

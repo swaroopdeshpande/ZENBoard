@@ -5,7 +5,7 @@ from .waveshare_epd import epdconfig
 import sys
 
 from display.abstract_display import AbstractDisplay
-from PIL import Image
+from PIL import Image, ImageChops
 from pathlib import Path
 from plugins.plugin_registry import get_plugin_instance
 
@@ -110,6 +110,23 @@ class WaveshareDisplay(AbstractDisplay):
     _partial_count = 0
     _last_buf = None
 
+    @staticmethod
+    def _has_red(image, threshold=60):
+        """True if any pixel is meaningfully red rather than grey.
+
+        Compares the red channel against the brighter of green and blue, so
+        greys and near-whites (where all three track together) score zero and
+        only genuinely red ink trips it. Runs in C over the whole frame; the
+        cost is a few milliseconds against a 1.4s refresh.
+        """
+        try:
+            r, g, b = image.convert("RGB").split()
+            excess = ImageChops.subtract(r, ImageChops.lighter(g, b))
+            return excess.getextrema()[1] > threshold
+        except Exception:
+            # Cannot tell - assume red and take the safe path.
+            return True
+
     def _partial_frame(self, prev_buf, new_buf, w, h):
         """One partial refresh over the full screen, with an honest prior frame.
 
@@ -148,6 +165,24 @@ class WaveshareDisplay(AbstractDisplay):
             raise ValueError("No image provided.")
         if not self.bi_color_display or not hasattr(self.epd_display, "display_Partial"):
             logger.info("Partial refresh unavailable on this panel; full refresh.")
+            self.display_image(image)
+            return
+
+        # Partial refresh cannot carry red - not a library limitation, a
+        # controller one. The UC8179 has two SRAM planes and R00H bit 4 (KW/R)
+        # decides what they mean. init() sends PSR 0x0F (bit 4 = 0, KWR): plane
+        # 0x10 holds K/W, plane 0x13 holds RED. init_part() sends PSR 0x1F
+        # (bit 4 = 1, KW): plane 0x10 holds OLD, plane 0x13 holds NEW. The red
+        # channel and the previous-frame history are the same physical plane, so
+        # a differential refresh and a third colour are mutually exclusive.
+        #
+        # Nothing enforces that in software, and the failure is silent: red would
+        # go through convert("1") as black, print black for the whole partial
+        # run, then snap back to red at the next full refresh. So refuse.
+        if self._has_red(image):
+            logger.info("Image contains red; partial refresh is black/white only "
+                        "(UC8179 KW mode). Full refresh.")
+            self._partial_count = 0
             self.display_image(image)
             return
 
