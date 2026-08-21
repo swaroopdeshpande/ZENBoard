@@ -160,9 +160,11 @@ class RefreshTask:
                                     p_settings = refresh_action.plugin_settings
                                 else:
                                     p_settings = {}
+                                # Orientation no longer matters: the partial
+                                # window is the whole panel either way, and the
+                                # buffer is built from the rendered image.
                                 if (p_settings.get("action") in ("next", "prev") and
-                                        p_settings.get("partialRefresh", "true") == "true" and
-                                        p_settings.get("orientation", "landscape") == "landscape"):
+                                        p_settings.get("partialRefresh", "true") == "true"):
                                     image._partial = True
                                     logger.info(f"Tagged image for partial refresh")
                             except Exception as e:

@@ -1,6 +1,7 @@
 import inspect
 import importlib
 import logging
+from .waveshare_epd import epdconfig
 import sys
 
 from display.abstract_display import AbstractDisplay
@@ -100,24 +101,78 @@ class WaveshareDisplay(AbstractDisplay):
                 write=True)
 
 
+    # Waveshare's manual: "you cannot refresh them with the partial refresh
+    # mode all the time. After refreshing partially several times, you need to
+    # fully refresh EPD once. Otherwise, the display effect will be abnormal."
+    # Their FAQ puts a number on it - clear the screen after 5 rounds of
+    # partial refreshing - so every 5th turn goes through a full refresh.
+    PARTIAL_BEFORE_FULL = 5
+    _partial_count = 0
+    _last_buf = None
+
+    def _partial_frame(self, prev_buf, new_buf, w, h):
+        """One partial refresh over the full screen, with an honest prior frame.
+
+        The driver's display_Partial() cannot be used as-is. It keys off partFlag,
+        which init_part() resets to 0, so the first partial after every init
+        writes the 0x10 plane as solid 0xff - it tells the panel the glass was
+        blank. The panel drives each pixel from its 0x10 -> 0x13 transition, so
+        under that lie a pixel that is currently black and should turn white
+        reads as white -> white and is never driven. The old text stays on the
+        glass. That is the ghosting, and no full-refresh budget can fix it,
+        because every turn re-tells the same lie.
+
+        Here 0x10 carries the frame actually on the panel. Both planes use the
+        PIL "1" convention (1 = white), which is what the partial path wants -
+        unlike the full display() path, where 0x13 is the red plane.
+        """
+        epd = self.epd_display
+        epd.send_command(0x91)                      # enter partial mode
+        epd.send_command(0x90)                      # window: full screen
+        for v in (0, 0, (w - 1) // 256, (w - 1) % 256,
+                  0, 0, (h - 1) // 256, (h - 1) % 256):
+            epd.send_data(v)
+        epd.send_data(0x01)
+
+        epd.send_command(0x10)                      # what is on the glass now
+        epd.send_data2(bytearray(prev_buf))
+        epd.send_command(0x13)                      # what should be there next
+        epd.send_data2(bytearray(new_buf))
+
+        epd.send_command(0x12)
+        epdconfig.delay_ms(100)
+        epd.ReadBusy()
+
     def display_image_partial(self, image):
-        """Fast full refresh - skips Clear() for faster page turns."""
-        logger.info("Displaying image with fast refresh (no clear).")
         if not image:
             raise ValueError("No image provided.")
-        
-        self.epd_display_init()
-        
-        # Skip Clear() - go straight to display
-        if not self.bi_color_display:
-            self.epd_display.display(self.epd_display.getbuffer(image))
-        else:
-            from display.waveshare_display import split_image_for_bi_color_epd
-            black_layer, red_layer = split_image_for_bi_color_epd(image)
-            self.epd_display.display(
-                self.epd_display.getbuffer(black_layer),
-                self.epd_display.getbuffer(red_layer),
-            )
+        if not self.bi_color_display or not hasattr(self.epd_display, "display_Partial"):
+            logger.info("Partial refresh unavailable on this panel; full refresh.")
+            self.display_image(image)
+            return
+
+        w, h = self.epd_display.width, self.epd_display.height
+        if image.size != (w, h):
+            image = image.resize((w, h))
+        new_buf = image.convert("1").tobytes()
+
+        self._partial_count += 1
+        # A differential refresh is only as good as its reference. Without one -
+        # after a restart, or once the budget is spent - take a full refresh,
+        # which both clears accumulated ghosting and re-establishes the frame.
+        if self._last_buf is None or self._partial_count > self.PARTIAL_BEFORE_FULL:
+            logger.info("Full refresh: %s.",
+                        "no known previous frame" if self._last_buf is None
+                        else "partial budget spent (%d)" % self.PARTIAL_BEFORE_FULL)
+            self._partial_count = 0
+            self.display_image(image)
+            return
+
+        logger.info("Partial refresh %d/%d", self._partial_count, self.PARTIAL_BEFORE_FULL)
+        self.epd_display.init_part()
+        self._partial_frame(self._last_buf, new_buf, w, h)
+        self.epd_display.sleep()
+        self._last_buf = new_buf
 
     def display_image(self, image, image_settings=[]):
         
@@ -155,6 +210,15 @@ class WaveshareDisplay(AbstractDisplay):
                 self.epd_display.getbuffer(black_layer),
                 self.epd_display.getbuffer(red_layer),
             )
+
+        # Whatever a later partial refresh diffs against, it diffs against this.
+        # The 0x10 plane physically holds the black/white layer, so that - not
+        # the composite - is the reference.
+        try:
+            ref = black_layer if self.bi_color_display else image
+            self._last_buf = ref.convert("1").tobytes()
+        except Exception:
+            self._last_buf = None
 
         # Put device into low power mode (EPD displays maintain image when powered off)
         logger.info("Putting Waveshare display into sleep mode for power saving.")

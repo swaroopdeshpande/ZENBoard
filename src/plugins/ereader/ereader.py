@@ -88,22 +88,18 @@ class Ereader(BasePlugin):
             page, len(pages), portrait
         )
 
-        # Tag for partial refresh (page turns within same orientation) -
-        # but force a real full refresh (with Clear()) every 15 page turns
-        # so faint ghosting never has a chance to silently build up across
-        # a long reading session. The skip-Clear "partial" mode still
-        # redraws every pixel correctly each time, it just never resets
-        # the panel - this periodic full Clear() is that reset.
+        # Tag page turns for partial refresh. The display layer now performs a
+        # genuine partial refresh - black/white plane only, roughly 1.4s against
+        # 21s, with no flashing - rather than the previous "full refresh minus
+        # Clear()", which redrew every pixel and was never actually faster.
+        #
+        # The 15-turn counter that used to live here is gone. Waveshare put a
+        # number on this: clear the screen after 5 rounds of partial refreshing,
+        # otherwise "the display effect will be abnormal". That budget belongs to
+        # the display layer, which owns the panel and now enforces it; keeping a
+        # second, larger counter here would only override it.
         if action in ("next", "prev") and partial_ok:
-            all_states = self._load_all_states()
-            turn_count = all_states.get("_partial_turn_count", 0) + 1
-            if turn_count >= 15:
-                turn_count = 0
-                logger.info("Ereader: forcing full refresh (15 partial turns reached)")
-            else:
-                img._partial = True
-            all_states["_partial_turn_count"] = turn_count
-            self._save_all_states(all_states)
+            img._partial = True
 
         # Notify LED service of orientation
         try:
@@ -302,16 +298,53 @@ class Ereader(BasePlugin):
         return pages or ["Empty document"]
 
     def _wrap(self, text, font, max_w):
-        words, lines, cur = text.split(), [], []
-        for word in words:
-            test = " ".join(cur + [word])
-            bb   = font.getbbox(test)
-            if bb[2] - bb[0] <= max_w:
-                cur.append(word)
+        """Greedy word wrap, measured per word rather than per prefix.
+
+        The obvious version measures the candidate line - " ".join(cur + [word]) -
+        on every word, so a twelve-word line is measured twelve times at growing
+        length, and the work is quadratic in line length. Over a whole novel that
+        was 62s of pagination on this Pi.
+
+        Instead each word is measured once and the widths are added. getlength()
+        returns the advance width, which is the quantity that actually composes
+        additively - unlike getbbox(), which returns inked extents and cannot be
+        summed meaningfully. Word widths are memoised too: prose reuses the same
+        few thousand words constantly, so nearly every lookup after the first
+        chapter is a dict hit.
+        """
+        try:
+            cache = self._wcache
+        except AttributeError:
+            cache = self._wcache = {}
+        key = (font.path if hasattr(font, "path") else id(font),
+               getattr(font, "size", 0))
+        widths = cache.setdefault(key, {})
+
+        def width_of(w):
+            v = widths.get(w)
+            if v is None:
+                v = widths[w] = font.getlength(w)
+            return v
+
+        space = width_of(" ")
+
+        # Advance width is what the renderer steps by, but a glyph can ink a
+        # couple of pixels past its advance (italic f, some serifs), and the old
+        # getbbox() wrap measured that inked extent. Across a whole novel the
+        # difference showed up on 5 lines out of 2408, at most 2px - well inside
+        # the margin, but shave it so this is strictly no wider than before.
+        max_w -= 2
+
+        lines, cur, cur_w = [], [], 0.0
+        for word in text.split():
+            ww = width_of(word)
+            # cur_w already includes the trailing space for each word present
+            if cur and cur_w + ww > max_w:
+                lines.append(" ".join(cur))
+                cur, cur_w = [word], ww + space
             else:
-                if cur:
-                    lines.append(" ".join(cur))
-                cur = [word]
+                cur.append(word)
+                cur_w += ww + space
         if cur:
             lines.append(" ".join(cur))
         return lines or [""]
