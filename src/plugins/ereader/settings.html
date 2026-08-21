@@ -56,13 +56,40 @@
     <div class="form-group">
         <label class="form-label">Page Navigation</label>
         <div style="display:flex; gap:8px;">
-            <button type="button" class="action-button compact" onclick="document.getElementById('action').value='prev'">← Previous</button>
-            <button type="button" class="action-button compact" onclick="document.getElementById('action').value='next'">Next →</button>
+            <button type="button" id="pgPrev" class="action-button compact" onclick="ereaderTurn('prev')">← Previous</button>
+            <button type="button" id="pgNext" class="action-button compact" onclick="ereaderTurn('next')">Next →</button>
         </div>
         <input type="hidden" id="action" name="action" value="current">
     </div>
 </div>
 <script>
+// The page buttons used to only set the hidden action field and stop there,
+// so nothing was ever sent - a turn required clicking Update Now afterwards.
+// They now submit through the page's own handleAction(), the same path Update
+// Now uses, so the whole settings form goes along (the book, font and partial
+// refresh setting all have to travel with it).
+//
+// The field is put back to "current" afterwards. It never used to be, so once
+// you had clicked Next the field stayed on "next" and every later Update Now
+// silently advanced another page.
+async function ereaderTurn(dir) {
+    const field = document.getElementById('action');
+    const btns  = [document.getElementById('pgPrev'), document.getElementById('pgNext')];
+    if (typeof handleAction !== 'function') {
+        console.error('ereader: handleAction() unavailable');
+        return;
+    }
+    field.value = dir;
+    // A turn takes several seconds on the panel; without this a second click
+    // queues another refresh behind the first.
+    btns.forEach(b => { if (b) b.disabled = true; });
+    try {
+        await handleAction('update_now');
+    } finally {
+        field.value = 'current';
+        btns.forEach(b => { if (b) b.disabled = false; });
+    }
+}
 async function uploadBook() {
     const file = document.getElementById('bookUpload').files[0];
     if (!file) return;
