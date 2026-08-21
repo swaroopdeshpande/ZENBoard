@@ -22,54 +22,6 @@ PRESENCE_STATE_FILE = "/tmp/zenboard_presence.json"
 PRESENCE_STALE_SECONDS = 300
 
 class RefreshTask:
-
-    # Plugins whose refreshes may update in place rather than repainting the
-    # whole panel. Only worth it where the layout holds still and a few values
-    # change - and only safe where those values are black-on-white, since a
-    # partial refresh has no red plane. The display layer re-checks every
-    # window for red and falls back to a full refresh on its own.
-    REGION_PARTIAL_PLUGINS = {"weather_terminal"}
-
-    # How often a plugin that is already on the panel updates its values in
-    # place. This is not a playlist advance and deliberately does not touch the
-    # playlist clock - the plugin stays put and only its numbers change.
-    REGION_UPDATE_SECONDS = 600
-
-    _last_displayed_plugin = None
-    _on_glass_action = None        # how to re-render whatever is on the panel
-    _last_region_update = None     # time.monotonic() of the last paint
-
-    def _region_capable(self):
-        return (self._last_displayed_plugin in self.REGION_PARTIAL_PLUGINS
-                and self._on_glass_action is not None
-                and self._last_region_update is not None)
-
-    def _region_update_due(self):
-        return (self._region_capable() and
-                time.monotonic() - self._last_region_update >= self.REGION_UPDATE_SECONDS)
-
-    def _next_wake(self, cycle_seconds):
-        """Sleep until the playlist is due, or the next in-place update, whichever
-        comes first. The loop otherwise sleeps for the whole cycle interval - an
-        hour here - which is why a ten minute update could never fire."""
-        if not self._region_capable():
-            return cycle_seconds
-        remaining = self.REGION_UPDATE_SECONDS - (time.monotonic() - self._last_region_update)
-        return max(5, min(cycle_seconds, remaining))
-
-    def _note_displayed(self, refresh_action):
-        """Remember what is on the glass, and restart its update clock."""
-        pid = refresh_action.get_plugin_id()
-        self._last_displayed_plugin = pid
-        if pid in self.REGION_PARTIAL_PLUGINS:
-            self._on_glass_action = refresh_action
-            self._last_region_update = time.monotonic()
-        else:
-            # Something else took the panel. No in-place updates until a
-            # region-capable plugin is displayed again.
-            self._on_glass_action = None
-            self._last_region_update = None
-
     """Handles the logic for refreshing the display using a background thread."""
 
     def __init__(self, device_config, display_manager):
@@ -136,8 +88,7 @@ class RefreshTask:
         while True:
             try:
                 with self.condition:
-                    sleep_time = self._next_wake(
-                        self.device_config.get_config("plugin_cycle_interval_seconds", default=60*60))
+                    sleep_time = self.device_config.get_config("plugin_cycle_interval_seconds", default=60*60)
 
                     # Wait for sleep_time or until notified
                     self.condition.wait(timeout=sleep_time)
@@ -153,7 +104,6 @@ class RefreshTask:
                     current_dt = self._get_current_datetime()
 
                     refresh_action = None
-                    do_region = False
                     if self.manual_update_request:
                         # handle immediate update request
                         logger.info("Manual update requested")
@@ -176,14 +126,6 @@ class RefreshTask:
                         playlist, plugin_instance = self._determine_next_plugin(playlist_manager, latest_refresh, current_dt)
                         if plugin_instance:
                             refresh_action = PlaylistRefresh(playlist, plugin_instance)
-                        elif self._region_update_due():
-                            # Playlist is not due, but the plugin on the panel
-                            # updates its values in place. Re-render the same
-                            # plugin and refresh only the boxes that changed.
-                            refresh_action = self._on_glass_action
-                            do_region = True
-                            logger.info("In-place value update for '%s'",
-                                        self._last_displayed_plugin)
 
                     if refresh_action:
                         plugin_config = self.device_config.get_plugin(refresh_action.get_plugin_id())
@@ -225,23 +167,9 @@ class RefreshTask:
                                         p_settings.get("partialRefresh", "true") == "true"):
                                     image._partial = True
                                     logger.info(f"Tagged image for partial refresh")
-                                # Region partial refresh: only the boxes that
-                                # changed get driven, so the rest of the frame -
-                                # red included - is left alone.
-                                #
-                                # This is set by the in-place tick above, never
-                                # inferred here. The previous version compared
-                                # the plugin against the last displayed one,
-                                # which can never match: get_next_plugin() is
-                                # strict round-robin, so a plugin is never shown
-                                # twice in a row and the whole path was dead.
-                                if do_region:
-                                    image._partial_regions = True
-                                    logger.info("Tagged image for region partial refresh")
                             except Exception as e:
                                 logger.info(f"Partial tag failed: {e}")
                             self.display_manager.display_image(image, image_settings=plugin.config.get("image_settings", []))
-                            self._note_displayed(refresh_action)
 
                             # Phone notification, after the paint rather than
                             # before it, so it reports what actually reached the
@@ -260,22 +188,10 @@ class RefreshTask:
                                 logger.debug(f"notify failed: {e}")
                         else:
                             logger.info(f"Image already displayed, skipping refresh. | refresh_info: {refresh_info}")
-                            if do_region:
-                                # Nothing changed, but the clock still has to
-                                # restart. Otherwise the update stays due, the
-                                # next wake is immediate, and the loop re-renders
-                                # the plugin every few seconds forever.
-                                self._last_region_update = time.monotonic()
 
-                        # Update latest refresh data in the device config -
-                        # except for in-place value updates. This timestamp is
-                        # what should_refresh() measures the playlist cycle
-                        # against, so recording one here would push rotation out
-                        # by another full interval every ten minutes and the
-                        # playlist would never advance again.
-                        if not do_region:
-                            self.device_config.refresh_info = RefreshInfo(**refresh_info)
-                            self.device_config.write_config()
+                        # update latest refresh data in the device config
+                        self.device_config.refresh_info = RefreshInfo(**refresh_info)
+                        self.device_config.write_config()
 
             except Exception as e:
                 logger.exception('Exception during refresh')
