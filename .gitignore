@@ -39,6 +39,8 @@ src/config/apple_health.json
 # usage patterns (what was read, when the frame refreshed, LED settings).
 src/config/led_config.json
 src/config/refresh_stats.json
+src/config/presence_history.jsonl
+src/config/system_stats.jsonl
 books/.ereader_state.json
 **/.state/
 
@@ -61,8 +63,30 @@ src/plugins/tv_quotes/render/portraits/rinki.png
 src/plugins/tv_quotes/render/portraits/bhushan.png
 src/plugins/tv_quotes/render/logos/panchayat_logo.png
 
+# Gullak is TVF material too - same rule as the Panchayat portraits above.
+src/plugins/tv_quotes/render/portraits/santosh*.png
+src/plugins/tv_quotes/render/portraits/shanti*.png
+src/plugins/tv_quotes/render/portraits/annu*.png
+src/plugins/tv_quotes/render/portraits/aman*.png
+src/plugins/tv_quotes/render/portraits/bittu*.png
+src/plugins/tv_quotes/render/logos/gullak_logo.png
+
 # Mac design workstation (see .claude/skills/zenboard-display)
 .venv-mac/
 .bin/
 .fonts-from-pi/
 renders/
+
+# ESP32 presence node firmware secrets (WiFi password) - NEVER commit
+esp32/presence-node/include/secrets.h
+esp32/**/secrets.h
+
+# ESP32 presence node firmware secrets (WiFi password) - NEVER commit
+esp32/presence-node/include/secrets.h
+esp32/**/secrets.h
+esp32/**/secrets.h*
+esp32/**/*secrets*
+
+# PlatformIO build artifacts (regenerable, huge)
+.pio/
+esp32/**/.pio/
